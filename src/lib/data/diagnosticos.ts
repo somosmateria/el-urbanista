@@ -81,6 +81,18 @@ export async function descargarDiagnosticoDesdeStorage(storagePath: string) {
   return Buffer.from(await data.arrayBuffer());
 }
 
+export async function getSeccionPorCodigo(diagnosticoId: string, codigo: string) {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("diagnostico_secciones")
+    .select("*")
+    .eq("diagnostico_id", diagnosticoId)
+    .eq("codigo", codigo)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 export async function guardarSeccionesDiagnostico(
   diagnosticoId: string,
   secciones: { codigo: string; titulo: string; texto: string; orden: number }[]

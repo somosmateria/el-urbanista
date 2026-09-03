@@ -2,6 +2,8 @@ import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { CapituloEstado, MotorTipo } from "@/lib/supabase/types";
 import { PLANTILLAS } from "@/lib/motores/plantilla";
+import { generarCapituloRAG } from "@/lib/motores/rag";
+import { getDiagnosticoDeMunicipio } from "@/lib/data/diagnosticos";
 
 export async function listMunicipiosConProgreso() {
   const supabase = createServiceClient();
@@ -103,6 +105,9 @@ export async function generarCapitulosIniciales(municipioId: string) {
   const municipio = await getMunicipio(municipioId);
   if (!municipio) throw new Error("Municipio no encontrado");
 
+  const diagnostico = await getDiagnosticoDeMunicipio(municipioId);
+  const diagnosticoId = diagnostico?.estado === "listo" ? diagnostico.id : null;
+
   const { data: mapeo, error: mapeoError } = await supabase
     .from("mapeo_capitulos")
     .select("*")
@@ -111,41 +116,63 @@ export async function generarCapitulosIniciales(municipioId: string) {
     .order("orden");
   if (mapeoError) throw mapeoError;
 
-  const capitulosAInsertar = mapeo.map((entrada) => {
-    const motor = entrada.motor as MotorTipo;
+  const capitulosAInsertar = await Promise.all(
+    mapeo.map(async (entrada) => {
+      const motor = entrada.motor as MotorTipo;
 
-    if (motor === "tabla") {
+      if (motor === "tabla") {
+        return {
+          municipio_id: municipioId,
+          codigo: entrada.capitulo_codigo,
+          titulo: entrada.titulo_canonico,
+          motor,
+          estado: "tu_aportacion" as CapituloEstado,
+          sin_info_motivo: null,
+          contenido_html: null,
+          orden: entrada.orden,
+        };
+      }
+
+      if (motor === "rag") {
+        // Motor RAG dirigido: reformatea subepígrafe a subepígrafe el texto
+        // ya verificado del diagnóstico (ver src/lib/motores/rag). Sin
+        // diagnóstico procesado, no hay nada que reformatear.
+        const contenido = diagnosticoId
+          ? await generarCapituloRAG(entrada.capitulo_codigo, diagnosticoId)
+          : null;
+
+        return {
+          municipio_id: municipioId,
+          codigo: entrada.capitulo_codigo,
+          titulo: entrada.titulo_canonico,
+          motor,
+          estado: (contenido ? "revisar" : "sin_info") as CapituloEstado,
+          sin_info_motivo: contenido ? null : ("falta_dato" as const),
+          contenido_html: contenido,
+          orden: entrada.orden,
+        };
+      }
+
+      // Motor plantilla: si ya hay una plantilla implementada para este
+      // capítulo y los datos del municipio bastan para rellenarla, se genera
+      // de inmediato — no necesita diagnóstico ni Claude. Si no, se deja en
+      // "sin información" en vez de fabricar un texto a medias (ver
+      // src/lib/motores/plantilla/index.ts).
+      const generador = PLANTILLAS[entrada.capitulo_codigo];
+      const contenido = generador ? generador(municipio) : null;
+
       return {
         municipio_id: municipioId,
         codigo: entrada.capitulo_codigo,
         titulo: entrada.titulo_canonico,
         motor,
-        estado: "tu_aportacion" as CapituloEstado,
-        sin_info_motivo: null,
-        contenido_html: null,
+        estado: (contenido ? "listo" : "sin_info") as CapituloEstado,
+        sin_info_motivo: contenido ? null : ("falta_dato" as const),
+        contenido_html: contenido,
         orden: entrada.orden,
       };
-    }
-
-    // Motor plantilla: si ya hay una plantilla implementada para este
-    // capítulo y los datos del municipio bastan para rellenarla, se genera
-    // de inmediato — no necesita diagnóstico ni Claude. Si no, se deja en
-    // "sin información" en vez de fabricar un texto a medias (ver
-    // src/lib/motores/plantilla/index.ts).
-    const generador = motor === "plantilla" ? PLANTILLAS[entrada.capitulo_codigo] : undefined;
-    const contenido = generador ? generador(municipio) : null;
-
-    return {
-      municipio_id: municipioId,
-      codigo: entrada.capitulo_codigo,
-      titulo: entrada.titulo_canonico,
-      motor,
-      estado: (contenido ? "listo" : "sin_info") as CapituloEstado,
-      sin_info_motivo: contenido ? null : ("falta_dato" as const),
-      contenido_html: contenido,
-      orden: entrada.orden,
-    };
-  });
+    })
+  );
 
   const { data: capitulosCreados, error: capitulosError } = await supabase
     .from("capitulos")
