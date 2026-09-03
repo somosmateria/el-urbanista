@@ -45,12 +45,10 @@ export default async function CapituloPage({
       )}
 
       {capitulo.motor !== "tabla" && capitulo.contenido_html && (
-        <div className="rounded-xl border border-line bg-surface p-7">
-          <div
-            className="font-serif text-[16.5px] leading-[1.8]"
-            dangerouslySetInnerHTML={{ __html: capitulo.contenido_html }}
-          />
-        </div>
+        <div
+          className="rounded-xl border border-line bg-surface p-7"
+          dangerouslySetInnerHTML={{ __html: capitulo.contenido_html }}
+        />
       )}
 
       {capitulo.motor !== "tabla" && !capitulo.contenido_html && (

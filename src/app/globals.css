@@ -75,3 +75,38 @@ mark {
   padding: 1px 4px;
   border-radius: 4px;
 }
+
+/*
+ * Los motores de generación devuelven HTML con estas clases directamente
+ * (ver src/lib/motores/*), en vez de que cada pantalla que renderiza
+ * contenido_html tenga que conocer su estructura interna.
+ */
+.doc-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-faint);
+  margin-bottom: 14px;
+}
+
+.doc-text {
+  font-family: var(--font-serif);
+  font-size: 16.5px;
+  line-height: 1.8;
+}
+
+.doc-text p {
+  margin: 0 0 1em;
+}
+
+.doc-text p:last-child {
+  margin-bottom: 0;
+}
+
+.src-note {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--color-line-strong);
+  font-size: 12px;
+  color: var(--color-text-faint);
+  font-family: var(--font-mono);
+}

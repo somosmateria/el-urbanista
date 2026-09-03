@@ -33,9 +33,28 @@ export default function NuevoMunicipioPage() {
           <input
             name="plan_vigente"
             type="text"
-            placeholder="Ej. Normas Subsidiarias de 1986"
+            placeholder="Ej. las Normas Subsidiarias, o el PGOU de 2005"
             className="w-full box-border bg-surface-hi border border-line-strong rounded-lg px-3 py-2.5 text-[14px] text-text outline-none focus:border-violet"
           />
+          <p className="text-[11.5px] text-text-faint mt-2">
+            Escríbelo con el artículo incluido — se usa tal cual en la frase "Desde la
+            aprobación y entrada en vigor de…".
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-line bg-surface p-6 mb-5">
+          <label className="block font-mono text-[11px] text-text-faint mb-3">
+            FECHA DE APROBACIÓN DEL PLAN VIGENTE (OPCIONAL)
+          </label>
+          <input
+            name="fecha_plan_vigente"
+            type="date"
+            className="w-full box-border bg-surface-hi border border-line-strong rounded-lg px-3 py-2.5 text-[14px] text-text outline-none focus:border-violet"
+          />
+          <p className="text-[11.5px] text-text-faint mt-2">
+            Con el plan vigente y esta fecha, MO.1 se genera solo — sin ellos se queda
+            en "Sin información" hasta que se editen a mano.
+          </p>
         </div>
 
         <button

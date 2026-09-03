@@ -9,8 +9,9 @@ export async function crearMunicipioAction(formData: FormData) {
     throw new Error("El nombre del municipio es obligatorio.");
   }
   const planVigente = String(formData.get("plan_vigente") ?? "").trim() || null;
+  const fechaPlanVigente = String(formData.get("fecha_plan_vigente") ?? "").trim() || null;
 
-  const municipio = await crearMunicipio({ nombre, planVigente });
+  const municipio = await crearMunicipio({ nombre, planVigente, fechaPlanVigente });
 
   redirect(`/avance/ordenacion/nuevo/${municipio.id}`);
 }

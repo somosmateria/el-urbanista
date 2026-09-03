@@ -1,6 +1,7 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { CapituloEstado, MotorTipo } from "@/lib/supabase/types";
+import { PLANTILLAS } from "@/lib/motores/plantilla";
 
 export async function listMunicipiosConProgreso() {
   const supabase = createServiceClient();
@@ -99,6 +100,9 @@ export async function generarCapitulosIniciales(municipioId: string) {
   if (existenError) throw existenError;
   if (yaExisten.length > 0) return;
 
+  const municipio = await getMunicipio(municipioId);
+  if (!municipio) throw new Error("Municipio no encontrado");
+
   const { data: mapeo, error: mapeoError } = await supabase
     .from("mapeo_capitulos")
     .select("*")
@@ -109,21 +113,58 @@ export async function generarCapitulosIniciales(municipioId: string) {
 
   const capitulosAInsertar = mapeo.map((entrada) => {
     const motor = entrada.motor as MotorTipo;
-    const estado: CapituloEstado = motor === "tabla" ? "tu_aportacion" : "sin_info";
+
+    if (motor === "tabla") {
+      return {
+        municipio_id: municipioId,
+        codigo: entrada.capitulo_codigo,
+        titulo: entrada.titulo_canonico,
+        motor,
+        estado: "tu_aportacion" as CapituloEstado,
+        sin_info_motivo: null,
+        contenido_html: null,
+        orden: entrada.orden,
+      };
+    }
+
+    // Motor plantilla: si ya hay una plantilla implementada para este
+    // capítulo y los datos del municipio bastan para rellenarla, se genera
+    // de inmediato — no necesita diagnóstico ni Claude. Si no, se deja en
+    // "sin información" en vez de fabricar un texto a medias (ver
+    // src/lib/motores/plantilla/index.ts).
+    const generador = motor === "plantilla" ? PLANTILLAS[entrada.capitulo_codigo] : undefined;
+    const contenido = generador ? generador(municipio) : null;
+
     return {
       municipio_id: municipioId,
       codigo: entrada.capitulo_codigo,
       titulo: entrada.titulo_canonico,
       motor,
-      estado,
-      sin_info_motivo: estado === "sin_info" ? ("falta_dato" as const) : null,
-      contenido_html: null,
+      estado: (contenido ? "listo" : "sin_info") as CapituloEstado,
+      sin_info_motivo: contenido ? null : ("falta_dato" as const),
+      contenido_html: contenido,
       orden: entrada.orden,
     };
   });
 
-  const { error: capitulosError } = await supabase
+  const { data: capitulosCreados, error: capitulosError } = await supabase
     .from("capitulos")
-    .insert(capitulosAInsertar);
+    .insert(capitulosAInsertar)
+    .select("id, contenido_html");
   if (capitulosError) throw capitulosError;
+
+  const versionesIniciales = capitulosCreados
+    .filter((c) => c.contenido_html)
+    .map((c) => ({
+      capitulo_id: c.id,
+      contenido_html: c.contenido_html as string,
+      tipo: "generacion_automatica" as const,
+    }));
+
+  if (versionesIniciales.length > 0) {
+    const { error: versionesError } = await supabase
+      .from("capitulo_versiones")
+      .insert(versionesIniciales);
+    if (versionesError) throw versionesError;
+  }
 }
