@@ -8,9 +8,25 @@ export type CapituloEstado = "listo" | "revisar" | "tu_aportacion" | "sin_info";
 export type SinInfoMotivo = "falta_dato" | "no_aplica";
 export type DiagnosticoEstado = "procesando" | "listo" | "error";
 export type VersionTipo = "generacion_automatica" | "edicion_manual";
+export type EquipoRol = "admin" | "miembro";
+
+export type EquipoRow = {
+  id: string;
+  nombre: string;
+  created_at: string;
+}
+
+export type EquipoMiembroRow = {
+  id: string;
+  equipo_id: string;
+  user_id: string;
+  rol: EquipoRol;
+  created_at: string;
+}
 
 export type MunicipioRow = {
   id: string;
+  equipo_id: string;
   nombre: string;
   plan_vigente: string | null;
   fecha_plan_vigente: string | null;
@@ -105,6 +121,16 @@ type TableDef<Row, Insert, Update> = {
 export type Database = {
   public: {
     Tables: {
+      equipos: TableDef<
+        EquipoRow,
+        Omit<EquipoRow, "id" | "created_at"> & { id?: string },
+        Partial<Omit<EquipoRow, "id">>
+      >;
+      equipo_miembros: TableDef<
+        EquipoMiembroRow,
+        Omit<EquipoMiembroRow, "id" | "created_at"> & { id?: string },
+        Partial<Omit<EquipoMiembroRow, "id">>
+      >;
       municipios: TableDef<
         MunicipioRow,
         Omit<MunicipioRow, "id" | "created_at"> & { id?: string },

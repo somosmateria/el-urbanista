@@ -12,8 +12,11 @@ import type { CapituloRow } from "@/lib/supabase/types";
  * docs/03-flujo-de-usuario.md, "volver a generar este capítulo"). Los
  * capítulos de motor "tabla" nunca se regeneran automáticamente.
  */
-export async function regenerarContenido(capitulo: CapituloRow): Promise<string | null> {
-  let municipio = await getMunicipio(capitulo.municipio_id);
+export async function regenerarContenido(
+  capitulo: CapituloRow,
+  equipoId: string
+): Promise<string | null> {
+  let municipio = await getMunicipio(capitulo.municipio_id, equipoId);
   if (!municipio) return null;
 
   if (capitulo.motor === "rag") {

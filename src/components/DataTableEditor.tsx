@@ -1,8 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import type { CapituloTablaRow } from "@/lib/supabase/types";
-import { guardarTablaAction } from "@/app/avance/ordenacion/[municipioId]/[capitulo]/actions";
+import { ConfirmModal } from "@/components/ConfirmModal";
+import {
+  guardarTablaAction,
+  eliminarBloqueTablaAction,
+} from "@/app/avance/ordenacion/[municipioId]/[capitulo]/actions";
 
 export function DataTableEditor({
   municipioId,
@@ -18,6 +23,30 @@ export function DataTableEditor({
   const [guardado, setGuardado] = useState(false);
   const [anadiendoColumna, setAnadiendoColumna] = useState(false);
   const [nombreColumna, setNombreColumna] = useState("");
+  const [confirmandoEliminar, setConfirmandoEliminar] = useState(false);
+  const [eliminando, startEliminando] = useTransition();
+  const router = useRouter();
+
+  function eliminarColumna(col: string) {
+    if (columnas.length <= 1) return;
+    setColumnas((prev) => prev.filter((c) => c !== col));
+    setFilas((prev) =>
+      prev.map((fila) => {
+        const { [col]: _quitada, ...resto } = fila;
+        void _quitada;
+        return resto;
+      })
+    );
+    setDirty(true);
+    setGuardado(false);
+  }
+
+  function eliminarBloque() {
+    startEliminando(async () => {
+      await eliminarBloqueTablaAction(municipioId, tabla.id);
+      router.refresh();
+    });
+  }
 
   function actualizarCelda(filaIdx: number, columna: string, valor: string) {
     setFilas((prev) =>
@@ -65,9 +94,24 @@ export function DataTableEditor({
 
   return (
     <div className="rounded-xl border border-line bg-surface p-6 mb-5">
-      <div className="font-mono text-[11px] text-text-faint mb-3">
-        {tabla.nombre_bloque.toUpperCase()}
+      <div className="flex items-center justify-between mb-3">
+        <div className="font-mono text-[11px] text-text-faint">{tabla.nombre_bloque.toUpperCase()}</div>
+        <button
+          type="button"
+          onClick={() => setConfirmandoEliminar(true)}
+          className="text-[11.5px] text-text-faint hover:text-coral-ink cursor-pointer"
+        >
+          Eliminar bloque
+        </button>
       </div>
+      <ConfirmModal
+        abierto={confirmandoEliminar}
+        titulo={`¿Eliminar "${tabla.nombre_bloque}"?`}
+        descripcion="Se elimina este bloque de tabla entero, con todas sus filas. No se puede deshacer."
+        procesando={eliminando}
+        onConfirmar={eliminarBloque}
+        onCancelar={() => setConfirmandoEliminar(false)}
+      />
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-[13.5px]">
@@ -78,7 +122,19 @@ export function DataTableEditor({
                   key={col}
                   className="text-left font-mono font-normal text-[11px] text-text-faint px-2.5 py-1.5 border-b border-line-strong whitespace-nowrap"
                 >
-                  {col}
+                  <span className="inline-flex items-center gap-1.5">
+                    {col}
+                    {columnas.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => eliminarColumna(col)}
+                        title="Quitar columna"
+                        className="text-text-faint hover:text-coral-ink cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </span>
                 </th>
               ))}
               <th className="border-b border-line-strong" />

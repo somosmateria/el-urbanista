@@ -3,20 +3,25 @@ import { signOutAction } from "@/app/login/actions";
 import { NavMenu } from "@/components/NavMenu";
 
 export function AppShell({
-  breadcrumb,
+  titulo,
   children,
 }: {
-  breadcrumb: string;
+  titulo?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="min-h-screen bg-rail">
       <header className="border-b border-line px-8 py-4 flex items-center gap-4">
         <NavMenu />
-        <Link href="/" className="font-serif text-lg text-text">
+        <Link href="/" className="font-medium text-[15px] text-text">
           El Urbanista
         </Link>
-        <span className="font-mono text-[11.5px] text-text-faint">{breadcrumb}</span>
+        {titulo && (
+          <>
+            <span className="text-line-strong">/</span>
+            <span className="text-[14px] text-text-soft">{titulo}</span>
+          </>
+        )}
         <span className="flex-1" />
         <form action={signOutAction}>
           <button

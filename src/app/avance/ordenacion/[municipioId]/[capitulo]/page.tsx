@@ -7,7 +7,13 @@ import { RegenerarPanel } from "@/components/RegenerarPanel";
 import { getMunicipio, getCapituloPorCodigo } from "@/lib/data/municipios";
 import { listTablasDeCapitulo } from "@/lib/data/tablas";
 import { getSubepigrafes } from "@/lib/data/mapeo";
-import { marcarMotivoAction, crearBloqueTablaAction, generarTextoTablaAction } from "./actions";
+import { requireEquipoActivo } from "@/lib/data/equipos";
+import {
+  marcarMotivoAction,
+  crearBloqueTablaAction,
+  eliminarBloqueTablaAction,
+  generarTextoTablaAction,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +23,8 @@ export default async function CapituloPage({
   params: Promise<{ municipioId: string; capitulo: string }>;
 }) {
   const { municipioId, capitulo: codigo } = await params;
-  const municipio = await getMunicipio(municipioId);
+  const equipo = await requireEquipoActivo();
+  const municipio = await getMunicipio(municipioId, equipo.id);
   if (!municipio) notFound();
 
   const capitulo = await getCapituloPorCodigo(municipioId, codigo);
@@ -35,9 +42,7 @@ export default async function CapituloPage({
   );
 
   return (
-    <AppShell
-      breadcrumb={`elurbanista.app / avance / ordenacion / ${municipio.nombre.toLowerCase()} / ${capitulo.codigo.toLowerCase()}`}
-    >
+    <AppShell>
       <BackLink href={`/avance/ordenacion/${municipio.id}`} />
       <div className="flex items-start justify-between gap-5 mb-2">
         <h1 className="font-serif font-medium text-[27px]">
@@ -164,6 +169,11 @@ export default async function CapituloPage({
               </form>
             </div>
           </div>
+          <RegenerarPanel
+            municipioId={municipioId}
+            capituloId={capitulo.id}
+            etiqueta="Generar desde los datos actuales"
+          />
         </>
       )}
 

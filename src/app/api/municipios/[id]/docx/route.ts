@@ -2,24 +2,21 @@ import { NextResponse } from "next/server";
 import JSZip from "jszip";
 import { createServiceClient } from "@/lib/supabase/server";
 import { generarDocxCapitulo, nombreArchivoCapitulo } from "@/lib/export/docx";
+import { getMunicipio } from "@/lib/data/municipios";
+import { requireEquipoActivo } from "@/lib/data/equipos";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: municipioId } = await params;
-  const supabase = createServiceClient();
-
-  const { data: municipio, error: municipioError } = await supabase
-    .from("municipios")
-    .select("nombre")
-    .eq("id", municipioId)
-    .maybeSingle();
-  if (municipioError) throw municipioError;
+  const equipo = await requireEquipoActivo();
+  const municipio = await getMunicipio(municipioId, equipo.id);
   if (!municipio) {
     return NextResponse.json({ error: "Municipio no encontrado." }, { status: 404 });
   }
 
+  const supabase = createServiceClient();
   const { data: capitulos, error: capitulosError } = await supabase
     .from("capitulos")
     .select("*")

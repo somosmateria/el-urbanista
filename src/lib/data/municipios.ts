@@ -6,11 +6,12 @@ import { extraerPlanVigente } from "@/lib/motores/plantilla/mo1";
 import { generarCapituloRAG } from "@/lib/motores/rag";
 import { getDiagnosticoDeMunicipio } from "@/lib/data/diagnosticos";
 
-export async function listMunicipiosConProgreso() {
+export async function listMunicipiosConProgreso(equipoId: string) {
   const supabase = createServiceClient();
   const { data: municipios, error } = await supabase
     .from("municipios")
     .select("*")
+    .eq("equipo_id", equipoId)
     .order("created_at", { ascending: false });
   if (error) throw error;
   if (municipios.length === 0) return [];
@@ -39,12 +40,21 @@ export async function listMunicipiosConProgreso() {
   });
 }
 
-export async function getMunicipio(id: string) {
+/**
+ * `equipoId` no es opcional: es la frontera de autorización entre
+ * equipos. Nunca se confía en un municipioId de la URL o de un formulario
+ * sin comprobar aquí que pertenece al equipo activo de quien pregunta —
+ * de lo contrario cualquier miembro autenticado de CUALQUIER equipo
+ * podría leer/tocar los municipios de otro con solo adivinar o copiar un
+ * UUID.
+ */
+export async function getMunicipio(id: string, equipoId: string) {
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("municipios")
     .select("*")
     .eq("id", id)
+    .eq("equipo_id", equipoId)
     .maybeSingle();
   if (error) throw error;
   return data;
@@ -61,6 +71,27 @@ export async function listCapitulosDeMunicipio(municipioId: string) {
   return data;
 }
 
+/**
+ * Igual que `getMunicipio`, pero partiendo de un capituloId — para
+ * Server Actions que reciben directamente un capituloId/tablaId (no un
+ * municipioId) y necesitan comprobar que pertenece al equipo activo antes
+ * de tocar nada. Devuelve el capítulo si (y solo si) su municipio
+ * pertenece a `equipoId`.
+ */
+export async function verificarCapituloDeEquipo(capituloId: string, equipoId: string) {
+  const supabase = createServiceClient();
+  const { data: capitulo, error } = await supabase
+    .from("capitulos")
+    .select("*")
+    .eq("id", capituloId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!capitulo) return null;
+
+  const municipio = await getMunicipio(capitulo.municipio_id, equipoId);
+  return municipio ? capitulo : null;
+}
+
 export async function getCapituloPorCodigo(municipioId: string, codigo: string) {
   const supabase = createServiceClient();
   const { data, error } = await supabase
@@ -73,15 +104,19 @@ export async function getCapituloPorCodigo(municipioId: string, codigo: string) 
   return data;
 }
 
-export async function crearMunicipio(input: {
-  nombre: string;
-  planVigente?: string | null;
-  fechaPlanVigente?: string | null;
-}) {
+export async function crearMunicipio(
+  input: {
+    nombre: string;
+    planVigente?: string | null;
+    fechaPlanVigente?: string | null;
+  },
+  equipoId: string
+) {
   const supabase = createServiceClient();
   const { data: municipio, error } = await supabase
     .from("municipios")
     .insert({
+      equipo_id: equipoId,
       nombre: input.nombre,
       plan_vigente: input.planVigente ?? null,
       fecha_plan_vigente: input.fechaPlanVigente ?? null,
@@ -94,6 +129,7 @@ export async function crearMunicipio(input: {
 
 export async function actualizarMunicipio(
   id: string,
+  equipoId: string,
   input: { nombre: string; planVigente?: string | null; fechaPlanVigente?: string | null }
 ) {
   const supabase = createServiceClient();
@@ -104,11 +140,12 @@ export async function actualizarMunicipio(
       plan_vigente: input.planVigente ?? null,
       fecha_plan_vigente: input.fechaPlanVigente ?? null,
     })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("equipo_id", equipoId);
   if (error) throw error;
 }
 
-export async function eliminarMunicipio(id: string) {
+export async function eliminarMunicipio(id: string, equipoId: string) {
   const supabase = createServiceClient();
 
   // El borrado del municipio arrastra en cascada (FK on delete cascade)
@@ -119,7 +156,7 @@ export async function eliminarMunicipio(id: string) {
     await supabase.storage.from("diagnosticos").remove(archivos.map((a) => `${id}/${a.name}`));
   }
 
-  const { error } = await supabase.from("municipios").delete().eq("id", id);
+  const { error } = await supabase.from("municipios").delete().eq("id", id).eq("equipo_id", equipoId);
   if (error) throw error;
 }
 
@@ -151,7 +188,7 @@ export async function asegurarPlanVigente(
   return actualizado;
 }
 
-export async function generarCapitulosIniciales(municipioId: string) {
+export async function generarCapitulosIniciales(municipioId: string, equipoId: string) {
   const supabase = createServiceClient();
 
   const { data: yaExisten, error: existenError } = await supabase
@@ -162,7 +199,7 @@ export async function generarCapitulosIniciales(municipioId: string) {
   if (existenError) throw existenError;
   if (yaExisten.length > 0) return;
 
-  let municipio = await getMunicipio(municipioId);
+  let municipio = await getMunicipio(municipioId, equipoId);
   if (!municipio) throw new Error("Municipio no encontrado");
 
   const diagnostico = await getDiagnosticoDeMunicipio(municipioId);

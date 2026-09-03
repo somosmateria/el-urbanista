@@ -5,6 +5,7 @@ import { CapituloEditor } from "@/components/CapituloEditor";
 import { HistPanel } from "@/components/HistPanel";
 import { getMunicipio, getCapituloPorCodigo } from "@/lib/data/municipios";
 import { listVersionesDeCapitulo } from "@/lib/data/versiones";
+import { requireEquipoActivo } from "@/lib/data/equipos";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,8 @@ export default async function EditarCapituloPage({
   params: Promise<{ municipioId: string; capitulo: string }>;
 }) {
   const { municipioId, capitulo: codigo } = await params;
-  const municipio = await getMunicipio(municipioId);
+  const equipo = await requireEquipoActivo();
+  const municipio = await getMunicipio(municipioId, equipo.id);
   if (!municipio) notFound();
 
   const capitulo = await getCapituloPorCodigo(municipioId, codigo);
@@ -23,9 +25,7 @@ export default async function EditarCapituloPage({
   const versiones = await listVersionesDeCapitulo(capitulo.id);
 
   return (
-    <AppShell
-      breadcrumb={`elurbanista.app / avance / ordenacion / ${municipio.nombre.toLowerCase()} / ${capitulo.codigo.toLowerCase()} / editar`}
-    >
+    <AppShell>
       <BackLink href={`/avance/ordenacion/${municipioId}/${capitulo.codigo}`}>
         Volver sin guardar
       </BackLink>

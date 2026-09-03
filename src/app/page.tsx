@@ -3,7 +3,7 @@ import { DocCard } from "@/components/DocCard";
 
 export default function Home() {
   return (
-    <AppShell breadcrumb="elurbanista.app / nuevo">
+    <AppShell>
       <h1 className="font-serif font-medium text-[27px] mb-2">¿Qué vas a redactar?</h1>
       <p className="text-text-soft text-[14.5px] mb-8 max-w-[540px] leading-relaxed">
         Elige el tipo de documento. Avance ya está desarrollado; el resto llega más

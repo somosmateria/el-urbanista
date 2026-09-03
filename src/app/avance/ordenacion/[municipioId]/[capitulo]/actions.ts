@@ -3,10 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { SinInfoMotivo } from "@/lib/supabase/types";
-import { crearBloqueTabla, guardarTabla, listTablasDeCapitulo } from "@/lib/data/tablas";
+import {
+  crearBloqueTabla,
+  guardarTabla,
+  eliminarBloqueTabla,
+  listTablasDeCapitulo,
+  getCapituloIdDeTabla,
+} from "@/lib/data/tablas";
 import { generarCapituloTabla } from "@/lib/motores/tabla";
 import { regenerarContenido } from "@/lib/motores/regenerar";
 import { PLANTILLAS_QUE_NECESITAN_REVISION } from "@/lib/motores/plantilla";
+import { verificarCapituloDeEquipo } from "@/lib/data/municipios";
+import { requireEquipoActivo } from "@/lib/data/equipos";
 import type { CapituloEstado } from "@/lib/supabase/types";
 
 export async function marcarMotivoAction(
@@ -14,6 +22,11 @@ export async function marcarMotivoAction(
   capituloId: string,
   motivo: SinInfoMotivo
 ) {
+  const equipo = await requireEquipoActivo();
+  if (!(await verificarCapituloDeEquipo(capituloId, equipo.id))) {
+    throw new Error("Capítulo no encontrado.");
+  }
+
   const supabase = createServiceClient();
   const { error } = await supabase
     .from("capitulos")
@@ -30,9 +43,25 @@ export async function crearBloqueTablaAction(
   subepigrafeCodigo: string | null,
   formData: FormData
 ) {
+  const equipo = await requireEquipoActivo();
+  if (!(await verificarCapituloDeEquipo(capituloId, equipo.id))) {
+    throw new Error("Capítulo no encontrado.");
+  }
+
   const nombre = String(formData.get("nombreBloque") ?? "").trim();
   if (!nombre) return;
   await crearBloqueTabla(capituloId, nombre, subepigrafeCodigo);
+  revalidatePath(`/avance/ordenacion/${municipioId}`);
+}
+
+export async function eliminarBloqueTablaAction(municipioId: string, tablaId: string) {
+  const equipo = await requireEquipoActivo();
+  const capituloId = await getCapituloIdDeTabla(tablaId);
+  if (!capituloId || !(await verificarCapituloDeEquipo(capituloId, equipo.id))) {
+    throw new Error("Tabla no encontrada.");
+  }
+
+  await eliminarBloqueTabla(tablaId);
   revalidatePath(`/avance/ordenacion/${municipioId}`);
 }
 
@@ -42,6 +71,12 @@ export async function guardarTablaAction(
   columnas: string[],
   filas: Record<string, string>[]
 ) {
+  const equipo = await requireEquipoActivo();
+  const capituloId = await getCapituloIdDeTabla(tablaId);
+  if (!capituloId || !(await verificarCapituloDeEquipo(capituloId, equipo.id))) {
+    throw new Error("Tabla no encontrada.");
+  }
+
   await guardarTabla(tablaId, columnas, filas);
   revalidatePath(`/avance/ordenacion/${municipioId}`);
 }
@@ -52,15 +87,11 @@ export async function guardarTablaAction(
  * docs/03-flujo-de-usuario.md, "Regenerar desde el origen").
  */
 export async function previsualizarRegeneracionAction(capituloId: string) {
-  const supabase = createServiceClient();
-  const { data: capitulo, error } = await supabase
-    .from("capitulos")
-    .select("*")
-    .eq("id", capituloId)
-    .single();
-  if (error) throw error;
+  const equipo = await requireEquipoActivo();
+  const capitulo = await verificarCapituloDeEquipo(capituloId, equipo.id);
+  if (!capitulo) throw new Error("Capítulo no encontrado.");
 
-  const contenidoNuevo = await regenerarContenido(capitulo);
+  const contenidoNuevo = await regenerarContenido(capitulo, equipo.id);
   if (!contenidoNuevo) {
     return { disponible: false as const };
   }
@@ -69,6 +100,7 @@ export async function previsualizarRegeneracionAction(capituloId: string) {
     return { disponible: true as const, sinCambios: true as const };
   }
 
+  const supabase = createServiceClient();
   const { data: ultimaVersion, error: versionError } = await supabase
     .from("capitulo_versiones")
     .select("tipo")
@@ -92,18 +124,15 @@ export async function aplicarRegeneracionAction(
   capituloId: string,
   contenidoNuevo: string
 ) {
-  const supabase = createServiceClient();
-  const { data: capitulo, error: getError } = await supabase
-    .from("capitulos")
-    .select("motor, codigo")
-    .eq("id", capituloId)
-    .single();
-  if (getError) throw getError;
+  const equipo = await requireEquipoActivo();
+  const capitulo = await verificarCapituloDeEquipo(capituloId, equipo.id);
+  if (!capitulo) throw new Error("Capítulo no encontrado.");
 
   const necesitaRevision =
     capitulo.motor === "rag" || PLANTILLAS_QUE_NECESITAN_REVISION.has(capitulo.codigo);
   const estado: CapituloEstado = necesitaRevision ? "revisar" : "listo";
 
+  const supabase = createServiceClient();
   const { error: updateError } = await supabase
     .from("capitulos")
     .update({ contenido_html: contenidoNuevo, estado, sin_info_motivo: null })
@@ -121,6 +150,11 @@ export async function aplicarRegeneracionAction(
 }
 
 export async function generarTextoTablaAction(municipioId: string, capituloId: string) {
+  const equipo = await requireEquipoActivo();
+  if (!(await verificarCapituloDeEquipo(capituloId, equipo.id))) {
+    throw new Error("Capítulo no encontrado.");
+  }
+
   const tablas = await listTablasDeCapitulo(capituloId);
   const contenido = await generarCapituloTabla(tablas);
   if (!contenido) return;

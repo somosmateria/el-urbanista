@@ -8,6 +8,8 @@ import {
 } from "@/lib/data/diagnosticos";
 import { parseDiagnostico } from "@/lib/diagnostico/parser";
 import { instalarPolyfillDOMMatrix } from "@/lib/diagnostico/dommatrix-polyfill";
+import { getMunicipio } from "@/lib/data/municipios";
+import { requireEquipoActivo } from "@/lib/data/equipos";
 
 export const runtime = "nodejs";
 // Los diagnósticos reales pesan cientos de MB (sobre todo cartografía); la
@@ -20,6 +22,11 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
 
   const diagnostico = await getDiagnosticoPorId(diagnosticoId);
   if (!diagnostico) {
+    return NextResponse.json({ error: "Diagnóstico no encontrado" }, { status: 404 });
+  }
+
+  const equipo = await requireEquipoActivo();
+  if (!(await getMunicipio(diagnostico.municipio_id, equipo.id))) {
     return NextResponse.json({ error: "Diagnóstico no encontrado" }, { status: 404 });
   }
 

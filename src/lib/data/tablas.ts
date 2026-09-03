@@ -81,3 +81,15 @@ export async function guardarTabla(
     .eq("id", tablaId);
   if (updateError) throw updateError;
 }
+
+export async function getCapituloIdDeTabla(tablaId: string): Promise<string | null> {
+  const supabase = createServiceClient();
+  const { data } = await supabase.from("capitulo_tablas").select("capitulo_id").eq("id", tablaId).maybeSingle();
+  return data?.capitulo_id ?? null;
+}
+
+export async function eliminarBloqueTabla(tablaId: string) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("capitulo_tablas").delete().eq("id", tablaId);
+  if (error) throw error;
+}

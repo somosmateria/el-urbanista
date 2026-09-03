@@ -16,9 +16,11 @@ type Preview = {
 export function RegenerarPanel({
   municipioId,
   capituloId,
+  etiqueta = "Regenerar desde el diagnóstico",
 }: {
   municipioId: string;
   capituloId: string;
+  etiqueta?: string;
 }) {
   const [pending, startTransition] = useTransition();
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -123,7 +125,7 @@ export function RegenerarPanel({
           <path d="M4 4v6h6M20 20v-6h-6" />
           <path d="M4 10a8 8 0 0 1 14.5-4.5M20 14a8 8 0 0 1-14.5 4.5" />
         </svg>
-        {pending ? "Comprobando…" : "Regenerar desde el diagnóstico"}
+        {pending ? "Comprobando…" : etiqueta}
       </button>
       {mensaje && <p className="text-[12.5px] text-text-faint mt-2">{mensaje}</p>}
     </div>

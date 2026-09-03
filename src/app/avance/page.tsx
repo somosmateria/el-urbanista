@@ -4,7 +4,7 @@ import { DocCard } from "@/components/DocCard";
 
 export default function AvancePage() {
   return (
-    <AppShell breadcrumb="elurbanista.app / avance">
+    <AppShell>
       <BackLink href="/" />
       <h1 className="font-serif font-medium text-[27px] mb-2">Avance — ¿qué memoria?</h1>
       <p className="text-text-soft text-[14.5px] mb-8 max-w-[540px] leading-relaxed">

@@ -4,7 +4,7 @@ import { crearMunicipioAction } from "./actions";
 
 export default function NuevoMunicipioPage() {
   return (
-    <AppShell breadcrumb="elurbanista.app / avance / ordenacion / nuevo">
+    <AppShell>
       <BackLink href="/avance/ordenacion" />
       <h1 className="font-serif font-medium text-[27px] mb-2">Nuevo municipio</h1>
       <p className="text-text-soft text-[14.5px] mb-8 max-w-[540px] leading-relaxed">

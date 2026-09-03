@@ -59,7 +59,12 @@
   --color-coral-ink: var(--color-coral-ink);
   --color-coral-wash: var(--color-coral-wash);
 
-  --font-serif: var(--font-fraunces);
+  /* Tipografía sans-serif en toda la app — incluida .doc-text (el cuerpo
+     de las memorias generadas), que hasta ahora usaba font-serif. Un solo
+     punto de control: cualquier `font-serif` de Tailwind o `var(--font-serif)`
+     en este archivo pasa a resolver a la misma sans que el resto de la UI,
+     sin tocar componente por componente. */
+  --font-serif: var(--font-plex-sans);
   --font-sans: var(--font-plex-sans);
   --font-mono: var(--font-plex-mono);
 }

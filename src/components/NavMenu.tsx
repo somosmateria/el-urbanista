@@ -5,8 +5,8 @@ import Link from "next/link";
 
 const ENLACES = [
   { href: "/", label: "Inicio" },
-  { href: "/avance/ordenacion", label: "Avance · Municipios" },
-  { href: "/avance/ordenacion/nuevo", label: "+ Nuevo municipio" },
+  { href: "/avance/ordenacion", label: "Municipios" },
+  { href: "/ajustes", label: "Ajustes" },
 ];
 
 export function NavMenu() {
