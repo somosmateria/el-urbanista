@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { BackLink } from "@/components/BackLink";
 import { DiagnosticoUploader } from "@/components/DiagnosticoUploader";
+import { GenerarMemoriaBoton } from "@/components/GenerarMemoriaBoton";
 import { getMunicipio } from "@/lib/data/municipios";
 import { getDiagnosticoDeMunicipio } from "@/lib/data/diagnosticos";
 import { requireEquipoActivo } from "@/lib/data/equipos";
@@ -33,7 +34,7 @@ export default async function NuevoMunicipioDiagnosticoPage({
 
       <div className="font-mono text-[11px] text-text-faint mb-2">DIAGNÓSTICO DE ORIGEN</div>
       <div className="mb-5">
-        <DiagnosticoUploader municipioId={municipioId} yaHayDiagnostico={diagnostico !== null} />
+        <DiagnosticoUploader municipioId={municipioId} nombreArchivoExistente={diagnostico?.nombre_archivo ?? null} />
         {diagnostico?.estado === "error" && (
           <p className="text-[12px] text-coral-ink mt-2">
             El último intento falló: {diagnostico.error_mensaje}
@@ -41,14 +42,7 @@ export default async function NuevoMunicipioDiagnosticoPage({
         )}
       </div>
 
-      <form action={generarMemoriaAction.bind(null, municipioId)}>
-        <button
-          type="submit"
-          className="inline-block bg-violet hover:bg-violet-hover text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg cursor-pointer"
-        >
-          Generar memoria de ordenación
-        </button>
-      </form>
+      <GenerarMemoriaBoton action={generarMemoriaAction.bind(null, municipioId)} />
     </AppShell>
   );
 }

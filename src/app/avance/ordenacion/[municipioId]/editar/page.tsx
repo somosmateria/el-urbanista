@@ -82,7 +82,7 @@ export default async function EditarMunicipioPage({
 
       <div className="font-mono text-[11px] text-text-faint mt-10 mb-2">DIAGNÓSTICO DE ORIGEN</div>
       <div className="mb-10">
-        <DiagnosticoUploader municipioId={municipioId} yaHayDiagnostico={diagnostico !== null} />
+        <DiagnosticoUploader municipioId={municipioId} nombreArchivoExistente={diagnostico?.nombre_archivo ?? null} />
         {diagnostico?.estado === "error" && (
           <p className="text-[12px] text-coral-ink mt-2">
             El último intento falló: {diagnostico.error_mensaje}

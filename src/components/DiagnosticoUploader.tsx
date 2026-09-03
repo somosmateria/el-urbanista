@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Estado = "idle" | "subiendo" | "procesando" | "listo" | "error";
@@ -44,19 +44,57 @@ function subirConProgreso(
   });
 }
 
+const MENSAJES_PROCESANDO = [
+  "Leyendo el PDF…",
+  "Extrayendo el texto…",
+  "Segmentando por epígrafes…",
+  "Casi listo…",
+];
+
 export function DiagnosticoUploader({
   municipioId,
-  yaHayDiagnostico,
+  nombreArchivoExistente,
 }: {
   municipioId: string;
-  yaHayDiagnostico: boolean;
+  nombreArchivoExistente: string | null;
 }) {
   const [estado, setEstado] = useState<Estado>("idle");
   const [nombreArchivo, setNombreArchivo] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [progreso, setProgreso] = useState(0);
+  const [progresoLectura, setProgresoLectura] = useState(0);
+  const [mensajeLectura, setMensajeLectura] = useState(MENSAJES_PROCESANDO[0]);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  // No hay forma de saber el progreso real de lectura (una sola petición
+  // de servidor, sin eventos) — se simula en función del tamaño del
+  // archivo, calibrado contra el tiempo real medido con un PDF de 411 MB
+  // (~3,6 s), y se deja "colgado" cerca del final hasta que llega la
+  // respuesta real, para no prometer un 100% que no ha pasado todavía.
+  useEffect(() => {
+    if (estado !== "procesando") return;
+    setProgresoLectura(0);
+    let mensajeIdx = 0;
+    setMensajeLectura(MENSAJES_PROCESANDO[0]);
+
+    const inicio = Date.now();
+    const intervalo = setInterval(() => {
+      const transcurrido = Date.now() - inicio;
+      const pct = Math.min(92, Math.round((transcurrido / 4000) * 100));
+      setProgresoLectura(pct);
+      const nuevoIdx = Math.min(
+        MENSAJES_PROCESANDO.length - 1,
+        Math.floor(pct / (100 / MENSAJES_PROCESANDO.length))
+      );
+      if (nuevoIdx !== mensajeIdx) {
+        mensajeIdx = nuevoIdx;
+        setMensajeLectura(MENSAJES_PROCESANDO[nuevoIdx]);
+      }
+    }, 150);
+
+    return () => clearInterval(intervalo);
+  }, [estado]);
 
   async function handleFile(file: File) {
     setNombreArchivo(file.name);
@@ -68,7 +106,7 @@ export function DiagnosticoUploader({
       const iniciarRes = await fetch("/api/diagnosticos/iniciar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ municipioId }),
+        body: JSON.stringify({ municipioId, nombreArchivo: file.name }),
       });
       if (!iniciarRes.ok) throw new Error("No se pudo iniciar la subida.");
       const { diagnosticoId, path, token } = await iniciarRes.json();
@@ -82,6 +120,7 @@ export function DiagnosticoUploader({
       const procesarBody = await procesarRes.json();
       if (!procesarRes.ok) throw new Error(procesarBody?.error ?? "Error al procesar el PDF.");
 
+      setProgresoLectura(100);
       setEstado("listo");
       router.refresh();
     } catch (err) {
@@ -89,6 +128,8 @@ export function DiagnosticoUploader({
       setErrorMsg(err instanceof Error ? err.message : "Error inesperado.");
     }
   }
+
+  const nombreMostrado = nombreArchivo ?? nombreArchivoExistente;
 
   return (
     <div>
@@ -110,7 +151,7 @@ export function DiagnosticoUploader({
         className="w-full text-left rounded-xl border border-line bg-surface overflow-hidden hover:border-line-strong disabled:cursor-not-allowed"
       >
         <div className="flex items-center justify-between px-[18px] py-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="w-[38px] h-[38px] rounded-md bg-white/5 flex items-center justify-center shrink-0">
               {estado === "subiendo" || estado === "procesando" ? (
                 <span className="inline-block w-[9px] h-[9px] rounded-full border-[1.5px] border-line-strong border-t-violet animate-spin" />
@@ -126,14 +167,14 @@ export function DiagnosticoUploader({
                 </svg>
               )}
             </div>
-            <div>
-              <div className="font-serif text-[15px]">
-                {nombreArchivo ?? (yaHayDiagnostico ? "Sustituir diagnóstico (PDF)" : "Subir diagnóstico (PDF)")}
+            <div className="min-w-0">
+              <div className="text-[15px] truncate">
+                {nombreMostrado ?? "Subir diagnóstico (PDF)"}
               </div>
               <div className="text-[12.5px] text-text-faint font-mono">
-                {estado === "idle" && (yaHayDiagnostico ? "Ya hay un diagnóstico vinculado" : "Toca para elegir el archivo")}
+                {estado === "idle" && (nombreArchivoExistente ? "Toca para sustituirlo" : "Toca para elegir el archivo")}
                 {estado === "subiendo" && `Subiendo… ${progreso}%`}
-                {estado === "procesando" && "Leyendo y segmentando el diagnóstico…"}
+                {estado === "procesando" && `${mensajeLectura} ${progresoLectura}%`}
                 {estado === "listo" && "Procesado correctamente"}
                 {estado === "error" && "Hubo un error — toca para reintentar"}
               </div>
@@ -145,11 +186,11 @@ export function DiagnosticoUploader({
             </span>
           )}
         </div>
-        {estado === "subiendo" && (
+        {(estado === "subiendo" || estado === "procesando") && (
           <div className="h-[3px] bg-white/5">
             <div
               className="h-full bg-violet transition-[width] duration-150"
-              style={{ width: `${progreso}%` }}
+              style={{ width: `${estado === "subiendo" ? progreso : progresoLectura}%` }}
             />
           </div>
         )}

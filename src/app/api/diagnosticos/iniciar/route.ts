@@ -9,12 +9,13 @@ export async function POST(request: Request) {
   if (!municipioId) {
     return NextResponse.json({ error: "Falta municipioId" }, { status: 400 });
   }
+  const nombreArchivo = String(body?.nombreArchivo ?? "").trim() || null;
 
   const equipo = await requireEquipoActivo();
   if (!(await getMunicipio(municipioId, equipo.id))) {
     return NextResponse.json({ error: "Municipio no encontrado" }, { status: 404 });
   }
 
-  const resultado = await iniciarSubidaDiagnostico(municipioId);
+  const resultado = await iniciarSubidaDiagnostico(municipioId, nombreArchivo);
   return NextResponse.json(resultado);
 }

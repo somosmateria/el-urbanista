@@ -28,7 +28,7 @@ export async function getDiagnosticoDeMunicipio(municipioId: string) {
   return data;
 }
 
-export async function iniciarSubidaDiagnostico(municipioId: string) {
+export async function iniciarSubidaDiagnostico(municipioId: string, nombreArchivo: string | null) {
   const supabase = createServiceClient();
   const path = `${municipioId}/${randomUUID()}.pdf`;
 
@@ -37,7 +37,7 @@ export async function iniciarSubidaDiagnostico(municipioId: string) {
     .insert({
       municipio_id: municipioId,
       storage_path: path,
-      nombre_archivo: null,
+      nombre_archivo: nombreArchivo,
       estado: "procesando",
     })
     .select("*")
