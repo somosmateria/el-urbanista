@@ -2,9 +2,47 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 type Estado = "idle" | "subiendo" | "procesando" | "listo" | "error";
+
+/**
+ * supabase-js no expone progreso de subida (usa fetch, sin eventos de
+ * upload). Estos PDFs pesan cientos de MB, así que replicamos a mano lo que
+ * hace uploadToSignedUrl() por dentro (mismo endpoint, mismo FormData) con
+ * XMLHttpRequest para poder leer xhr.upload.onprogress.
+ */
+function subirConProgreso(
+  file: File,
+  path: string,
+  token: string,
+  onProgreso: (pct: number) => void
+): Promise<void> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const url = new URL(`${supabaseUrl}/storage/v1/object/upload/sign/diagnosticos/${path}`);
+  url.searchParams.set("token", token);
+
+  const body = new FormData();
+  body.append("cacheControl", "3600");
+  body.append("", file);
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url.toString());
+    xhr.setRequestHeader("apikey", anonKey);
+    xhr.setRequestHeader("Authorization", `Bearer ${anonKey}`);
+    xhr.setRequestHeader("x-upsert", "false");
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgreso(Math.round((event.loaded / event.total) * 100));
+    };
+    xhr.onerror = () => reject(new Error("Fallo de red al subir el archivo."));
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`No se pudo subir el archivo (${xhr.status}).`));
+    };
+    xhr.send(body);
+  });
+}
 
 export function DiagnosticoUploader({
   municipioId,
@@ -16,12 +54,14 @@ export function DiagnosticoUploader({
   const [estado, setEstado] = useState<Estado>("idle");
   const [nombreArchivo, setNombreArchivo] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [progreso, setProgreso] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   async function handleFile(file: File) {
     setNombreArchivo(file.name);
     setErrorMsg(null);
+    setProgreso(0);
     setEstado("subiendo");
 
     try {
@@ -33,11 +73,7 @@ export function DiagnosticoUploader({
       if (!iniciarRes.ok) throw new Error("No se pudo iniciar la subida.");
       const { diagnosticoId, path, token } = await iniciarRes.json();
 
-      const supabase = createBrowserSupabaseClient();
-      const { error: uploadError } = await supabase.storage
-        .from("diagnosticos")
-        .uploadToSignedUrl(path, token, file);
-      if (uploadError) throw uploadError;
+      await subirConProgreso(file, path, token, setProgreso);
 
       setEstado("procesando");
       const procesarRes = await fetch(`/api/diagnosticos/${diagnosticoId}/procesar`, {
@@ -96,7 +132,7 @@ export function DiagnosticoUploader({
               </div>
               <div className="text-[12.5px] text-text-faint font-mono">
                 {estado === "idle" && (yaHayDiagnostico ? "Ya hay un diagnóstico vinculado" : "Toca para elegir el archivo")}
-                {estado === "subiendo" && "Subiendo…"}
+                {estado === "subiendo" && `Subiendo… ${progreso}%`}
                 {estado === "procesando" && "Leyendo y segmentando el diagnóstico…"}
                 {estado === "listo" && "Procesado correctamente"}
                 {estado === "error" && "Hubo un error — toca para reintentar"}
@@ -109,6 +145,14 @@ export function DiagnosticoUploader({
             </span>
           )}
         </div>
+        {estado === "subiendo" && (
+          <div className="h-[3px] bg-white/5">
+            <div
+              className="h-full bg-violet transition-[width] duration-150"
+              style={{ width: `${progreso}%` }}
+            />
+          </div>
+        )}
       </button>
 
       {errorMsg && <p className="text-[12px] text-coral-ink mt-2">{errorMsg}</p>}
