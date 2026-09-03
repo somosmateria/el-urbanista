@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { PDFParse } from "pdf-parse";
 import {
   descargarDiagnosticoDesdeStorage,
   getDiagnosticoPorId,
@@ -8,6 +7,7 @@ import {
   marcarDiagnosticoListo,
 } from "@/lib/data/diagnosticos";
 import { parseDiagnostico } from "@/lib/diagnostico/parser";
+import { instalarPolyfillDOMMatrix } from "@/lib/diagnostico/dommatrix-polyfill";
 
 export const runtime = "nodejs";
 // Los diagnósticos reales pesan cientos de MB (sobre todo cartografía); la
@@ -24,6 +24,13 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   }
 
   try {
+    // Debe instalarse antes de cargar pdf-parse: ese módulo referencia
+    // DOMMatrix en su propio ámbito superior al importarse, así que un
+    // `import` estático de pdf-parse (que Next evalúa antes que cualquier
+    // otra línea de este archivo) llegaría demasiado tarde.
+    instalarPolyfillDOMMatrix();
+    const { PDFParse } = await import("pdf-parse");
+
     const buffer = await descargarDiagnosticoDesdeStorage(diagnostico.storage_path);
 
     const parser = new PDFParse({ data: buffer });
