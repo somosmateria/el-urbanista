@@ -110,3 +110,27 @@ mark {
   color: var(--color-text-faint);
   font-family: var(--font-mono);
 }
+
+/* Tabla de propuesta técnica (Motor 3) ya generada — ver src/lib/motores/tabla. */
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  margin-top: 12px;
+  font-family: var(--font-sans);
+}
+
+table.data th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--color-text-faint);
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--color-line-strong);
+}
+
+table.data td {
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--color-line);
+}

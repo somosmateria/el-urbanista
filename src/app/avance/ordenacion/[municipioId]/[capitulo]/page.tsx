@@ -1,8 +1,12 @@
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { BackLink } from "@/components/BackLink";
+import { DataTableEditor } from "@/components/DataTableEditor";
 import { getMunicipio, getCapituloPorCodigo } from "@/lib/data/municipios";
-import { marcarMotivoAction } from "./actions";
+import { listTablasDeCapitulo } from "@/lib/data/tablas";
+import { marcarMotivoAction, crearBloqueTablaAction, generarTextoTablaAction } from "./actions";
+
+export const dynamic = "force-dynamic";
 
 export default async function CapituloPage({
   params,
@@ -16,6 +20,9 @@ export default async function CapituloPage({
   const capitulo = await getCapituloPorCodigo(municipioId, codigo);
   if (!capitulo) notFound();
 
+  const tablas = capitulo.motor === "tabla" ? await listTablasDeCapitulo(capitulo.id) : [];
+  const hayFilas = tablas.some((t) => t.filas.length > 0);
+
   return (
     <AppShell
       breadcrumb={`elurbanista.app / avance / ordenacion / ${municipio.nombre.toLowerCase()} / ${capitulo.codigo.toLowerCase()}`}
@@ -27,20 +34,50 @@ export default async function CapituloPage({
 
       {capitulo.motor === "tabla" && (
         <>
-          <p className="text-text-soft text-[14.5px] mb-8 max-w-[540px] leading-relaxed">
+          <p className="text-text-soft text-[14.5px] mb-6 max-w-[540px] leading-relaxed">
             Esta propuesta no está en el diagnóstico. Añade los elementos que definís
             para el municipio.
           </p>
-          <div className="rounded-xl border border-line bg-surface p-6">
-            <div className="font-mono text-[11px] text-text-faint mb-3">
-              TABLA DE PROPUESTA TÉCNICA
-            </div>
-            <p className="text-text-faint text-[13.5px]">
-              El editor de tabla (añadir filas/columnas y bloques) llega en la siguiente
-              fase del desarrollo. Por ahora este capítulo se queda en “Tu aportación”
-              hasta entonces.
-            </p>
-          </div>
+
+          {capitulo.contenido_html && (
+            <div
+              className="rounded-xl border border-line bg-surface p-7 mb-6"
+              dangerouslySetInnerHTML={{ __html: capitulo.contenido_html }}
+            />
+          )}
+
+          {tablas.map((tabla) => (
+            <DataTableEditor key={tabla.id} municipioId={municipioId} tabla={tabla} />
+          ))}
+
+          <form
+            action={crearBloqueTablaAction.bind(null, municipioId, capitulo.id)}
+            className="flex items-center gap-3 mb-6"
+          >
+            <input
+              name="nombreBloque"
+              type="text"
+              placeholder="Ej. Áreas recreativas propuestas"
+              className="flex-1 box-border bg-surface border border-line-strong rounded-lg px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
+            />
+            <button
+              type="submit"
+              className="text-[12.5px] px-3.5 py-2 rounded-lg border border-line-strong text-text-soft hover:bg-surface-hi cursor-pointer whitespace-nowrap"
+            >
+              + Nuevo bloque de tabla
+            </button>
+          </form>
+
+          {hayFilas && (
+            <form action={generarTextoTablaAction.bind(null, municipioId, capitulo.id)}>
+              <button
+                type="submit"
+                className="inline-block bg-violet hover:bg-violet-hover text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg cursor-pointer"
+              >
+                {capitulo.contenido_html ? "Regenerar texto con los cambios" : "Generar texto"}
+              </button>
+            </form>
+          )}
         </>
       )}
 
