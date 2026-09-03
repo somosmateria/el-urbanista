@@ -1,7 +1,7 @@
 import "server-only";
 import { generarCapituloRAG } from "@/lib/motores/rag";
 import { PLANTILLAS } from "@/lib/motores/plantilla";
-import { getMunicipio } from "@/lib/data/municipios";
+import { getMunicipio, asegurarPlanVigente } from "@/lib/data/municipios";
 import { getDiagnosticoDeMunicipio } from "@/lib/data/diagnosticos";
 import type { CapituloRow } from "@/lib/supabase/types";
 
@@ -13,7 +13,7 @@ import type { CapituloRow } from "@/lib/supabase/types";
  * capítulos de motor "tabla" nunca se regeneran automáticamente.
  */
 export async function regenerarContenido(capitulo: CapituloRow): Promise<string | null> {
-  const municipio = await getMunicipio(capitulo.municipio_id);
+  let municipio = await getMunicipio(capitulo.municipio_id);
   if (!municipio) return null;
 
   if (capitulo.motor === "rag") {
@@ -27,6 +27,10 @@ export async function regenerarContenido(capitulo: CapituloRow): Promise<string 
     if (!generador) return null;
     const diagnostico = await getDiagnosticoDeMunicipio(capitulo.municipio_id);
     const diagnosticoId = diagnostico?.estado === "listo" ? diagnostico.id : null;
+    // Municipios ya existentes de antes de que esto se extrajera solos
+    // (ver asegurarPlanVigente) también se benefician al darle a
+    // "Regenerar" en MO.1.
+    municipio = await asegurarPlanVigente(municipio, diagnosticoId);
     return generador(municipio, diagnosticoId);
   }
 

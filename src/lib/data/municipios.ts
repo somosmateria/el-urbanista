@@ -1,7 +1,8 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
-import type { CapituloEstado, MotorTipo } from "@/lib/supabase/types";
+import type { CapituloEstado, MotorTipo, MunicipioRow } from "@/lib/supabase/types";
 import { PLANTILLAS, PLANTILLAS_QUE_NECESITAN_REVISION } from "@/lib/motores/plantilla";
+import { extraerPlanVigente } from "@/lib/motores/plantilla/mo1";
 import { generarCapituloRAG } from "@/lib/motores/rag";
 import { getDiagnosticoDeMunicipio } from "@/lib/data/diagnosticos";
 
@@ -122,6 +123,34 @@ export async function eliminarMunicipio(id: string) {
   if (error) throw error;
 }
 
+/**
+ * Si al municipio le faltan plan_vigente/fecha_plan_vigente (los datos que
+ * MO.1 necesita) y ya hay diagnóstico, intenta rellenarlos extrayéndolos
+ * de él y los persiste — así quedan visibles y corregibles en "Editar
+ * municipio" en vez de vivir solo dentro de la generación de MO.1. Nunca
+ * pisa un valor que el técnico ya haya escrito a mano.
+ */
+export async function asegurarPlanVigente(
+  municipio: MunicipioRow,
+  diagnosticoId: string | null
+): Promise<MunicipioRow> {
+  if (municipio.plan_vigente && municipio.fecha_plan_vigente) return municipio;
+  if (!diagnosticoId) return municipio;
+
+  const extraido = await extraerPlanVigente(diagnosticoId);
+  if (!extraido) return municipio;
+
+  const supabase = createServiceClient();
+  const { data: actualizado, error } = await supabase
+    .from("municipios")
+    .update({ plan_vigente: extraido.planVigente, fecha_plan_vigente: extraido.fechaPlanVigente })
+    .eq("id", municipio.id)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return actualizado;
+}
+
 export async function generarCapitulosIniciales(municipioId: string) {
   const supabase = createServiceClient();
 
@@ -133,11 +162,12 @@ export async function generarCapitulosIniciales(municipioId: string) {
   if (existenError) throw existenError;
   if (yaExisten.length > 0) return;
 
-  const municipio = await getMunicipio(municipioId);
+  let municipio = await getMunicipio(municipioId);
   if (!municipio) throw new Error("Municipio no encontrado");
 
   const diagnostico = await getDiagnosticoDeMunicipio(municipioId);
   const diagnosticoId = diagnostico?.estado === "listo" ? diagnostico.id : null;
+  municipio = await asegurarPlanVigente(municipio, diagnosticoId);
 
   const { data: mapeo, error: mapeoError } = await supabase
     .from("mapeo_capitulos")

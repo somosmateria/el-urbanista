@@ -1,4 +1,6 @@
 import type { MunicipioRow } from "@/lib/supabase/types";
+import { getSeccionPorCodigo } from "@/lib/data/diagnosticos";
+import { getAnthropicClient, MODELO_GENERACION } from "@/lib/anthropic";
 
 /**
  * MO.1 · 1.1 Conveniencia y oportunidad del PGOM.
@@ -116,6 +118,69 @@ urbana, la economía verde y la inclusión social.</p>
 </div>
 <div class="src-note">PLANTILLA — texto normativo común, sin datos del diagnóstico</div>
 `.trim();
+}
+
+/**
+ * MO.1 se queda en "sin_info" siempre que falten `plan_vigente` o
+ * `fecha_plan_vigente` del municipio — pero esos dos datos casi siempre
+ * están ya en el propio diagnóstico (el nombre/año del planeamiento
+ * vigente sale al hablar de sus modificaciones, "2.1"; la fecha exacta de
+ * aprobación definitiva suele salir de pasada al hablar del catálogo de
+ * patrimonio del planeamiento vigente, "4.4.2"). En vez de exigir que el
+ * técnico los teclee a mano antes de poder generar nada, se extraen con
+ * una llamada a Claude acotada a devolver solo esos dos datos — mismo
+ * mecanismo puntual que MO.11 usa para los municipios colindantes, no
+ * Motor 2 completo.
+ *
+ * Devuelve null si no se encuentra el dato con confianza — nunca inventa
+ * una fecha.
+ */
+export async function extraerPlanVigente(
+  diagnosticoId: string
+): Promise<{ planVigente: string; fechaPlanVigente: string } | null> {
+  const [modificaciones, catalogoPatrimonio] = await Promise.all([
+    getSeccionPorCodigo(diagnosticoId, "2.1"),
+    getSeccionPorCodigo(diagnosticoId, "4.4.2"),
+  ]);
+  const fragmentos = [modificaciones, catalogoPatrimonio].filter(
+    (s): s is NonNullable<typeof s> => s !== null
+  );
+  if (fragmentos.length === 0) return null;
+
+  const anthropic = getAnthropicClient();
+  const respuesta = await anthropic.messages.create({
+    model: MODELO_GENERACION,
+    max_tokens: 150,
+    system: `Extraes datos puntuales de fragmentos de un Diagnóstico urbanístico, nunca
+redactas ni interpretas.
+
+Busca el nombre/referencia del planeamiento general actualmente vigente en el
+municipio (p.ej. "PGOU de 2005", "Normas Subsidiarias de 1998") y su fecha de
+APROBACIÓN DEFINITIVA original — no la de modificaciones puntuales
+posteriores.
+
+Responde EXACTAMENTE en este formato de dos líneas, sin nada más:
+PLAN: <cómo debería citarse en una frase, con artículo, p.ej. "el PGOU de 2005" o "las Normas Subsidiarias de 1998">
+FECHA: <YYYY-MM-DD>
+
+Si no encuentras el dato con confianza en el fragmento, responde exactamente: NINGUNO`,
+    messages: [
+      {
+        role: "user",
+        content: fragmentos.map((s) => `--- Sección "${s.titulo}" ---\n${s.texto}`).join("\n\n"),
+      },
+    ],
+  });
+
+  const texto = respuesta.content
+    .filter((b) => b.type === "text")
+    .map((b) => b.text)
+    .join("")
+    .trim();
+
+  const match = texto.match(/PLAN:\s*(.+)\s*\nFECHA:\s*(\d{4}-\d{2}-\d{2})/);
+  if (!match) return null;
+  return { planVigente: match[1].trim(), fechaPlanVigente: match[2] };
 }
 
 function calcularAnosTranscurridos(fechaPlanVigente: string): number | null {

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { BackLink } from "@/components/BackLink";
 import { DiagnosticoUploader } from "@/components/DiagnosticoUploader";
+import { ReprocesarDiagnosticoBoton } from "@/components/ReprocesarDiagnosticoBoton";
 import { EliminarMunicipioBoton } from "@/components/EliminarMunicipioBoton";
 import { getMunicipio } from "@/lib/data/municipios";
 import { getDiagnosticoDeMunicipio } from "@/lib/data/diagnosticos";
@@ -48,7 +49,7 @@ export default async function EditarMunicipioPage({
 
         <div className="rounded-xl border border-line bg-surface p-6 mb-5">
           <label className="block font-mono text-[11px] text-text-faint mb-3">
-            PLAN VIGENTE (OPCIONAL)
+            PLAN VIGENTE (OPCIONAL — SE INTENTA EXTRAER DEL DIAGNÓSTICO SI LO DEJAS EN BLANCO)
           </label>
           <input
             name="plan_vigente"
@@ -87,6 +88,7 @@ export default async function EditarMunicipioPage({
             El último intento falló: {diagnostico.error_mensaje}
           </p>
         )}
+        {diagnostico?.estado === "listo" && <ReprocesarDiagnosticoBoton diagnosticoId={diagnostico.id} />}
       </div>
 
       <div className="rounded-xl border border-coral/40 bg-coral-wash p-6 flex items-center justify-between gap-4">
