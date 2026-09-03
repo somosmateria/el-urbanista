@@ -33,8 +33,11 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isLoginPage = request.nextUrl.pathname.startsWith("/login");
+  // /auth/confirm resuelve el enlace de invitación/recuperación ANTES de que
+  // exista sesión — no puede exigir login para acceder a él.
+  const isAuthCallback = request.nextUrl.pathname.startsWith("/auth");
 
-  if (!user && !isLoginPage) {
+  if (!user && !isLoginPage && !isAuthCallback) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", request.nextUrl.pathname);
