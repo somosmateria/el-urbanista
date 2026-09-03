@@ -6,6 +6,7 @@ import type { SinInfoMotivo } from "@/lib/supabase/types";
 import { crearBloqueTabla, guardarTabla, listTablasDeCapitulo } from "@/lib/data/tablas";
 import { generarCapituloTabla } from "@/lib/motores/tabla";
 import { regenerarContenido } from "@/lib/motores/regenerar";
+import { PLANTILLAS_QUE_NECESITAN_REVISION } from "@/lib/motores/plantilla";
 import type { CapituloEstado } from "@/lib/supabase/types";
 
 export async function marcarMotivoAction(
@@ -93,12 +94,14 @@ export async function aplicarRegeneracionAction(
   const supabase = createServiceClient();
   const { data: capitulo, error: getError } = await supabase
     .from("capitulos")
-    .select("motor")
+    .select("motor, codigo")
     .eq("id", capituloId)
     .single();
   if (getError) throw getError;
 
-  const estado: CapituloEstado = capitulo.motor === "rag" ? "revisar" : "listo";
+  const necesitaRevision =
+    capitulo.motor === "rag" || PLANTILLAS_QUE_NECESITAN_REVISION.has(capitulo.codigo);
+  const estado: CapituloEstado = necesitaRevision ? "revisar" : "listo";
 
   const { error: updateError } = await supabase
     .from("capitulos")

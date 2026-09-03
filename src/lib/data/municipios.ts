@@ -1,7 +1,7 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { CapituloEstado, MotorTipo } from "@/lib/supabase/types";
-import { PLANTILLAS } from "@/lib/motores/plantilla";
+import { PLANTILLAS, PLANTILLAS_QUE_NECESITAN_REVISION } from "@/lib/motores/plantilla";
 import { generarCapituloRAG } from "@/lib/motores/rag";
 import { getDiagnosticoDeMunicipio } from "@/lib/data/diagnosticos";
 
@@ -160,13 +160,18 @@ export async function generarCapitulosIniciales(municipioId: string) {
       // vez de fabricar un texto a medias (ver src/lib/motores/plantilla/index.ts).
       const generador = PLANTILLAS[entrada.capitulo_codigo];
       const contenido = generador ? await generador(municipio, diagnosticoId) : null;
+      const necesitaRevision = PLANTILLAS_QUE_NECESITAN_REVISION.has(entrada.capitulo_codigo);
 
       return {
         municipio_id: municipioId,
         codigo: entrada.capitulo_codigo,
         titulo: entrada.titulo_canonico,
         motor,
-        estado: (contenido ? "listo" : "sin_info") as CapituloEstado,
+        estado: (contenido
+          ? necesitaRevision
+            ? "revisar"
+            : "listo"
+          : "sin_info") as CapituloEstado,
         sin_info_motivo: contenido ? null : ("falta_dato" as const),
         contenido_html: contenido,
         orden: entrada.orden,
