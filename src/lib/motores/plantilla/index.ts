@@ -1,5 +1,7 @@
 import type { MunicipioRow } from "@/lib/supabase/types";
 import { generarMO1 } from "./mo1";
+import { generarMO9 } from "./mo9";
+import { generarMO12 } from "./mo12";
 
 /**
  * Registro de plantillas implementadas por código de capítulo. Un capítulo
@@ -9,4 +11,6 @@ import { generarMO1 } from "./mo1";
  */
 export const PLANTILLAS: Record<string, (municipio: MunicipioRow) => string | null> = {
   "MO.1": generarMO1,
+  "MO.9": generarMO9,
+  "MO.12": generarMO12,
 };
