@@ -166,11 +166,11 @@ export async function generarCapitulosIniciales(municipioId: string) {
 
       if (motor === "rag") {
         // Motor RAG dirigido: reformatea subepígrafe a subepígrafe el texto
-        // ya verificado del diagnóstico (ver src/lib/motores/rag). Sin
-        // diagnóstico procesado, no hay nada que reformatear.
-        const contenido = diagnosticoId
-          ? await generarCapituloRAG(entrada.capitulo_codigo, diagnosticoId)
-          : null;
+        // ya verificado del diagnóstico (ver src/lib/motores/rag). Un
+        // capítulo mixto como MO.3 puede tener también subepígrafes de
+        // motor "plantilla" que no necesitan diagnóstico — por eso se
+        // llama igual aunque diagnosticoId sea null.
+        const contenido = await generarCapituloRAG(entrada.capitulo_codigo, diagnosticoId, municipio);
 
         return {
           municipio_id: municipioId,

@@ -8,6 +8,8 @@ import { generarMO9 } from "./mo9";
 import { generarMO10 } from "./mo10";
 import { generarMO11 } from "./mo11";
 import { generarMO12 } from "./mo12";
+import { generarMO3_1_4 } from "./mo3-1-4";
+import { generarMO3_3 } from "./mo3-3";
 
 /**
  * Registro de plantillas implementadas por código de capítulo. Un capítulo
@@ -32,6 +34,10 @@ export const PLANTILLAS: Record<
   "MO.10": generarMO10,
   "MO.11": generarMO11,
   "MO.12": generarMO12,
+  // Subepígrafes de MO.3 (capítulo mixto rag+plantilla+tabla) — el motor
+  // RAG los consulta aquí mismo por su código de subepígrafe.
+  "MO.3.1.4": generarMO3_1_4,
+  "MO.3.3": generarMO3_3,
 };
 
 /**

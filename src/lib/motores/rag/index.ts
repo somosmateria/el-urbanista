@@ -2,7 +2,8 @@ import { getSubepigrafes } from "@/lib/data/mapeo";
 import { getSeccionPorCodigo } from "@/lib/data/diagnosticos";
 import { sinPrefijoMI } from "@/lib/diagnostico/parser";
 import { getAnthropicClient, MODELO_GENERACION } from "@/lib/anthropic";
-import type { MapeoCapituloRow } from "@/lib/supabase/types";
+import { PLANTILLAS } from "@/lib/motores/plantilla";
+import type { MapeoCapituloRow, MunicipioRow } from "@/lib/supabase/types";
 
 const SYSTEM_PROMPT = `Eres el motor de "RAG dirigido" de El Urbanista, una herramienta de
 redacción de Memorias de Ordenación urbanística (Avance PGOM/PBOM) para un estudio de
@@ -108,25 +109,35 @@ async function generarBloqueSubepigrafe(
 
 /**
  * Motor 2 — RAG dirigido. Genera el contenido de un capítulo compuesto por
- * subepígrafes (hoy: MO.3 y MO.6) volcando, subepígrafe a subepígrafe, el
- * fragmento del diagnóstico ya mapeado para él. Los subepígrafes cuyo motor
- * no es "rag" (plantilla, tabla) o cuya sección no se encuentra en el
- * diagnóstico se omiten — no bloquean el resto ni se rellenan con texto
- * inventado (ver docs/02-arquitectura-motores.md).
+ * subepígrafes (hoy: MO.3 y MO.6), en el orden configurado en
+ * mapeo_capitulos. Cada subepígrafe se resuelve según su propio motor:
+ * "rag" vuelca el fragmento del diagnóstico ya mapeado; "plantilla" busca
+ * un generador en el registro de `motores/plantilla` (mismo mecanismo que
+ * los capítulos plantilla de nivel superior, solo que aquí se indexa por
+ * código de subepígrafe, p.ej. "MO.3.1.4"). Los subepígrafes de motor
+ * "tabla", o "plantilla" sin generador todavía escrito, o "rag" cuya
+ * sección no se encuentra en el diagnóstico, se omiten — no bloquean el
+ * resto ni se rellenan con texto inventado (ver docs/02-arquitectura-motores.md).
  *
  * Devuelve null si ningún subepígrafe pudo generarse (el capítulo se queda
  * en "sin_info").
  */
 export async function generarCapituloRAG(
   capituloCodigo: string,
-  diagnosticoId: string
+  diagnosticoId: string | null,
+  municipio: MunicipioRow
 ): Promise<string | null> {
   const subepigrafes = await getSubepigrafes(capituloCodigo);
-  const deTipoRag = subepigrafes.filter((s) => s.motor === "rag");
-  if (deTipoRag.length === 0) return null;
 
   const bloques = await Promise.all(
-    deTipoRag.map((s) => generarBloqueSubepigrafe(s, diagnosticoId))
+    subepigrafes.map((s) => {
+      if (s.motor === "rag") return diagnosticoId ? generarBloqueSubepigrafe(s, diagnosticoId) : null;
+      if (s.motor === "plantilla") {
+        const generador = PLANTILLAS[s.capitulo_codigo];
+        return generador ? generador(municipio, diagnosticoId) : null;
+      }
+      return null; // motor "tabla": no soportado todavía dentro de un capítulo mixto
+    })
   );
 
   const bloquesGenerados = bloques.filter((b): b is string => b !== null);
