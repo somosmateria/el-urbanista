@@ -2,7 +2,9 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { BackLink } from "@/components/BackLink";
 import { ChapterRow } from "@/components/ChapterRow";
+import { EliminarMunicipioBoton } from "@/components/EliminarMunicipioBoton";
 import { getMunicipio, listCapitulosDeMunicipio } from "@/lib/data/municipios";
+import { eliminarMunicipioAction } from "./editar/actions";
 
 export default async function MunicipioPage({
   params,
@@ -36,6 +38,7 @@ export default async function MunicipioPage({
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <EliminarMunicipioBoton action={eliminarMunicipioAction.bind(null, municipio.id)} />
           <a
             href={`/avance/ordenacion/${municipio.id}/editar`}
             className="whitespace-nowrap inline-flex items-center border border-line-strong hover:border-text-faint text-text-soft text-[13.5px] font-medium px-4 py-2.5 rounded-lg"

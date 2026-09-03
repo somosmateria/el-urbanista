@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { BackLink } from "@/components/BackLink";
 import { DiagnosticoUploader } from "@/components/DiagnosticoUploader";
-import { EliminarMunicipioForm } from "@/components/EliminarMunicipioForm";
+import { EliminarMunicipioBoton } from "@/components/EliminarMunicipioBoton";
 import { getMunicipio } from "@/lib/data/municipios";
 import { getDiagnosticoDeMunicipio } from "@/lib/data/diagnosticos";
 import { actualizarMunicipioAction, eliminarMunicipioAction } from "./actions";
@@ -89,10 +89,16 @@ export default async function EditarMunicipioPage({
         )}
       </div>
 
-      <EliminarMunicipioForm
-        nombreMunicipio={municipio.nombre}
-        action={eliminarMunicipioAction.bind(null, municipioId)}
-      />
+      <div className="rounded-xl border border-coral/40 bg-coral-wash p-6 flex items-center justify-between gap-4">
+        <div>
+          <div className="font-mono text-[11px] text-coral-ink mb-1">ZONA DE PELIGRO</div>
+          <p className="text-[13px] text-text-soft max-w-[440px] leading-relaxed">
+            Elimina el municipio, sus capítulos, historial y diagnóstico. No se puede
+            deshacer.
+          </p>
+        </div>
+        <EliminarMunicipioBoton action={eliminarMunicipioAction.bind(null, municipioId)} />
+      </div>
     </AppShell>
   );
 }
