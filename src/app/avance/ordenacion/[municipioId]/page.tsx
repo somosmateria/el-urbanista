@@ -35,7 +35,14 @@ export default async function MunicipioPage({
               : `${abiertos} ${abiertos === 1 ? "sigue" : "siguen"} abierto${abiertos === 1 ? "" : "s"}.`}
           </p>
         </div>
-        {hayAlgoDescargable ? (
+        <div className="flex items-center gap-2 shrink-0">
+          <a
+            href={`/avance/ordenacion/${municipio.id}/editar`}
+            className="whitespace-nowrap inline-flex items-center border border-line-strong hover:border-text-faint text-text-soft text-[13.5px] font-medium px-4 py-2.5 rounded-lg"
+          >
+            Editar
+          </a>
+          {hayAlgoDescargable ? (
           <a
             href={`/api/municipios/${municipio.id}/docx`}
             className="whitespace-nowrap inline-flex items-center bg-violet hover:bg-violet-hover text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg"
@@ -66,7 +73,8 @@ export default async function MunicipioPage({
             </svg>
             Descargar todo
           </button>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="rounded-xl border border-line bg-surface overflow-hidden">

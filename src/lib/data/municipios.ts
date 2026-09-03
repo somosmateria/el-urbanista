@@ -91,6 +91,37 @@ export async function crearMunicipio(input: {
   return municipio;
 }
 
+export async function actualizarMunicipio(
+  id: string,
+  input: { nombre: string; planVigente?: string | null; fechaPlanVigente?: string | null }
+) {
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("municipios")
+    .update({
+      nombre: input.nombre,
+      plan_vigente: input.planVigente ?? null,
+      fecha_plan_vigente: input.fechaPlanVigente ?? null,
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function eliminarMunicipio(id: string) {
+  const supabase = createServiceClient();
+
+  // El borrado del municipio arrastra en cascada (FK on delete cascade)
+  // capítulos, versiones, tablas y diagnósticos — pero no los PDF en
+  // Storage, que hay que borrar aparte.
+  const { data: archivos } = await supabase.storage.from("diagnosticos").list(id);
+  if (archivos && archivos.length > 0) {
+    await supabase.storage.from("diagnosticos").remove(archivos.map((a) => `${id}/${a.name}`));
+  }
+
+  const { error } = await supabase.from("municipios").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function generarCapitulosIniciales(municipioId: string) {
   const supabase = createServiceClient();
 

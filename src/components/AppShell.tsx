@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { signOutAction } from "@/app/login/actions";
+import { NavMenu } from "@/components/NavMenu";
 
 export function AppShell({
   breadcrumb,
@@ -11,6 +12,7 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-rail">
       <header className="border-b border-line px-8 py-4 flex items-center gap-4">
+        <NavMenu />
         <Link href="/" className="font-serif text-lg text-text">
           El Urbanista
         </Link>
