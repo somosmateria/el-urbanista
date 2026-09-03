@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "src/app/api/diagnosticos/[id]/procesar/route.ts": {
+      "memory": 3009,
+      "maxDuration": 300
+    }
+  }
+}
