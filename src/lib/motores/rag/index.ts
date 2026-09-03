@@ -26,27 +26,52 @@ Reglas estrictas:
 - Si el fragmento no trae suficiente información para el subepígrafe, redacta con lo que
   hay — no completes con conocimiento general de urbanismo que no esté en el fragmento.`;
 
-function buildUserPrompt(tituloSubepigrafe: string, tituloSeccion: string, textoDiagnostico: string) {
+function buildUserPrompt(
+  tituloSubepigrafe: string,
+  secciones: { titulo: string; texto: string }[]
+) {
+  const fragmentos = secciones
+    .map(
+      (s, i) => `Fragmento ${i + 1} — sección "${s.titulo}":
+"""
+${s.texto}
+"""`
+    )
+    .join("\n\n");
+
   return `Subepígrafe de la Memoria de Ordenación: "${tituloSubepigrafe}"
 
-Fragmento del Diagnóstico (sección "${tituloSeccion}"), fuente verificada para este
-subepígrafe:
-"""
-${textoDiagnostico}
-"""
+${secciones.length > 1 ? "Fragmentos del Diagnóstico" : "Fragmento del Diagnóstico"}, fuente(s)
+verificada(s) para este subepígrafe:
 
-Redacta el contenido de este subepígrafe a partir únicamente de ese fragmento.`;
+${fragmentos}
+
+Redacta el contenido de este subepígrafe a partir únicamente de ${secciones.length > 1 ? "esos fragmentos, combinándolos" : "ese fragmento"}.`;
 }
 
+/**
+ * `seccion_diagnostico_codigo` admite varios códigos separados por comas
+ * cuando un subepígrafe de la Memoria agrupa temas que en el Diagnóstico
+ * están repartidos en varias secciones (p.ej. MO.3.1.1 combina RENPA,
+ * montes públicos, vías pecuarias y patrimonio — cuatro secciones
+ * distintas del Diagnóstico, MI.4.1 a MI.4.4).
+ */
 async function generarBloqueSubepigrafe(
   subepigrafe: MapeoCapituloRow,
   diagnosticoId: string
 ): Promise<string | null> {
   if (!subepigrafe.seccion_diagnostico_codigo) return null;
 
-  const codigo = sinPrefijoMI(subepigrafe.seccion_diagnostico_codigo);
-  const seccion = await getSeccionPorCodigo(diagnosticoId, codigo);
-  if (!seccion) return null; // "sección no encontrada" — no se fabrica contenido
+  const codigos = subepigrafe.seccion_diagnostico_codigo
+    .split(",")
+    .map((c) => sinPrefijoMI(c.trim()))
+    .filter(Boolean);
+
+  const secciones = (
+    await Promise.all(codigos.map((codigo) => getSeccionPorCodigo(diagnosticoId, codigo)))
+  ).filter((s): s is NonNullable<typeof s> => s !== null); // secciones no encontradas se omiten, no se fabrica contenido
+
+  if (secciones.length === 0) return null;
 
   const anthropic = getAnthropicClient();
   const respuesta = await anthropic.messages.create({
@@ -56,7 +81,10 @@ async function generarBloqueSubepigrafe(
     messages: [
       {
         role: "user",
-        content: buildUserPrompt(subepigrafe.titulo_canonico, seccion.titulo ?? seccion.codigo, seccion.texto),
+        content: buildUserPrompt(
+          subepigrafe.titulo_canonico,
+          secciones.map((s) => ({ titulo: s.titulo ?? s.codigo, texto: s.texto }))
+        ),
       },
     ],
   });
@@ -70,10 +98,11 @@ async function generarBloqueSubepigrafe(
   if (!textoGenerado) return null;
 
   const numeroSubepigrafe = subepigrafe.capitulo_codigo.replace(/^MO\./, "");
+  const fuentes = secciones.map((s) => `${s.titulo ?? ""} · MI.${s.codigo}`).join(" · ");
   return `
 <div class="doc-eyebrow">${numeroSubepigrafe} · ${subepigrafe.titulo_canonico.toUpperCase()}</div>
 <div class="doc-text">${textoGenerado}</div>
-<div class="src-note">FUENTE — Diagnóstico · ${seccion.titulo ?? ""} · MI.${seccion.codigo}</div>
+<div class="src-note">FUENTE — Diagnóstico · ${fuentes}</div>
 `.trim();
 }
 
