@@ -3,6 +3,10 @@ import { BackLink } from "@/components/BackLink";
 import { TownRow, NewTownRow } from "@/components/TownRow";
 import { listMunicipiosConProgreso } from "@/lib/data/municipios";
 
+// La lista de municipios cambia con cada alta/generación — nunca debe
+// congelarse como página estática en build-time.
+export const dynamic = "force-dynamic";
+
 export default async function OrdenacionPage() {
   const municipios = await listMunicipiosConProgreso();
 
