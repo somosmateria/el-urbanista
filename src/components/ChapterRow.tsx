@@ -35,26 +35,37 @@ export function ChapterRow({
         </span>
       </Link>
       <div className="w-10 pr-[14px] shrink-0 text-right">
-        <button
-          disabled={!puedeDescargar}
-          title={puedeDescargar ? `Descargar ${capitulo.codigo}` : "Completa el capítulo primero"}
-          className={clsx(
-            "w-7 h-7 rounded-md inline-flex items-center justify-center",
-            puedeDescargar ? "hover:bg-surface-hi cursor-pointer" : "cursor-not-allowed"
-          )}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            strokeWidth={1.8}
-            className={clsx(
-              "w-[15px] h-[15px]",
-              puedeDescargar ? "stroke-text-faint" : "stroke-text-faint opacity-35"
-            )}
+        {puedeDescargar ? (
+          <a
+            href={`/api/capitulos/${capitulo.id}/docx`}
+            title={`Descargar ${capitulo.codigo}`}
+            className="w-7 h-7 rounded-md inline-flex items-center justify-center hover:bg-surface-hi cursor-pointer"
           >
-            <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" />
-          </svg>
-        </button>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              strokeWidth={1.8}
+              className="w-[15px] h-[15px] stroke-text-faint"
+            >
+              <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" />
+            </svg>
+          </a>
+        ) : (
+          <button
+            disabled
+            title="Completa el capítulo primero"
+            className="w-7 h-7 rounded-md inline-flex items-center justify-center cursor-not-allowed"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              strokeWidth={1.8}
+              className="w-[15px] h-[15px] stroke-text-faint opacity-35"
+            >
+              <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" />
+            </svg>
+          </button>
+        )}
       </div>
     </div>
   );
