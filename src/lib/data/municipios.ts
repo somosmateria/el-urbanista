@@ -69,14 +69,13 @@ export async function getCapituloPorCodigo(municipioId: string, codigo: string) 
   return data;
 }
 
-export async function crearMunicipioConCapitulos(input: {
+export async function crearMunicipio(input: {
   nombre: string;
   planVigente?: string | null;
   fechaPlanVigente?: string | null;
 }) {
   const supabase = createServiceClient();
-
-  const { data: municipio, error: municipioError } = await supabase
+  const { data: municipio, error } = await supabase
     .from("municipios")
     .insert({
       nombre: input.nombre,
@@ -85,7 +84,20 @@ export async function crearMunicipioConCapitulos(input: {
     })
     .select("*")
     .single();
-  if (municipioError) throw municipioError;
+  if (error) throw error;
+  return municipio;
+}
+
+export async function generarCapitulosIniciales(municipioId: string) {
+  const supabase = createServiceClient();
+
+  const { data: yaExisten, error: existenError } = await supabase
+    .from("capitulos")
+    .select("id")
+    .eq("municipio_id", municipioId)
+    .limit(1);
+  if (existenError) throw existenError;
+  if (yaExisten.length > 0) return;
 
   const { data: mapeo, error: mapeoError } = await supabase
     .from("mapeo_capitulos")
@@ -99,7 +111,7 @@ export async function crearMunicipioConCapitulos(input: {
     const motor = entrada.motor as MotorTipo;
     const estado: CapituloEstado = motor === "tabla" ? "tu_aportacion" : "sin_info";
     return {
-      municipio_id: municipio.id,
+      municipio_id: municipioId,
       codigo: entrada.capitulo_codigo,
       titulo: entrada.titulo_canonico,
       motor,
@@ -114,6 +126,4 @@ export async function crearMunicipioConCapitulos(input: {
     .from("capitulos")
     .insert(capitulosAInsertar);
   if (capitulosError) throw capitulosError;
-
-  return municipio;
 }

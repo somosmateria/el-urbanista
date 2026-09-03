@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { crearMunicipioConCapitulos } from "@/lib/data/municipios";
+import { crearMunicipio } from "@/lib/data/municipios";
 
 export async function crearMunicipioAction(formData: FormData) {
   const nombre = String(formData.get("nombre") ?? "").trim();
@@ -10,10 +10,7 @@ export async function crearMunicipioAction(formData: FormData) {
   }
   const planVigente = String(formData.get("plan_vigente") ?? "").trim() || null;
 
-  const municipio = await crearMunicipioConCapitulos({
-    nombre,
-    planVigente,
-  });
+  const municipio = await crearMunicipio({ nombre, planVigente });
 
-  redirect(`/avance/ordenacion/${municipio.id}`);
+  redirect(`/avance/ordenacion/nuevo/${municipio.id}`);
 }

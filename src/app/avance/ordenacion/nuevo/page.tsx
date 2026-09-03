@@ -9,7 +9,7 @@ export default function NuevoMunicipioPage() {
       <h1 className="font-serif font-medium text-[27px] mb-2">Nuevo municipio</h1>
       <p className="text-text-soft text-[14.5px] mb-8 max-w-[540px] leading-relaxed">
         La memoria de ordenación se genera a partir del diagnóstico ya redactado de ese
-        municipio.
+        municipio. En el siguiente paso vinculas el diagnóstico.
       </p>
 
       <form action={crearMunicipioAction}>
@@ -38,38 +38,11 @@ export default function NuevoMunicipioPage() {
           />
         </div>
 
-        <div className="font-mono text-[11px] text-text-faint mb-2">
-          DIAGNÓSTICO DE ORIGEN
-        </div>
-        <div className="rounded-xl border border-line bg-surface overflow-hidden opacity-50">
-          <div className="flex items-center justify-between px-[18px] py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-[38px] h-[38px] rounded-md bg-white/5 flex items-center justify-center">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  strokeWidth={1.6}
-                  className="w-[19px] h-[19px] stroke-text-soft"
-                >
-                  <path d="M4 19V5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
-                  <path d="M14 3v6h6" />
-                </svg>
-              </div>
-              <div>
-                <div className="font-serif text-[15px]">Subir diagnóstico (PDF)</div>
-                <div className="text-[12.5px] text-text-faint font-mono">
-                  Próximamente en esta versión
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <button
           type="submit"
-          className="mt-[30px] inline-block bg-violet hover:bg-violet-hover text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg cursor-pointer"
+          className="inline-block bg-violet hover:bg-violet-hover text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg cursor-pointer"
         >
-          Generar memoria de ordenación
+          Continuar
         </button>
       </form>
     </AppShell>
