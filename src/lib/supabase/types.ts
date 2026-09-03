@@ -75,6 +75,9 @@ export type CapituloVersionRow = {
 export type CapituloTablaRow = {
   id: string;
   capitulo_id: string;
+  // null = tabla del capítulo completo (p.ej. MO.5); con valor = tabla de
+  // un subepígrafe concreto dentro de un capítulo mixto (p.ej. "MO.3.2").
+  subepigrafe_codigo: string | null;
   nombre_bloque: string;
   columnas: string[];
   filas: Record<string, string>[];

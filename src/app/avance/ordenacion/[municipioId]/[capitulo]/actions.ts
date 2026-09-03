@@ -27,11 +27,12 @@ export async function marcarMotivoAction(
 export async function crearBloqueTablaAction(
   municipioId: string,
   capituloId: string,
+  subepigrafeCodigo: string | null,
   formData: FormData
 ) {
   const nombre = String(formData.get("nombreBloque") ?? "").trim();
   if (!nombre) return;
-  await crearBloqueTabla(capituloId, nombre);
+  await crearBloqueTabla(capituloId, nombre, subepigrafeCodigo);
   revalidatePath(`/avance/ordenacion/${municipioId}`);
 }
 

@@ -78,7 +78,7 @@ export async function generarCapituloTabla(tablas: CapituloTablaRow[]): Promise<
       const intro = await generarIntroBloque(tabla);
       return `
 <div class="doc-eyebrow">${escapeHtml(tabla.nombre_bloque.toUpperCase())}</div>
-<div class="doc-text"><p>${intro}</p></div>
+<div class="doc-text">${intro}</div>
 ${renderTablaHTML(tabla)}
 `.trim();
     })

@@ -6,6 +6,7 @@ import { DataTableEditor } from "@/components/DataTableEditor";
 import { RegenerarPanel } from "@/components/RegenerarPanel";
 import { getMunicipio, getCapituloPorCodigo } from "@/lib/data/municipios";
 import { listTablasDeCapitulo } from "@/lib/data/tablas";
+import { getSubepigrafes } from "@/lib/data/mapeo";
 import { marcarMotivoAction, crearBloqueTablaAction, generarTextoTablaAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,14 @@ export default async function CapituloPage({
 
   const tablas = capitulo.motor === "tabla" ? await listTablasDeCapitulo(capitulo.id) : [];
   const hayFilas = tablas.some((t) => t.filas.length > 0);
+
+  // Un capítulo mixto (p.ej. MO.3) puede tener subepígrafes de motor
+  // "tabla" propios, aparte del motor del capítulo en sí (rag/plantilla).
+  const subepigrafesDeTabla =
+    capitulo.motor !== "tabla" ? (await getSubepigrafes(capitulo.codigo)).filter((s) => s.motor === "tabla") : [];
+  const tablasPorSubepigrafe = await Promise.all(
+    subepigrafesDeTabla.map((s) => listTablasDeCapitulo(capitulo.id, s.capitulo_codigo))
+  );
 
   return (
     <AppShell
@@ -74,7 +83,7 @@ export default async function CapituloPage({
           ))}
 
           <form
-            action={crearBloqueTablaAction.bind(null, municipioId, capitulo.id)}
+            action={crearBloqueTablaAction.bind(null, municipioId, capitulo.id, null)}
             className="flex items-center gap-3 mb-6"
           >
             <input
@@ -156,6 +165,49 @@ export default async function CapituloPage({
             </div>
           </div>
         </>
+      )}
+
+      {subepigrafesDeTabla.length > 0 && (
+        <div className="mt-10">
+          <div className="font-mono text-[11px] text-text-faint mb-1">
+            PROPUESTA DEL TÉCNICO (NO VIENE DEL DIAGNÓSTICO)
+          </div>
+          <p className="text-text-soft text-[14.5px] mb-6 max-w-[540px] leading-relaxed">
+            Estos subepígrafes de {capitulo.codigo} son propuesta técnica, no
+            reformateo del diagnóstico. Rellena las tablas y luego usa
+            &ldquo;Regenerar&rdquo; arriba para incorporarlas al capítulo.
+          </p>
+
+          {subepigrafesDeTabla.map((s, i) => (
+            <div key={s.capitulo_codigo} className="mb-8">
+              <h3 className="font-serif text-[16px] mb-3">
+                {s.capitulo_codigo.replace(/^MO\./, "")} · {s.titulo_canonico}
+              </h3>
+
+              {tablasPorSubepigrafe[i].map((tabla) => (
+                <DataTableEditor key={tabla.id} municipioId={municipioId} tabla={tabla} />
+              ))}
+
+              <form
+                action={crearBloqueTablaAction.bind(null, municipioId, capitulo.id, s.capitulo_codigo)}
+                className="flex items-center gap-3"
+              >
+                <input
+                  name="nombreBloque"
+                  type="text"
+                  placeholder="Ej. Sistemas generales de espacios libres"
+                  className="flex-1 box-border bg-surface border border-line-strong rounded-lg px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
+                />
+                <button
+                  type="submit"
+                  className="text-[12.5px] px-3.5 py-2 rounded-lg border border-line-strong text-text-soft hover:bg-surface-hi cursor-pointer whitespace-nowrap"
+                >
+                  + Nuevo bloque de tabla
+                </button>
+              </form>
+            </div>
+          ))}
+        </div>
       )}
     </AppShell>
   );

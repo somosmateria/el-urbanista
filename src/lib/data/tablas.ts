@@ -1,30 +1,42 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
 
-export async function listTablasDeCapitulo(capituloId: string) {
+/**
+ * `subepigrafeCodigo` en null trae las tablas del capítulo completo (p.ej.
+ * MO.5). Con un código (p.ej. "MO.3.2") trae solo las de ese subepígrafe
+ * dentro de un capítulo mixto — nunca se mezclan entre sí.
+ */
+export async function listTablasDeCapitulo(capituloId: string, subepigrafeCodigo: string | null = null) {
   const supabase = createServiceClient();
-  const { data, error } = await supabase
-    .from("capitulo_tablas")
-    .select("*")
-    .eq("capitulo_id", capituloId)
-    .order("orden");
+  let query = supabase.from("capitulo_tablas").select("*").eq("capitulo_id", capituloId);
+  query = subepigrafeCodigo ? query.eq("subepigrafe_codigo", subepigrafeCodigo) : query.is("subepigrafe_codigo", null);
+  const { data, error } = await query.order("orden");
   if (error) throw error;
   return data;
 }
 
-export async function crearBloqueTabla(capituloId: string, nombreBloque: string) {
+export async function crearBloqueTabla(
+  capituloId: string,
+  nombreBloque: string,
+  subepigrafeCodigo: string | null = null
+) {
   const supabase = createServiceClient();
 
-  const { count, error: countError } = await supabase
+  let countQuery = supabase
     .from("capitulo_tablas")
     .select("id", { count: "exact", head: true })
     .eq("capitulo_id", capituloId);
+  countQuery = subepigrafeCodigo
+    ? countQuery.eq("subepigrafe_codigo", subepigrafeCodigo)
+    : countQuery.is("subepigrafe_codigo", null);
+  const { count, error: countError } = await countQuery;
   if (countError) throw countError;
 
   const { data, error } = await supabase
     .from("capitulo_tablas")
     .insert({
       capitulo_id: capituloId,
+      subepigrafe_codigo: subepigrafeCodigo,
       nombre_bloque: nombreBloque,
       columnas: ["Nombre"],
       filas: [],

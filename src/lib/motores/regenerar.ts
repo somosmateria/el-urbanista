@@ -19,7 +19,7 @@ export async function regenerarContenido(capitulo: CapituloRow): Promise<string 
   if (capitulo.motor === "rag") {
     const diagnostico = await getDiagnosticoDeMunicipio(capitulo.municipio_id);
     const diagnosticoId = diagnostico?.estado === "listo" ? diagnostico.id : null;
-    return generarCapituloRAG(capitulo.codigo, diagnosticoId, municipio);
+    return generarCapituloRAG(capitulo.codigo, diagnosticoId, municipio, capitulo.id);
   }
 
   if (capitulo.motor === "plantilla") {
