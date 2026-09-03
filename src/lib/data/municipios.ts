@@ -154,12 +154,12 @@ export async function generarCapitulosIniciales(municipioId: string) {
       }
 
       // Motor plantilla: si ya hay una plantilla implementada para este
-      // capítulo y los datos del municipio bastan para rellenarla, se genera
-      // de inmediato — no necesita diagnóstico ni Claude. Si no, se deja en
-      // "sin información" en vez de fabricar un texto a medias (ver
-      // src/lib/motores/plantilla/index.ts).
+      // capítulo, se genera de inmediato — la mayoría no necesita
+      // diagnóstico ni Claude, salvo MO.11 (lista de colindantes). Si no
+      // hay plantilla o le faltan datos, se deja en "sin información" en
+      // vez de fabricar un texto a medias (ver src/lib/motores/plantilla/index.ts).
       const generador = PLANTILLAS[entrada.capitulo_codigo];
-      const contenido = generador ? generador(municipio) : null;
+      const contenido = generador ? await generador(municipio, diagnosticoId) : null;
 
       return {
         municipio_id: municipioId,
