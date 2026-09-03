@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
 import { BackLink } from "@/components/BackLink";
 import { DataTableEditor } from "@/components/DataTableEditor";
+import { RegenerarPanel } from "@/components/RegenerarPanel";
 import { getMunicipio, getCapituloPorCodigo } from "@/lib/data/municipios";
 import { listTablasDeCapitulo } from "@/lib/data/tablas";
 import { marcarMotivoAction, crearBloqueTablaAction, generarTextoTablaAction } from "./actions";
@@ -104,10 +105,13 @@ export default async function CapituloPage({
       )}
 
       {capitulo.motor !== "tabla" && capitulo.contenido_html && (
-        <div
-          className="rounded-xl border border-line bg-surface p-7"
-          dangerouslySetInnerHTML={{ __html: capitulo.contenido_html }}
-        />
+        <>
+          <div
+            className="rounded-xl border border-line bg-surface p-7"
+            dangerouslySetInnerHTML={{ __html: capitulo.contenido_html }}
+          />
+          <RegenerarPanel municipioId={municipioId} capituloId={capitulo.id} />
+        </>
       )}
 
       {capitulo.motor !== "tabla" && !capitulo.contenido_html && (
