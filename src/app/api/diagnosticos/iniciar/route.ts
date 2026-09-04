@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   const nombreArchivo = String(body?.nombreArchivo ?? "").trim() || null;
 
   const equipo = await requireEquipoActivo();
-  if (!(await getMunicipio(municipioId, equipo.id))) {
+  if (!(await getMunicipio(municipioId, equipo))) {
     return NextResponse.json({ error: "Municipio no encontrado" }, { status: 404 });
   }
 

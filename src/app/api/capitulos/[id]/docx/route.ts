@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const equipo = await requireEquipoActivo();
-  const capitulo = await verificarCapituloDeEquipo(id, equipo.id);
+  const capitulo = await verificarCapituloDeEquipo(id, equipo);
 
   if (!capitulo || !capitulo.contenido_html) {
     return NextResponse.json({ error: "Este capítulo todavía no tiene contenido." }, { status: 404 });

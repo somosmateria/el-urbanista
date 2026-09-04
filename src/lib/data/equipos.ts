@@ -5,7 +5,7 @@ import type { EquipoRol } from "@/lib/supabase/types";
 
 const COOKIE_EQUIPO_ACTIVO = "equipo_activo";
 
-export type EquipoActivo = { id: string; nombre: string; rol: EquipoRol };
+export type EquipoActivo = { id: string; nombre: string; rol: EquipoRol; userId: string };
 
 export async function getUsuarioActual() {
   const supabase = await createServerAuthClient();
@@ -42,7 +42,7 @@ export async function listEquiposDeUsuario(userId: string): Promise<EquipoActivo
   return miembros
     .map((m) => {
       const equipo = equipos.find((e) => e.id === m.equipo_id);
-      return equipo ? { id: equipo.id, nombre: equipo.nombre, rol: m.rol } : null;
+      return equipo ? { id: equipo.id, nombre: equipo.nombre, rol: m.rol, userId } : null;
     })
     .filter((e): e is EquipoActivo => e !== null);
 }

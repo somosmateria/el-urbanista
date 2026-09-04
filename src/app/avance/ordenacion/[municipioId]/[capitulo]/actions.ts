@@ -23,7 +23,7 @@ export async function marcarMotivoAction(
   motivo: SinInfoMotivo
 ) {
   const equipo = await requireEquipoActivo();
-  if (!(await verificarCapituloDeEquipo(capituloId, equipo.id))) {
+  if (!(await verificarCapituloDeEquipo(capituloId, equipo))) {
     throw new Error("Capítulo no encontrado.");
   }
 
@@ -44,7 +44,7 @@ export async function crearBloqueTablaAction(
   formData: FormData
 ) {
   const equipo = await requireEquipoActivo();
-  if (!(await verificarCapituloDeEquipo(capituloId, equipo.id))) {
+  if (!(await verificarCapituloDeEquipo(capituloId, equipo))) {
     throw new Error("Capítulo no encontrado.");
   }
 
@@ -57,7 +57,7 @@ export async function crearBloqueTablaAction(
 export async function eliminarBloqueTablaAction(municipioId: string, tablaId: string) {
   const equipo = await requireEquipoActivo();
   const capituloId = await getCapituloIdDeTabla(tablaId);
-  if (!capituloId || !(await verificarCapituloDeEquipo(capituloId, equipo.id))) {
+  if (!capituloId || !(await verificarCapituloDeEquipo(capituloId, equipo))) {
     throw new Error("Tabla no encontrada.");
   }
 
@@ -73,7 +73,7 @@ export async function guardarTablaAction(
 ) {
   const equipo = await requireEquipoActivo();
   const capituloId = await getCapituloIdDeTabla(tablaId);
-  if (!capituloId || !(await verificarCapituloDeEquipo(capituloId, equipo.id))) {
+  if (!capituloId || !(await verificarCapituloDeEquipo(capituloId, equipo))) {
     throw new Error("Tabla no encontrada.");
   }
 
@@ -88,10 +88,10 @@ export async function guardarTablaAction(
  */
 export async function previsualizarRegeneracionAction(capituloId: string) {
   const equipo = await requireEquipoActivo();
-  const capitulo = await verificarCapituloDeEquipo(capituloId, equipo.id);
+  const capitulo = await verificarCapituloDeEquipo(capituloId, equipo);
   if (!capitulo) throw new Error("Capítulo no encontrado.");
 
-  const contenidoNuevo = await regenerarContenido(capitulo, equipo.id);
+  const contenidoNuevo = await regenerarContenido(capitulo, equipo);
   if (!contenidoNuevo) {
     return { disponible: false as const };
   }
@@ -125,7 +125,7 @@ export async function aplicarRegeneracionAction(
   contenidoNuevo: string
 ) {
   const equipo = await requireEquipoActivo();
-  const capitulo = await verificarCapituloDeEquipo(capituloId, equipo.id);
+  const capitulo = await verificarCapituloDeEquipo(capituloId, equipo);
   if (!capitulo) throw new Error("Capítulo no encontrado.");
 
   const necesitaRevision =
@@ -151,7 +151,7 @@ export async function aplicarRegeneracionAction(
 
 export async function generarTextoTablaAction(municipioId: string, capituloId: string) {
   const equipo = await requireEquipoActivo();
-  if (!(await verificarCapituloDeEquipo(capituloId, equipo.id))) {
+  if (!(await verificarCapituloDeEquipo(capituloId, equipo))) {
     throw new Error("Capítulo no encontrado.");
   }
 

@@ -3,6 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { BackLink } from "@/components/BackLink";
 import { ChapterRow } from "@/components/ChapterRow";
 import { EliminarMunicipioBoton } from "@/components/EliminarMunicipioBoton";
+import { EstadoPill } from "@/components/EstadoPill";
 import { ESTADO_UI } from "@/lib/capitulos/estado-ui";
 import { getMunicipio, listCapitulosDeMunicipio } from "@/lib/data/municipios";
 import { requireEquipoActivo } from "@/lib/data/equipos";
@@ -15,7 +16,7 @@ export default async function MunicipioPage({
 }) {
   const { municipioId } = await params;
   const equipo = await requireEquipoActivo();
-  const municipio = await getMunicipio(municipioId, equipo.id);
+  const municipio = await getMunicipio(municipioId, equipo);
   if (!municipio) notFound();
 
   const capitulos = await listCapitulosDeMunicipio(municipioId);
@@ -95,19 +96,13 @@ export default async function MunicipioPage({
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-[26px] mt-[34px] pt-[18px] border-t border-line">
-        {estadosPresentes.map((estado) => {
-          const ui = ESTADO_UI[estado];
-          return (
-            <span key={estado} className="flex items-center gap-2.5 text-[10px] tracking-[0.14em] uppercase text-text-soft">
-              <span className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full border-[1.5px] ${ui.dotColor}`} />
-                <span className={ui.ink}>{ui.label}</span>
-              </span>
-              <span className="text-text-faint normal-case tracking-normal">{ui.desc}</span>
-            </span>
-          );
-        })}
+      <div className="flex flex-wrap items-center gap-[18px] mt-[34px] pt-[18px] border-t border-line">
+        {estadosPresentes.map((estado) => (
+          <span key={estado} className="flex items-center gap-2.5 text-[11px] text-text-soft">
+            <EstadoPill estado={estado} />
+            <span className="text-text-faint">{ESTADO_UI[estado].desc}</span>
+          </span>
+        ))}
       </div>
     </AppShell>
   );

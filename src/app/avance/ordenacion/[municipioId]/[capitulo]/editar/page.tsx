@@ -16,7 +16,7 @@ export default async function EditarCapituloPage({
 }) {
   const { municipioId, capitulo: codigo } = await params;
   const equipo = await requireEquipoActivo();
-  const municipio = await getMunicipio(municipioId, equipo.id);
+  const municipio = await getMunicipio(municipioId, equipo);
   if (!municipio) notFound();
 
   const capitulo = await getCapituloPorCodigo(municipioId, codigo);

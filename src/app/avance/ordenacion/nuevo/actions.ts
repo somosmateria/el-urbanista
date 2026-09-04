@@ -14,7 +14,7 @@ export async function crearMunicipioAction(formData: FormData) {
   const planVigente = String(formData.get("plan_vigente") ?? "").trim() || null;
   const fechaPlanVigente = String(formData.get("fecha_plan_vigente") ?? "").trim() || null;
 
-  const municipio = await crearMunicipio({ nombre, planVigente, fechaPlanVigente }, equipo.id);
+  const municipio = await crearMunicipio({ nombre, planVigente, fechaPlanVigente }, equipo);
 
   redirect(`/avance/ordenacion/nuevo/${municipio.id}`);
 }

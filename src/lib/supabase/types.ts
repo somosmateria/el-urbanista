@@ -33,6 +33,13 @@ export type MunicipioRow = {
   created_at: string;
 }
 
+export type MunicipioAccesoRow = {
+  id: string;
+  municipio_id: string;
+  user_id: string;
+  created_at: string;
+}
+
 export type DiagnosticoRow = {
   id: string;
   municipio_id: string;
@@ -135,6 +142,11 @@ export type Database = {
         MunicipioRow,
         Omit<MunicipioRow, "id" | "created_at"> & { id?: string },
         Partial<Omit<MunicipioRow, "id">>
+      >;
+      municipio_accesos: TableDef<
+        MunicipioAccesoRow,
+        Omit<MunicipioAccesoRow, "id" | "created_at"> & { id?: string },
+        Partial<Omit<MunicipioAccesoRow, "id">>
       >;
       diagnosticos: TableDef<
         DiagnosticoRow,

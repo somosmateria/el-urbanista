@@ -5,7 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { BackLink } from "@/components/BackLink";
 import { DataTableEditor } from "@/components/DataTableEditor";
 import { RegenerarPanel } from "@/components/RegenerarPanel";
-import { ESTADO_UI } from "@/lib/capitulos/estado-ui";
+import { EstadoPill } from "@/components/EstadoPill";
 import { getMunicipio, getCapituloPorCodigo } from "@/lib/data/municipios";
 import { listTablasDeCapitulo } from "@/lib/data/tablas";
 import { getSubepigrafes } from "@/lib/data/mapeo";
@@ -21,7 +21,7 @@ export default async function CapituloPage({
 }) {
   const { municipioId, capitulo: codigo } = await params;
   const equipo = await requireEquipoActivo();
-  const municipio = await getMunicipio(municipioId, equipo.id);
+  const municipio = await getMunicipio(municipioId, equipo);
   if (!municipio) notFound();
 
   const capitulo = await getCapituloPorCodigo(municipioId, codigo);
@@ -29,7 +29,6 @@ export default async function CapituloPage({
 
   const tablas = capitulo.motor === "tabla" ? await listTablasDeCapitulo(capitulo.id) : [];
   const hayFilas = tablas.some((t) => t.filas.length > 0);
-  const ui = ESTADO_UI[capitulo.estado];
   const MOTOR_LABEL: Record<string, string> = {
     plantilla: "Plantilla",
     rag: "RAG dirigido",
@@ -55,10 +54,7 @@ export default async function CapituloPage({
       </h1>
 
       <div className="flex flex-wrap items-center gap-[18px] py-3.5 border-t border-b border-line mb-8">
-        <span className={clsx("flex items-center gap-2 text-[10.5px] tracking-[0.14em] uppercase", ui.ink)}>
-          <span className={clsx("w-2 h-2 rounded-full border-[1.5px]", ui.dotColor)} />
-          {ui.label}
-        </span>
+        <EstadoPill estado={capitulo.estado} />
         <span className="text-[10.5px] tracking-[0.14em] uppercase text-text-faint">
           {MOTOR_LABEL[capitulo.motor]}
         </span>

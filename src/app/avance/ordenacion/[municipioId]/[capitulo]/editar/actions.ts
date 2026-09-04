@@ -13,7 +13,7 @@ export async function guardarEdicionAction(
   html: string
 ) {
   const equipo = await requireEquipoActivo();
-  if (!(await getMunicipio(municipioId, equipo.id))) throw new Error("Municipio no encontrado.");
+  if (!(await getMunicipio(municipioId, equipo))) throw new Error("Municipio no encontrado.");
 
   await guardarEdicionCapitulo(capituloId, html);
   revalidatePath(`/avance/ordenacion/${municipioId}`);
@@ -27,7 +27,7 @@ export async function restaurarVersionAction(
   versionId: string
 ) {
   const equipo = await requireEquipoActivo();
-  if (!(await getMunicipio(municipioId, equipo.id))) throw new Error("Municipio no encontrado.");
+  if (!(await getMunicipio(municipioId, equipo))) throw new Error("Municipio no encontrado.");
 
   await restaurarVersion(capituloId, versionId);
   revalidatePath(`/avance/ordenacion/${municipioId}`);

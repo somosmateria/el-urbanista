@@ -26,7 +26,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   }
 
   const equipo = await requireEquipoActivo();
-  if (!(await getMunicipio(diagnostico.municipio_id, equipo.id))) {
+  if (!(await getMunicipio(diagnostico.municipio_id, equipo))) {
     return NextResponse.json({ error: "Diagnóstico no encontrado" }, { status: 404 });
   }
 

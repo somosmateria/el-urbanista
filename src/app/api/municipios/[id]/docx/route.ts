@@ -11,7 +11,7 @@ export const maxDuration = 120;
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: municipioId } = await params;
   const equipo = await requireEquipoActivo();
-  const municipio = await getMunicipio(municipioId, equipo.id);
+  const municipio = await getMunicipio(municipioId, equipo);
   if (!municipio) {
     return NextResponse.json({ error: "Municipio no encontrado." }, { status: 404 });
   }

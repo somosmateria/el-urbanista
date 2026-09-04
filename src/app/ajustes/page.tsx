@@ -1,10 +1,13 @@
 import { AppShell } from "@/components/AppShell";
+import { MiembroAccesos } from "@/components/MiembroAccesos";
 import {
   getUsuarioActual,
   listEquiposDeUsuario,
   requireEquipoActivo,
   listMiembrosDeEquipo,
 } from "@/lib/data/equipos";
+import { listMunicipiosConProgreso } from "@/lib/data/municipios";
+import { listMunicipioIdsAccesibles } from "@/lib/data/municipio-accesos";
 import { cambiarEquipoActivoAction, crearEquipoAction, invitarAction, eliminarMiembroAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +18,22 @@ export default async function AjustesPage() {
   const equipos = await listEquiposDeUsuario(user!.id);
   const miembros = await listMiembrosDeEquipo(equipoActivo.id);
   const esAdmin = equipoActivo.rol === "admin";
+
+  // Solo un admin gestiona accesos, y solo necesita ver los municipios del
+  // equipo cuando hay miembros no-admin a los que gestionárselos.
+  const municipios = esAdmin ? await listMunicipiosConProgreso(equipoActivo) : [];
+  const accesosPorMiembro = esAdmin
+    ? Object.fromEntries(
+        await Promise.all(
+          miembros
+            .filter((m) => m.rol === "miembro")
+            .map(async (m) => [
+              m.user_id,
+              Array.from(await listMunicipioIdsAccesibles(municipios.map((mu) => mu.id), m.user_id)),
+            ])
+        )
+      )
+    : {};
 
   return (
     <AppShell>
@@ -68,20 +87,31 @@ export default async function AjustesPage() {
         </div>
         <div className="border-t border-line mb-5">
           {miembros.map((m) => (
-            <div key={m.id} className="flex items-center gap-4 px-1 py-[15px] border-b border-line last:border-b-0">
-              <span className="flex-1 text-[14.5px]">{m.email}</span>
-              <span className="text-[10px] tracking-[0.14em] uppercase text-text-faint">
-                {m.rol === "admin" ? "Admin" : "Miembro"}
-              </span>
-              {esAdmin && m.user_id !== user?.id && (
-                <form action={eliminarMiembroAction.bind(null, m.id)}>
-                  <button
-                    type="submit"
-                    className="text-[10px] tracking-[0.14em] uppercase text-text-faint hover:text-text cursor-pointer"
-                  >
-                    Quitar
-                  </button>
-                </form>
+            <div key={m.id} className="px-1 py-[15px] border-b border-line last:border-b-0">
+              <div className="flex items-center gap-4">
+                <span className="flex-1 text-[14.5px]">{m.email}</span>
+                <span className="text-[10px] tracking-[0.14em] uppercase text-text-faint">
+                  {m.rol === "admin" ? "Admin" : "Miembro"}
+                </span>
+                {esAdmin && m.user_id !== user?.id && (
+                  <form action={eliminarMiembroAction.bind(null, m.id)}>
+                    <button
+                      type="submit"
+                      className="text-[10px] tracking-[0.14em] uppercase text-text-faint hover:text-text cursor-pointer"
+                    >
+                      Quitar
+                    </button>
+                  </form>
+                )}
+              </div>
+              {esAdmin && m.rol === "miembro" && (
+                <div className="mt-3">
+                  <MiembroAccesos
+                    userId={m.user_id}
+                    municipios={municipios.map((mu) => ({ id: mu.id, nombre: mu.nombre }))}
+                    accesibles={accesosPorMiembro[m.user_id] ?? []}
+                  />
+                </div>
               )}
             </div>
           ))}

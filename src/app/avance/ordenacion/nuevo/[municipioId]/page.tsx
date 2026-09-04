@@ -17,7 +17,7 @@ export default async function NuevoMunicipioDiagnosticoPage({
 }) {
   const { municipioId } = await params;
   const equipo = await requireEquipoActivo();
-  const municipio = await getMunicipio(municipioId, equipo.id);
+  const municipio = await getMunicipio(municipioId, equipo);
   if (!municipio) notFound();
 
   const diagnostico = await getDiagnosticoDeMunicipio(municipioId);

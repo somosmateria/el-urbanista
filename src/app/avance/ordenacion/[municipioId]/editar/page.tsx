@@ -4,9 +4,11 @@ import { BackLink } from "@/components/BackLink";
 import { DiagnosticoUploader } from "@/components/DiagnosticoUploader";
 import { ReprocesarDiagnosticoBoton } from "@/components/ReprocesarDiagnosticoBoton";
 import { EliminarMunicipioBoton } from "@/components/EliminarMunicipioBoton";
+import { AccesoMunicipioToggle } from "@/components/AccesoMunicipioToggle";
 import { getMunicipio } from "@/lib/data/municipios";
 import { getDiagnosticoDeMunicipio } from "@/lib/data/diagnosticos";
-import { requireEquipoActivo } from "@/lib/data/equipos";
+import { requireEquipoActivo, listMiembrosDeEquipo } from "@/lib/data/equipos";
+import { listUserIdsConAcceso } from "@/lib/data/municipio-accesos";
 import { actualizarMunicipioAction, eliminarMunicipioAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -18,10 +20,12 @@ export default async function EditarMunicipioPage({
 }) {
   const { municipioId } = await params;
   const equipo = await requireEquipoActivo();
-  const municipio = await getMunicipio(municipioId, equipo.id);
+  const municipio = await getMunicipio(municipioId, equipo);
   if (!municipio) notFound();
 
   const diagnostico = await getDiagnosticoDeMunicipio(municipioId);
+  const miembros = equipo.rol === "admin" ? await listMiembrosDeEquipo(equipo.id) : [];
+  const conAcceso = equipo.rol === "admin" ? await listUserIdsConAcceso(municipioId) : new Set<string>();
 
   return (
     <AppShell>
@@ -97,6 +101,40 @@ export default async function EditarMunicipioPage({
           )}
           {diagnostico?.estado === "listo" && <ReprocesarDiagnosticoBoton diagnosticoId={diagnostico.id} />}
         </div>
+
+        {equipo.rol === "admin" && (
+          <>
+            <div className="text-[10px] tracking-[0.2em] uppercase text-text-faint mb-2.5">
+              Acceso a este municipio
+            </div>
+            <p className="text-[12.5px] text-text-faint mb-4 leading-relaxed">
+              Los admins del equipo siempre ven todos los municipios. Marca a qué miembros
+              les das acceso a {municipio.nombre} en concreto.
+            </p>
+            <div className="border-t border-line mb-14">
+              {miembros
+                .filter((m) => m.rol === "miembro")
+                .map((m) => (
+                  <label
+                    key={m.id}
+                    className="flex items-center gap-4 px-1 py-[13px] border-b border-line last:border-b-0 cursor-pointer"
+                  >
+                    <AccesoMunicipioToggle
+                      municipioId={municipioId}
+                      userId={m.user_id}
+                      checkedInicial={conAcceso.has(m.user_id)}
+                    />
+                    <span className="text-[14px]">{m.email}</span>
+                  </label>
+                ))}
+              {miembros.filter((m) => m.rol === "miembro").length === 0 && (
+                <p className="text-[12.5px] text-text-faint py-3">
+                  Todavía no hay ningún miembro (aparte de admins) en este equipo.
+                </p>
+              )}
+            </div>
+          </>
+        )}
 
         <div className="border border-coral/40 rounded p-6 flex items-center justify-between gap-4 flex-wrap">
           <div>

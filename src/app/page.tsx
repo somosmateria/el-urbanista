@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const equipo = await requireEquipoActivo();
-  const municipios = await listMunicipiosConProgreso(equipo.id);
+  const municipios = await listMunicipiosConProgreso(equipo);
   const recientes = municipios.slice(0, 5);
 
   return (

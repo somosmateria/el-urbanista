@@ -4,6 +4,7 @@ import { PLANTILLAS } from "@/lib/motores/plantilla";
 import { getMunicipio, asegurarPlanVigente } from "@/lib/data/municipios";
 import { getDiagnosticoDeMunicipio } from "@/lib/data/diagnosticos";
 import type { CapituloRow } from "@/lib/supabase/types";
+import type { EquipoActivo } from "@/lib/data/equipos";
 
 /**
  * Vuelve a ejecutar el motor de un capítulo con los datos actuales
@@ -14,9 +15,9 @@ import type { CapituloRow } from "@/lib/supabase/types";
  */
 export async function regenerarContenido(
   capitulo: CapituloRow,
-  equipoId: string
+  equipo: EquipoActivo
 ): Promise<string | null> {
-  let municipio = await getMunicipio(capitulo.municipio_id, equipoId);
+  let municipio = await getMunicipio(capitulo.municipio_id, equipo);
   if (!municipio) return null;
 
   if (capitulo.motor === "rag") {

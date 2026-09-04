@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function OrdenacionPage() {
   const equipo = await requireEquipoActivo();
-  const municipios = await listMunicipiosConProgreso(equipo.id);
+  const municipios = await listMunicipiosConProgreso(equipo);
 
   return (
     <AppShell>
