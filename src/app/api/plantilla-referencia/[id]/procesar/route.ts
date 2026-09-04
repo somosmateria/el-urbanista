@@ -41,6 +41,17 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     await parser.destroy();
 
     const secciones = await segmentarReferencia(text);
+    // Un documento real de verdad no debería fallar en encontrar NI UNO de
+    // los ~26 temas — si pasa, es casi seguro un fallo sistemático (visto
+    // en producción: un límite del SDK de Anthropic tiraba las 26 llamadas
+    // por igual y esto se marcaba "listo" con 0 filas, sin avisar a nadie).
+    // Mejor un error visible que un "listo" que no lo está.
+    if (secciones.length === 0) {
+      throw new Error(
+        "No se identificó ningún capítulo en el PDF — puede que el documento no sea un Avance de Ordenación, o que haya fallado la extracción. Vuelve a intentarlo."
+      );
+    }
+
     await guardarSeccionesReferencia(referenciaId, secciones);
     await marcarReferenciaLista(referenciaId);
 

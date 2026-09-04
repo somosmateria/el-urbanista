@@ -117,6 +117,14 @@ Reglas estrictas:
  * quedar cortado a mitad de frase — riesgo residual conocido, no
  * resuelto del todo (haría falta extracción por continuación en varias
  * llamadas, fuera de alcance por ahora).
+ *
+ * IMPORTANTE: por encima de ~21.333 (128000 × 10/60), el propio SDK de
+ * Anthropic rechaza la llamada sin streaming con "Streaming is required
+ * for operations that may take longer than 10 minutes" — pasó
+ * desapercibido en pruebas con pocos temas a la vez y reventó los 26 en
+ * producción (0 capítulos encontrados, sin marcar error). Por eso la
+ * llamada de abajo usa `.stream().finalMessage()` en vez de `.create()`
+ * — mismo resultado, sin ese límite de 10 minutos.
  */
 const MAX_TOKENS_RESPUESTA = 24_000;
 
@@ -141,7 +149,7 @@ async function extraerCapitulo(
       ? `Tema a localizar en el texto de arriba: "${objetivo.titulo}". Devuelve su título exacto Y su contenido completo.`
       : `Tema a localizar en el texto de arriba: "${objetivo.titulo}". Devuelve SOLO su título exacto — dentro del formato pedido, deja el contenido después de "---" vacío, no hace falta transcribirlo.`;
 
-    const respuesta = await anthropic.messages.create({
+    const stream = anthropic.messages.stream({
       model: MODELO_GENERACION,
       max_tokens: MAX_TOKENS_RESPUESTA,
       // Sin esto, con un documento de cientos de miles de tokens el modelo
@@ -168,6 +176,7 @@ async function extraerCapitulo(
         },
       ],
     });
+    const respuesta = await stream.finalMessage();
 
     const bruto = respuesta.content
       .filter((b) => b.type === "text")

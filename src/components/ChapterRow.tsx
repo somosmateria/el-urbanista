@@ -1,6 +1,4 @@
 import Link from "next/link";
-import clsx from "clsx";
-import { ESTADO_UI } from "@/lib/capitulos/estado-ui";
 import { EstadoPill } from "@/components/EstadoPill";
 import type { CapituloRow } from "@/lib/supabase/types";
 
@@ -11,7 +9,6 @@ export function ChapterRow({
   municipioId: string;
   capitulo: CapituloRow;
 }) {
-  const ui = ESTADO_UI[capitulo.estado];
   const puedeDescargar = capitulo.estado === "listo" || capitulo.estado === "revisar";
 
   return (
@@ -25,11 +22,6 @@ export function ChapterRow({
         </span>
         <span className="flex-1 min-w-0 font-serif font-semibold text-[18px] leading-[1.25] truncate">
           {capitulo.titulo}
-        </span>
-        <span className="hidden sm:flex items-center gap-2.5 w-[90px] shrink-0">
-          <span className="flex-1 h-[2px] bg-line relative overflow-hidden">
-            <span className={clsx("absolute inset-y-0 left-0", ui.meterColor)} style={{ width: `${ui.pct}%` }} />
-          </span>
         </span>
         <EstadoPill estado={capitulo.estado} className="shrink-0" />
       </Link>

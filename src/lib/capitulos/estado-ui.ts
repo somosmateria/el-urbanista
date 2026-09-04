@@ -14,8 +14,6 @@ export const ESTADO_UI: Record<
   CapituloEstado,
   {
     ink: string;
-    meterColor: string;
-    pct: number;
     label: string;
     desc: string;
     icon: string;
@@ -27,8 +25,6 @@ export const ESTADO_UI: Record<
   // tierra — no un verde/rojo saturado que desentone del resto.
   listo: {
     ink: "text-cyan-ink",
-    meterColor: "bg-cyan",
-    pct: 100,
     label: "Listo",
     desc: "cerrado, se puede entregar",
     icon: ICONO.check,
@@ -36,8 +32,6 @@ export const ESTADO_UI: Record<
   },
   revisar: {
     ink: "text-amber-ink",
-    meterColor: "bg-amber",
-    pct: 70,
     label: "Revisar",
     desc: "confirma los datos del diagnóstico",
     icon: ICONO.aviso,
@@ -45,8 +39,6 @@ export const ESTADO_UI: Record<
   },
   tu_aportacion: {
     ink: "text-coral-ink",
-    meterColor: "bg-coral",
-    pct: 0,
     label: "Tu aportación",
     desc: "espera una tabla tuya",
     icon: ICONO.mas,
@@ -54,8 +46,6 @@ export const ESTADO_UI: Record<
   },
   sin_info: {
     ink: "text-text-faint",
-    meterColor: "bg-text-faint",
-    pct: 0,
     label: "Sin información",
     desc: "falta un dato del diagnóstico",
     icon: ICONO.raya,
