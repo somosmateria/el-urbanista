@@ -102,7 +102,7 @@ export function MiembroAccesos({
               if (e.target.value) anadir(e.target.value);
             }}
             onBlur={() => setAnadiendo(false)}
-            className="text-[12.5px] bg-transparent border border-line rounded-full px-2.5 py-1 outline-none focus:border-violet"
+            className="select-line text-[12.5px] bg-transparent border border-line rounded-full px-2.5 py-1 outline-none focus:border-violet"
           >
             <option value="" disabled>
               Elige un municipio…

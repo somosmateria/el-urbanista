@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { createServiceClient, createServerAuthClient } from "@/lib/supabase/server";
 import { enviarInvitacionEquipo } from "@/lib/email";
@@ -8,20 +9,26 @@ const COOKIE_EQUIPO_ACTIVO = "equipo_activo";
 
 export type EquipoActivo = { id: string; nombre: string; rol: EquipoRol; userId: string };
 
-export async function getUsuarioActual() {
+/**
+ * `cache()` deduplica dentro de un mismo render — el usuario actual se
+ * pregunta desde requireEquipoActivo() (usado en casi toda página) Y desde
+ * InvitacionBannerGate en paralelo; sin esto, cada navegación pagaba dos
+ * viajes a Supabase Auth por la misma pregunta.
+ */
+export const getUsuarioActual = cache(async () => {
   const supabase = await createServerAuthClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   return user;
-}
+});
 
 /**
  * Los equipos de una persona, en el mismo orden en que se unió a ellos —
  * sin tabla de relaciones en el tipado (mismo estilo que el resto del
  * proyecto), se resuelve con dos consultas y se cruza en JS.
  */
-export async function listEquiposDeUsuario(userId: string): Promise<EquipoActivo[]> {
+export const listEquiposDeUsuario = cache(async (userId: string): Promise<EquipoActivo[]> => {
   const supabase = createServiceClient();
   const { data: miembros, error } = await supabase
     .from("equipo_miembros")
@@ -46,7 +53,7 @@ export async function listEquiposDeUsuario(userId: string): Promise<EquipoActivo
       return equipo ? { id: equipo.id, nombre: equipo.nombre, rol: m.rol, userId } : null;
     })
     .filter((e): e is EquipoActivo => e !== null);
-}
+});
 
 /**
  * El equipo con el que se trabaja ahora mismo — de una cookie propia, no

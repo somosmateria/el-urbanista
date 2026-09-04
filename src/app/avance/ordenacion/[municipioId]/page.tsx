@@ -16,10 +16,11 @@ export default async function MunicipioPage({
 }) {
   const { municipioId } = await params;
   const equipo = await requireEquipoActivo();
-  const municipio = await getMunicipio(municipioId, equipo);
+  const [municipio, capitulos] = await Promise.all([
+    getMunicipio(municipioId, equipo),
+    listCapitulosDeMunicipio(municipioId, equipo.id),
+  ]);
   if (!municipio) notFound();
-
-  const capitulos = await listCapitulosDeMunicipio(municipioId, equipo.id);
   const contables = capitulos.filter((c) => c.sin_info_motivo !== "no_aplica");
   const cerrados = contables.filter((c) => c.estado === "listo").length;
   const abiertos = contables.length - cerrados;

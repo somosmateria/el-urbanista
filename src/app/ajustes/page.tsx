@@ -67,19 +67,22 @@ export default async function AjustesPage() {
     );
   }
 
-  const miembros = await listMiembrosDeEquipo(equipoActivo.id);
   const esAdmin = equipoActivo.rol === "admin";
 
   // Solo un admin gestiona accesos, y solo necesita ver los municipios del
-  // equipo cuando hay miembros no-admin a los que gestionárselos.
-  const municipios = esAdmin ? await listMunicipiosDeEquipo(equipoActivo.id) : [];
-  const accesosPorMiembro = esAdmin
-    ? await listAccesosPorMiembro(municipios.map((mu) => mu.id))
-    : new Map<string, Set<string>>();
+  // equipo cuando hay miembros no-admin a los que gestionárselos. Las tres
+  // son independientes entre sí, así que van en paralelo.
+  const [miembros, municipios, referencia] = await Promise.all([
+    listMiembrosDeEquipo(equipoActivo.id),
+    esAdmin ? listMunicipiosDeEquipo(equipoActivo.id) : Promise.resolve([]),
+    esAdmin ? getReferenciaDeEquipo(equipoActivo.id) : Promise.resolve(null),
+  ]);
 
-  const referencia = esAdmin ? await getReferenciaDeEquipo(equipoActivo.id) : null;
-  const capitulosIdentificados =
-    referencia?.estado === "listo" ? (await listSeccionesDeReferencia(referencia.id)).length : null;
+  const [accesosPorMiembro, seccionesReferencia] = await Promise.all([
+    esAdmin ? listAccesosPorMiembro(municipios.map((mu) => mu.id)) : Promise.resolve(new Map<string, Set<string>>()),
+    referencia?.estado === "listo" ? listSeccionesDeReferencia(referencia.id) : Promise.resolve(null),
+  ]);
+  const capitulosIdentificados = seccionesReferencia ? seccionesReferencia.length : null;
 
   return (
     <AppShell>

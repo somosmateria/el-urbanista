@@ -31,14 +31,20 @@ export default async function CapituloPage({
 }) {
   const { municipioId, capitulo: codigo } = await params;
   const equipo = await requireEquipoActivo();
-  const municipio = await getMunicipio(municipioId, equipo);
+
+  const [municipio, capitulo, titulosReferencia, miembros] = await Promise.all([
+    getMunicipio(municipioId, equipo),
+    getCapituloPorCodigo(municipioId, codigo, equipo.id),
+    getTitulosReferenciaDeEquipo(equipo.id),
+    listMiembrosDeEquipo(equipo.id),
+  ]);
   if (!municipio) notFound();
-
-  const capitulo = await getCapituloPorCodigo(municipioId, codigo, equipo.id);
   if (!capitulo) notFound();
+  const asignado = miembros.find((m) => m.user_id === capitulo.asignado_a);
 
-  const tablas = capitulo.motor === "tabla" ? await listTablasDeCapitulo(capitulo.id) : [];
-  const textos = capitulo.motor === "tabla" ? await listTextosDeCapitulo(capitulo.id) : [];
+  const [tablas, textos] = capitulo.motor === "tabla"
+    ? await Promise.all([listTablasDeCapitulo(capitulo.id), listTextosDeCapitulo(capitulo.id)])
+    : [[], []];
   const hayFilas = tablas.some((t) => t.filas.length > 0) || textos.some((t) => t.contenido_html.trim() !== "");
   const MOTOR_LABEL: Record<string, string> = {
     plantilla: "Plantilla",
@@ -50,15 +56,10 @@ export default async function CapituloPage({
   // "tabla" propios, aparte del motor del capítulo en sí (rag/plantilla).
   const subepigrafesDeTabla =
     capitulo.motor !== "tabla" ? (await getSubepigrafes(capitulo.codigo)).filter((s) => s.motor === "tabla") : [];
-  const tablasPorSubepigrafe = await Promise.all(
-    subepigrafesDeTabla.map((s) => listTablasDeCapitulo(capitulo.id, s.capitulo_codigo))
-  );
-  const textosPorSubepigrafe = await Promise.all(
-    subepigrafesDeTabla.map((s) => listTextosDeCapitulo(capitulo.id, s.capitulo_codigo))
-  );
-  const titulosReferencia = await getTitulosReferenciaDeEquipo(equipo.id);
-  const miembros = await listMiembrosDeEquipo(equipo.id);
-  const asignado = miembros.find((m) => m.user_id === capitulo.asignado_a);
+  const [tablasPorSubepigrafe, textosPorSubepigrafe] = await Promise.all([
+    Promise.all(subepigrafesDeTabla.map((s) => listTablasDeCapitulo(capitulo.id, s.capitulo_codigo))),
+    Promise.all(subepigrafesDeTabla.map((s) => listTextosDeCapitulo(capitulo.id, s.capitulo_codigo))),
+  ]);
 
   return (
     <AppShell>

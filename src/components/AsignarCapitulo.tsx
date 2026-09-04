@@ -40,7 +40,7 @@ export function AsignarCapitulo({
             }
           });
         }}
-        className="text-[11px] bg-transparent border border-line rounded px-2 py-1 outline-none focus:border-violet cursor-pointer disabled:opacity-50 max-w-[180px]"
+        className="select-line text-[11px] bg-transparent border border-line rounded px-2 py-1 outline-none focus:border-violet cursor-pointer disabled:opacity-50 max-w-[180px]"
       >
         <option value="">Sin asignar</option>
         {miembros.map((m) => (

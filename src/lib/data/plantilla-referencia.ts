@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { randomUUID } from "node:crypto";
 import { createServiceClient } from "@/lib/supabase/server";
 import { normalizarTituloReferencia } from "@/lib/texto/avance-referencia";
@@ -148,8 +149,13 @@ export async function getSeccionReferenciaDeEquipo(equipoId: string, codigo: str
  * cabeceras) sin una consulta por cada uno. Mapa vacío si el equipo no
  * tiene referencia lista, no si falla — nunca debe romper una página que
  * solo quiere mostrar títulos.
+ *
+ * `cache()` deduplica dentro de un mismo render: getCapituloPorCodigo la
+ * llama por su cuenta para el título de un capítulo, y la página que lo
+ * pinta casi siempre la vuelve a llamar para los subepígrafes — sin esto
+ * eran dos viajes idénticos a la base de datos en la misma petición.
  */
-export async function getTitulosReferenciaDeEquipo(equipoId: string): Promise<Map<string, string>> {
+export const getTitulosReferenciaDeEquipo = cache(async (equipoId: string): Promise<Map<string, string>> => {
   const referencia = await getReferenciaDeEquipo(equipoId);
   if (!referencia || referencia.estado !== "listo") return new Map();
 
@@ -164,4 +170,4 @@ export async function getTitulosReferenciaDeEquipo(equipoId: string): Promise<Ma
       .filter((s): s is typeof s & { titulo: string } => !!s.titulo)
       .map((s) => [s.capitulo_codigo, normalizarTituloReferencia(s.titulo)])
   );
-}
+});

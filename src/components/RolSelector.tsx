@@ -28,7 +28,7 @@ export function RolSelector({ miembroId, rolInicial }: { miembroId: string; rolI
             }
           });
         }}
-        className="text-[10px] tracking-[0.14em] uppercase bg-transparent border border-line rounded px-2 py-1 outline-none focus:border-violet cursor-pointer disabled:opacity-50"
+        className="select-line text-[10px] tracking-[0.14em] uppercase bg-transparent border border-line rounded px-2 py-1 outline-none focus:border-violet cursor-pointer disabled:opacity-50"
       >
         <option value="admin">Admin</option>
         <option value="miembro">Miembro</option>
