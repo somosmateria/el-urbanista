@@ -138,6 +138,11 @@ export function PlantillaReferenciaUploader({
           )}
         </div>
       </button>
+      <p className="text-[11.5px] text-text-faint mt-3.5 leading-relaxed">
+        Procesarlo consulta la IA una vez por cada capítulo del documento — tiene un coste de API. Solo hace
+        falta subirlo (o sustituirlo) cuando cambie de verdad, no como prueba.
+      </p>
+
       {errorMsg && <p className="text-[12px] text-coral-ink mt-2">{errorMsg}</p>}
     </div>
   );

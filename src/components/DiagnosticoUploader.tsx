@@ -180,7 +180,8 @@ export function DiagnosticoUploader({
         </div>
       </button>
       <p className="text-[11.5px] text-text-faint mt-3.5 leading-relaxed">
-        PDF de hasta 500 MB. Se lee, se extrae el texto y se segmenta por epígrafes antes de generar nada.
+        PDF de hasta 500 MB. Se lee, se extrae el texto y se segmenta por epígrafes antes de generar nada —
+        ese segmentado consulta la IA y tiene un coste de API, evita subirlo varias veces solo para probar.
       </p>
 
       {errorMsg && <p className="text-[12px] text-coral-ink mt-2">{errorMsg}</p>}
