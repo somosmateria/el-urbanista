@@ -118,6 +118,17 @@ export type CapituloTablaVersionRow = {
   created_at: string;
 }
 
+export type CapituloTextoRow = {
+  id: string;
+  capitulo_id: string;
+  subepigrafe_codigo: string | null;
+  titulo: string;
+  contenido_html: string;
+  orden: number;
+  created_at: string;
+  updated_at: string;
+}
+
 type TableDef<Row, Insert, Update> = {
   Row: Row;
   Insert: Insert;
@@ -186,6 +197,11 @@ export type Database = {
         CapituloTablaVersionRow,
         Omit<CapituloTablaVersionRow, "id" | "created_at"> & { id?: string },
         Partial<Omit<CapituloTablaVersionRow, "id">>
+      >;
+      capitulo_textos: TableDef<
+        CapituloTextoRow,
+        Omit<CapituloTextoRow, "id" | "created_at" | "updated_at"> & { id?: string },
+        Partial<Omit<CapituloTextoRow, "id">>
       >;
     };
     Views: Record<string, never>;

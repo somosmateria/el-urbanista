@@ -7,7 +7,7 @@ import {
   listMiembrosDeEquipo,
 } from "@/lib/data/equipos";
 import { listMunicipiosConProgreso } from "@/lib/data/municipios";
-import { listMunicipioIdsAccesibles } from "@/lib/data/municipio-accesos";
+import { listAccesosPorMiembro } from "@/lib/data/municipio-accesos";
 import { cambiarEquipoActivoAction, crearEquipoAction, invitarAction, eliminarMiembroAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -20,20 +20,12 @@ export default async function AjustesPage() {
   const esAdmin = equipoActivo.rol === "admin";
 
   // Solo un admin gestiona accesos, y solo necesita ver los municipios del
-  // equipo cuando hay miembros no-admin a los que gestionárselos.
+  // equipo cuando hay miembros no-admin a los que gestionárselos. Una sola
+  // consulta para todos los accesos del equipo en vez de una por miembro.
   const municipios = esAdmin ? await listMunicipiosConProgreso(equipoActivo) : [];
   const accesosPorMiembro = esAdmin
-    ? Object.fromEntries(
-        await Promise.all(
-          miembros
-            .filter((m) => m.rol === "miembro")
-            .map(async (m) => [
-              m.user_id,
-              Array.from(await listMunicipioIdsAccesibles(municipios.map((mu) => mu.id), m.user_id)),
-            ])
-        )
-      )
-    : {};
+    ? await listAccesosPorMiembro(municipios.map((mu) => mu.id))
+    : new Map<string, Set<string>>();
 
   return (
     <AppShell>
@@ -109,7 +101,7 @@ export default async function AjustesPage() {
                   <MiembroAccesos
                     userId={m.user_id}
                     municipios={municipios.map((mu) => ({ id: mu.id, nombre: mu.nombre }))}
-                    accesibles={accesosPorMiembro[m.user_id] ?? []}
+                    accesibles={Array.from(accesosPorMiembro.get(m.user_id) ?? [])}
                   />
                 </div>
               )}

@@ -10,6 +10,13 @@ import {
   listTablasDeCapitulo,
   getCapituloIdDeTabla,
 } from "@/lib/data/tablas";
+import {
+  crearBloqueTexto,
+  guardarTexto,
+  eliminarBloqueTexto,
+  listTextosDeCapitulo,
+  getCapituloIdDeTexto,
+} from "@/lib/data/textos";
 import { generarCapituloTabla } from "@/lib/motores/tabla";
 import { regenerarContenido } from "@/lib/motores/regenerar";
 import { PLANTILLAS_QUE_NECESITAN_REVISION } from "@/lib/motores/plantilla";
@@ -17,15 +24,23 @@ import { verificarCapituloDeEquipo } from "@/lib/data/municipios";
 import { requireEquipoActivo } from "@/lib/data/equipos";
 import type { CapituloEstado } from "@/lib/supabase/types";
 
+// El semáforo y la propia página del capítulo son rutas distintas —
+// revalidar solo la primera dejaba la segunda con datos obsoletos hasta
+// un refresco manual (p.ej. un bloque de tabla recién creado que no
+// aparecía). Revalidar las dos siempre que se toca un capítulo.
+function revalidarCapitulo(municipioId: string, codigo: string) {
+  revalidatePath(`/avance/ordenacion/${municipioId}`);
+  revalidatePath(`/avance/ordenacion/${municipioId}/${codigo}`);
+}
+
 export async function marcarMotivoAction(
   municipioId: string,
   capituloId: string,
   motivo: SinInfoMotivo
 ) {
   const equipo = await requireEquipoActivo();
-  if (!(await verificarCapituloDeEquipo(capituloId, equipo))) {
-    throw new Error("Capítulo no encontrado.");
-  }
+  const capitulo = await verificarCapituloDeEquipo(capituloId, equipo);
+  if (!capitulo) throw new Error("Capítulo no encontrado.");
 
   const supabase = createServiceClient();
   const { error } = await supabase
@@ -34,7 +49,7 @@ export async function marcarMotivoAction(
     .eq("id", capituloId);
   if (error) throw error;
 
-  revalidatePath(`/avance/ordenacion/${municipioId}`);
+  revalidarCapitulo(municipioId, capitulo.codigo);
 }
 
 export async function crearBloqueTablaAction(
@@ -44,25 +59,23 @@ export async function crearBloqueTablaAction(
   formData: FormData
 ) {
   const equipo = await requireEquipoActivo();
-  if (!(await verificarCapituloDeEquipo(capituloId, equipo))) {
-    throw new Error("Capítulo no encontrado.");
-  }
+  const capitulo = await verificarCapituloDeEquipo(capituloId, equipo);
+  if (!capitulo) throw new Error("Capítulo no encontrado.");
 
   const nombre = String(formData.get("nombreBloque") ?? "").trim();
   if (!nombre) return;
   await crearBloqueTabla(capituloId, nombre, subepigrafeCodigo);
-  revalidatePath(`/avance/ordenacion/${municipioId}`);
+  revalidarCapitulo(municipioId, capitulo.codigo);
 }
 
 export async function eliminarBloqueTablaAction(municipioId: string, tablaId: string) {
   const equipo = await requireEquipoActivo();
   const capituloId = await getCapituloIdDeTabla(tablaId);
-  if (!capituloId || !(await verificarCapituloDeEquipo(capituloId, equipo))) {
-    throw new Error("Tabla no encontrada.");
-  }
+  const capitulo = capituloId ? await verificarCapituloDeEquipo(capituloId, equipo) : null;
+  if (!capitulo) throw new Error("Tabla no encontrada.");
 
   await eliminarBloqueTabla(tablaId);
-  revalidatePath(`/avance/ordenacion/${municipioId}`);
+  revalidarCapitulo(municipioId, capitulo.codigo);
 }
 
 export async function guardarTablaAction(
@@ -73,12 +86,47 @@ export async function guardarTablaAction(
 ) {
   const equipo = await requireEquipoActivo();
   const capituloId = await getCapituloIdDeTabla(tablaId);
-  if (!capituloId || !(await verificarCapituloDeEquipo(capituloId, equipo))) {
-    throw new Error("Tabla no encontrada.");
-  }
+  const capitulo = capituloId ? await verificarCapituloDeEquipo(capituloId, equipo) : null;
+  if (!capitulo) throw new Error("Tabla no encontrada.");
 
   await guardarTabla(tablaId, columnas, filas);
-  revalidatePath(`/avance/ordenacion/${municipioId}`);
+  revalidarCapitulo(municipioId, capitulo.codigo);
+}
+
+export async function crearBloqueTextoAction(
+  municipioId: string,
+  capituloId: string,
+  subepigrafeCodigo: string | null,
+  formData: FormData
+) {
+  const equipo = await requireEquipoActivo();
+  const capitulo = await verificarCapituloDeEquipo(capituloId, equipo);
+  if (!capitulo) throw new Error("Capítulo no encontrado.");
+
+  const titulo = String(formData.get("tituloBloque") ?? "").trim();
+  if (!titulo) return;
+  await crearBloqueTexto(capituloId, titulo, subepigrafeCodigo);
+  revalidarCapitulo(municipioId, capitulo.codigo);
+}
+
+export async function guardarTextoAction(municipioId: string, textoId: string, contenidoHtml: string) {
+  const equipo = await requireEquipoActivo();
+  const capituloId = await getCapituloIdDeTexto(textoId);
+  const capitulo = capituloId ? await verificarCapituloDeEquipo(capituloId, equipo) : null;
+  if (!capitulo) throw new Error("Bloque de texto no encontrado.");
+
+  await guardarTexto(textoId, contenidoHtml);
+  revalidarCapitulo(municipioId, capitulo.codigo);
+}
+
+export async function eliminarBloqueTextoAction(municipioId: string, textoId: string) {
+  const equipo = await requireEquipoActivo();
+  const capituloId = await getCapituloIdDeTexto(textoId);
+  const capitulo = capituloId ? await verificarCapituloDeEquipo(capituloId, equipo) : null;
+  if (!capitulo) throw new Error("Bloque de texto no encontrado.");
+
+  await eliminarBloqueTexto(textoId);
+  revalidarCapitulo(municipioId, capitulo.codigo);
 }
 
 /**
@@ -146,17 +194,19 @@ export async function aplicarRegeneracionAction(
   });
   if (versionError) throw versionError;
 
-  revalidatePath(`/avance/ordenacion/${municipioId}`);
+  revalidarCapitulo(municipioId, capitulo.codigo);
 }
 
 export async function generarTextoTablaAction(municipioId: string, capituloId: string) {
   const equipo = await requireEquipoActivo();
-  if (!(await verificarCapituloDeEquipo(capituloId, equipo))) {
-    throw new Error("Capítulo no encontrado.");
-  }
+  const capitulo = await verificarCapituloDeEquipo(capituloId, equipo);
+  if (!capitulo) throw new Error("Capítulo no encontrado.");
 
-  const tablas = await listTablasDeCapitulo(capituloId);
-  const contenido = await generarCapituloTabla(tablas);
+  const [tablas, textos] = await Promise.all([
+    listTablasDeCapitulo(capituloId),
+    listTextosDeCapitulo(capituloId),
+  ]);
+  const contenido = await generarCapituloTabla(tablas, textos);
   if (!contenido) return;
 
   const supabase = createServiceClient();
@@ -173,5 +223,5 @@ export async function generarTextoTablaAction(municipioId: string, capituloId: s
   });
   if (versionError) throw versionError;
 
-  revalidatePath(`/avance/ordenacion/${municipioId}`);
+  revalidarCapitulo(municipioId, capitulo.codigo);
 }

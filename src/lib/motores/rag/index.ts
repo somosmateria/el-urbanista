@@ -1,6 +1,7 @@
 import { getSubepigrafes } from "@/lib/data/mapeo";
 import { getSeccionPorCodigo } from "@/lib/data/diagnosticos";
 import { listTablasDeCapitulo } from "@/lib/data/tablas";
+import { listTextosDeCapitulo } from "@/lib/data/textos";
 import { sinPrefijoMI } from "@/lib/diagnostico/parser";
 import { getAnthropicClient, MODELO_GENERACION } from "@/lib/anthropic";
 import { PLANTILLAS } from "@/lib/motores/plantilla";
@@ -147,8 +148,11 @@ export async function generarCapituloRAG(
       }
       if (s.motor === "tabla") {
         if (!capituloId) return null;
-        const tablas = await listTablasDeCapitulo(capituloId, s.capitulo_codigo);
-        return generarCapituloTabla(tablas);
+        const [tablas, textos] = await Promise.all([
+          listTablasDeCapitulo(capituloId, s.capitulo_codigo),
+          listTextosDeCapitulo(capituloId, s.capitulo_codigo),
+        ]);
+        return generarCapituloTabla(tablas, textos);
       }
       return null;
     })

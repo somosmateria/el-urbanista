@@ -25,7 +25,7 @@ export default async function EditarCapituloPage({
   const versiones = await listVersionesDeCapitulo(capitulo.id);
 
   return (
-    <AppShell>
+    <AppShell ancho="amplio">
       <BackLink href={`/avance/ordenacion/${municipioId}/${capitulo.codigo}`}>
         Volver sin guardar
       </BackLink>

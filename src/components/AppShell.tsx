@@ -1,8 +1,16 @@
+import clsx from "clsx";
 import Link from "next/link";
 import { signOutAction } from "@/app/login/actions";
 import { NavMenu } from "@/components/NavMenu";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  ancho = "normal",
+}: {
+  children: React.ReactNode;
+  /** El editor de capítulo necesita más aire que el resto de páginas. */
+  ancho?: "normal" | "amplio";
+}) {
   return (
     <div className="min-h-screen bg-bg">
       <header className="flex items-center gap-7 px-6 sm:px-10 py-[18px] border-b border-line">
@@ -21,7 +29,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </form>
       </header>
       <main className="min-h-[calc(100vh-63px)]">
-        <div className="max-w-3xl mx-auto px-6 sm:px-10 py-10 sm:py-11">{children}</div>
+        <div
+          className={clsx(
+            "mx-auto px-6 sm:px-10 py-10 sm:py-11",
+            ancho === "amplio" ? "max-w-6xl" : "max-w-3xl"
+          )}
+        >
+          {children}
+        </div>
       </main>
     </div>
   );

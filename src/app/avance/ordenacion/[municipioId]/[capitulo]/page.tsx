@@ -4,13 +4,20 @@ import clsx from "clsx";
 import { AppShell } from "@/components/AppShell";
 import { BackLink } from "@/components/BackLink";
 import { DataTableEditor } from "@/components/DataTableEditor";
+import { TextoBlockEditor } from "@/components/TextoBlockEditor";
 import { RegenerarPanel } from "@/components/RegenerarPanel";
 import { EstadoPill } from "@/components/EstadoPill";
 import { getMunicipio, getCapituloPorCodigo } from "@/lib/data/municipios";
 import { listTablasDeCapitulo } from "@/lib/data/tablas";
+import { listTextosDeCapitulo } from "@/lib/data/textos";
 import { getSubepigrafes } from "@/lib/data/mapeo";
 import { requireEquipoActivo } from "@/lib/data/equipos";
-import { marcarMotivoAction, crearBloqueTablaAction, generarTextoTablaAction } from "./actions";
+import {
+  marcarMotivoAction,
+  crearBloqueTablaAction,
+  crearBloqueTextoAction,
+  generarTextoTablaAction,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +35,8 @@ export default async function CapituloPage({
   if (!capitulo) notFound();
 
   const tablas = capitulo.motor === "tabla" ? await listTablasDeCapitulo(capitulo.id) : [];
-  const hayFilas = tablas.some((t) => t.filas.length > 0);
+  const textos = capitulo.motor === "tabla" ? await listTextosDeCapitulo(capitulo.id) : [];
+  const hayFilas = tablas.some((t) => t.filas.length > 0) || textos.some((t) => t.contenido_html.trim() !== "");
   const MOTOR_LABEL: Record<string, string> = {
     plantilla: "Plantilla",
     rag: "RAG dirigido",
@@ -41,6 +49,9 @@ export default async function CapituloPage({
     capitulo.motor !== "tabla" ? (await getSubepigrafes(capitulo.codigo)).filter((s) => s.motor === "tabla") : [];
   const tablasPorSubepigrafe = await Promise.all(
     subepigrafesDeTabla.map((s) => listTablasDeCapitulo(capitulo.id, s.capitulo_codigo))
+  );
+  const textosPorSubepigrafe = await Promise.all(
+    subepigrafesDeTabla.map((s) => listTextosDeCapitulo(capitulo.id, s.capitulo_codigo))
   );
 
   return (
@@ -104,24 +115,34 @@ export default async function CapituloPage({
           {tablas.map((tabla) => (
             <DataTableEditor key={tabla.id} municipioId={municipioId} tabla={tabla} />
           ))}
+          {textos.map((texto) => (
+            <TextoBlockEditor key={texto.id} municipioId={municipioId} texto={texto} />
+          ))}
 
-          <form
-            action={crearBloqueTablaAction.bind(null, municipioId, capitulo.id, null)}
-            className="flex items-center gap-3 mb-6"
-          >
-            <input
-              name="nombreBloque"
-              type="text"
-              placeholder="Ej. Áreas recreativas propuestas"
-              className="flex-1 box-border bg-surface border border-line-strong rounded-lg px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
-            />
-            <button
-              type="submit"
-              className="text-[12.5px] px-3.5 py-2 rounded-lg border border-line-strong text-text-soft hover:bg-surface-hi cursor-pointer whitespace-nowrap"
-            >
-              + Nuevo bloque de tabla
-            </button>
-          </form>
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <form action={crearBloqueTablaAction.bind(null, municipioId, capitulo.id, null)} className="flex items-center gap-3">
+              <input
+                name="nombreBloque"
+                type="text"
+                placeholder="Ej. Áreas recreativas propuestas"
+                className="box-border bg-transparent border border-line rounded px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
+              />
+              <button type="submit" className="btn btn-secondary whitespace-nowrap">
+                + Nueva tabla
+              </button>
+            </form>
+            <form action={crearBloqueTextoAction.bind(null, municipioId, capitulo.id, null)} className="flex items-center gap-3">
+              <input
+                name="tituloBloque"
+                type="text"
+                placeholder="Ej. Justificación de la propuesta"
+                className="box-border bg-transparent border border-line rounded px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
+              />
+              <button type="submit" className="btn btn-secondary whitespace-nowrap">
+                + Nuevo texto
+              </button>
+            </form>
+          </div>
 
           {hayFilas && (
             <form action={generarTextoTablaAction.bind(null, municipioId, capitulo.id)}>
@@ -210,24 +231,40 @@ export default async function CapituloPage({
               {tablasPorSubepigrafe[i].map((tabla) => (
                 <DataTableEditor key={tabla.id} municipioId={municipioId} tabla={tabla} />
               ))}
+              {textosPorSubepigrafe[i].map((texto) => (
+                <TextoBlockEditor key={texto.id} municipioId={municipioId} texto={texto} />
+              ))}
 
-              <form
-                action={crearBloqueTablaAction.bind(null, municipioId, capitulo.id, s.capitulo_codigo)}
-                className="flex items-center gap-3"
-              >
-                <input
-                  name="nombreBloque"
-                  type="text"
-                  placeholder="Ej. Sistemas generales de espacios libres"
-                  className="flex-1 box-border bg-surface border border-line-strong rounded-lg px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
-                />
-                <button
-                  type="submit"
-                  className="text-[12.5px] px-3.5 py-2 rounded-lg border border-line-strong text-text-soft hover:bg-surface-hi cursor-pointer whitespace-nowrap"
+              <div className="flex flex-wrap items-center gap-3">
+                <form
+                  action={crearBloqueTablaAction.bind(null, municipioId, capitulo.id, s.capitulo_codigo)}
+                  className="flex items-center gap-3"
                 >
-                  + Nuevo bloque de tabla
-                </button>
-              </form>
+                  <input
+                    name="nombreBloque"
+                    type="text"
+                    placeholder="Ej. Sistemas generales de espacios libres"
+                    className="box-border bg-transparent border border-line rounded px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
+                  />
+                  <button type="submit" className="btn btn-secondary whitespace-nowrap">
+                    + Nueva tabla
+                  </button>
+                </form>
+                <form
+                  action={crearBloqueTextoAction.bind(null, municipioId, capitulo.id, s.capitulo_codigo)}
+                  className="flex items-center gap-3"
+                >
+                  <input
+                    name="tituloBloque"
+                    type="text"
+                    placeholder="Ej. Justificación de la propuesta"
+                    className="box-border bg-transparent border border-line rounded px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
+                  />
+                  <button type="submit" className="btn btn-secondary whitespace-nowrap">
+                    + Nuevo texto
+                  </button>
+                </form>
+              </div>
             </div>
           ))}
         </div>

@@ -5,6 +5,7 @@ import { DiagnosticoUploader } from "@/components/DiagnosticoUploader";
 import { GenerarMemoriaBoton } from "@/components/GenerarMemoriaBoton";
 import { getMunicipio } from "@/lib/data/municipios";
 import { getDiagnosticoDeMunicipio } from "@/lib/data/diagnosticos";
+import { listCapitulosPrincipales } from "@/lib/data/mapeo";
 import { requireEquipoActivo } from "@/lib/data/equipos";
 import { generarMemoriaAction } from "./actions";
 
@@ -21,6 +22,7 @@ export default async function NuevoMunicipioDiagnosticoPage({
   if (!municipio) notFound();
 
   const diagnostico = await getDiagnosticoDeMunicipio(municipioId);
+  const capitulosPrincipales = await listCapitulosPrincipales();
 
   return (
     <AppShell>
@@ -46,7 +48,10 @@ export default async function NuevoMunicipioDiagnosticoPage({
           )}
         </div>
 
-        <GenerarMemoriaBoton action={generarMemoriaAction.bind(null, municipioId)} />
+        <GenerarMemoriaBoton
+          action={generarMemoriaAction.bind(null, municipioId)}
+          capitulos={capitulosPrincipales.map((c) => ({ codigo: c.capitulo_codigo, titulo: c.titulo_canonico }))}
+        />
       </div>
     </AppShell>
   );

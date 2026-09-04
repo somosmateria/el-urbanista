@@ -32,6 +32,28 @@ export async function listMunicipioIdsAccesibles(municipioIds: string[], userId:
   return new Set(data.map((a) => a.municipio_id));
 }
 
+/**
+ * Todos los accesos de golpe, agrupados por miembro — para pintar la
+ * pantalla de Ajustes en una sola consulta en vez de una por miembro
+ * (`listMunicipioIdsAccesibles` llamado en bucle escala mal según crece
+ * el equipo).
+ */
+export async function listAccesosPorMiembro(municipioIds: string[]): Promise<Map<string, Set<string>>> {
+  const mapa = new Map<string, Set<string>>();
+  if (municipioIds.length === 0) return mapa;
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("municipio_accesos")
+    .select("user_id, municipio_id")
+    .in("municipio_id", municipioIds);
+  if (error) throw error;
+  for (const fila of data) {
+    if (!mapa.has(fila.user_id)) mapa.set(fila.user_id, new Set());
+    mapa.get(fila.user_id)!.add(fila.municipio_id);
+  }
+  return mapa;
+}
+
 /** IDs de usuario con acceso concedido a este municipio (para pintar checkboxes). */
 export async function listUserIdsConAcceso(municipioId: string) {
   const supabase = createServiceClient();
