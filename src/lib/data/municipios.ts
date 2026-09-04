@@ -3,7 +3,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import type { CapituloEstado, MotorTipo, MunicipioRow } from "@/lib/supabase/types";
 import type { EquipoActivo } from "@/lib/data/equipos";
 import { tieneAccesoAMunicipio, listMunicipioIdsAccesibles, concederAcceso } from "@/lib/data/municipio-accesos";
-import { PLANTILLAS, PLANTILLAS_QUE_NECESITAN_REVISION } from "@/lib/motores/plantilla";
+import { resolverPlantilla } from "@/lib/motores/plantilla";
 import { extraerPlanVigente } from "@/lib/motores/plantilla/mo1";
 import { generarCapituloRAG } from "@/lib/motores/rag";
 import { getDiagnosticoDeMunicipio } from "@/lib/data/diagnosticos";
@@ -261,7 +261,7 @@ export async function generarCapitulosIniciales(municipioId: string, equipo: Equ
         // capítulo mixto como MO.3 puede tener también subepígrafes de
         // motor "plantilla" que no necesitan diagnóstico — por eso se
         // llama igual aunque diagnosticoId sea null.
-        const contenido = await generarCapituloRAG(entrada.capitulo_codigo, diagnosticoId, municipio);
+        const contenido = await generarCapituloRAG(entrada.capitulo_codigo, diagnosticoId, municipio, equipo.id);
 
         return {
           municipio_id: municipioId,
@@ -280,9 +280,12 @@ export async function generarCapitulosIniciales(municipioId: string, equipo: Equ
       // diagnóstico ni Claude, salvo MO.11 (lista de colindantes). Si no
       // hay plantilla o le faltan datos, se deja en "sin información" en
       // vez de fabricar un texto a medias (ver src/lib/motores/plantilla/index.ts).
-      const generador = PLANTILLAS[entrada.capitulo_codigo];
-      const contenido = generador ? await generador(municipio, diagnosticoId) : null;
-      const necesitaRevision = PLANTILLAS_QUE_NECESITAN_REVISION.has(entrada.capitulo_codigo);
+      const { contenido, necesitaRevision } = await resolverPlantilla(
+        entrada.capitulo_codigo,
+        municipio,
+        diagnosticoId,
+        equipo.id
+      );
 
       return {
         municipio_id: municipioId,

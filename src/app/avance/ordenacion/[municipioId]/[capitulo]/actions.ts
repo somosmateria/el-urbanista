@@ -19,7 +19,6 @@ import {
 } from "@/lib/data/textos";
 import { generarCapituloTabla } from "@/lib/motores/tabla";
 import { regenerarContenido } from "@/lib/motores/regenerar";
-import { PLANTILLAS_QUE_NECESITAN_REVISION } from "@/lib/motores/plantilla";
 import { verificarCapituloDeEquipo } from "@/lib/data/municipios";
 import { requireEquipoActivo } from "@/lib/data/equipos";
 import type { CapituloEstado } from "@/lib/supabase/types";
@@ -139,7 +138,7 @@ export async function previsualizarRegeneracionAction(capituloId: string) {
   const capitulo = await verificarCapituloDeEquipo(capituloId, equipo);
   if (!capitulo) throw new Error("Capítulo no encontrado.");
 
-  const contenidoNuevo = await regenerarContenido(capitulo, equipo);
+  const { contenido: contenidoNuevo, necesitaRevision } = await regenerarContenido(capitulo, equipo);
   if (!contenidoNuevo) {
     return { disponible: false as const };
   }
@@ -164,20 +163,20 @@ export async function previsualizarRegeneracionAction(capituloId: string) {
     hayEdicionesManuales: ultimaVersion?.tipo === "edicion_manual",
     contenidoActual: capitulo.contenido_html,
     contenidoNuevo,
+    necesitaRevision,
   };
 }
 
 export async function aplicarRegeneracionAction(
   municipioId: string,
   capituloId: string,
-  contenidoNuevo: string
+  contenidoNuevo: string,
+  necesitaRevision: boolean
 ) {
   const equipo = await requireEquipoActivo();
   const capitulo = await verificarCapituloDeEquipo(capituloId, equipo);
   if (!capitulo) throw new Error("Capítulo no encontrado.");
 
-  const necesitaRevision =
-    capitulo.motor === "rag" || PLANTILLAS_QUE_NECESITAN_REVISION.has(capitulo.codigo);
   const estado: CapituloEstado = necesitaRevision ? "revisar" : "listo";
 
   const supabase = createServiceClient();

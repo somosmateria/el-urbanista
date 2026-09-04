@@ -11,6 +11,7 @@ type Preview = {
   contenidoActual: string | null;
   contenidoNuevo: string;
   hayEdicionesManuales: boolean;
+  necesitaRevision: boolean;
 };
 
 export function RegenerarPanel({
@@ -45,7 +46,7 @@ export function RegenerarPanel({
       if (!resultado.hayEdicionesManuales) {
         // Nadie ha tocado el texto a mano desde la última generación — se
         // aplica directo, sin pedir confirmación (ver docs/03).
-        await aplicarRegeneracionAction(municipioId, capituloId, resultado.contenidoNuevo);
+        await aplicarRegeneracionAction(municipioId, capituloId, resultado.contenidoNuevo, resultado.necesitaRevision);
         router.refresh();
         setMensaje("Actualizado con los datos actuales del diagnóstico.");
         return;
@@ -55,6 +56,7 @@ export function RegenerarPanel({
         contenidoActual: resultado.contenidoActual,
         contenidoNuevo: resultado.contenidoNuevo,
         hayEdicionesManuales: true,
+        necesitaRevision: resultado.necesitaRevision,
       });
     });
   }
@@ -62,7 +64,7 @@ export function RegenerarPanel({
   function aplicar() {
     if (!preview) return;
     startTransition(async () => {
-      await aplicarRegeneracionAction(municipioId, capituloId, preview.contenidoNuevo);
+      await aplicarRegeneracionAction(municipioId, capituloId, preview.contenidoNuevo, preview.necesitaRevision);
       setPreview(null);
       router.refresh();
     });

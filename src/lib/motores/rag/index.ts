@@ -4,7 +4,7 @@ import { listTablasDeCapitulo } from "@/lib/data/tablas";
 import { listTextosDeCapitulo } from "@/lib/data/textos";
 import { sinPrefijoMI } from "@/lib/diagnostico/parser";
 import { getAnthropicClient, MODELO_GENERACION } from "@/lib/anthropic";
-import { PLANTILLAS } from "@/lib/motores/plantilla";
+import { resolverPlantilla } from "@/lib/motores/plantilla";
 import { generarCapituloTabla } from "@/lib/motores/tabla";
 import type { MapeoCapituloRow, MunicipioRow } from "@/lib/supabase/types";
 
@@ -135,6 +135,7 @@ export async function generarCapituloRAG(
   capituloCodigo: string,
   diagnosticoId: string | null,
   municipio: MunicipioRow,
+  equipoId: string,
   capituloId?: string
 ): Promise<string | null> {
   const subepigrafes = await getSubepigrafes(capituloCodigo);
@@ -143,8 +144,8 @@ export async function generarCapituloRAG(
     subepigrafes.map(async (s) => {
       if (s.motor === "rag") return diagnosticoId ? generarBloqueSubepigrafe(s, diagnosticoId) : null;
       if (s.motor === "plantilla") {
-        const generador = PLANTILLAS[s.capitulo_codigo];
-        return generador ? generador(municipio, diagnosticoId) : null;
+        const { contenido } = await resolverPlantilla(s.capitulo_codigo, municipio, diagnosticoId, equipoId);
+        return contenido;
       }
       if (s.motor === "tabla") {
         if (!capituloId) return null;

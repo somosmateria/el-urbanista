@@ -118,6 +118,26 @@ export type CapituloTablaVersionRow = {
   created_at: string;
 }
 
+export type EquipoPlantillaReferenciaRow = {
+  id: string;
+  equipo_id: string;
+  storage_path: string;
+  nombre_archivo: string | null;
+  estado: DiagnosticoEstado;
+  error_mensaje: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type EquipoPlantillaSeccionRow = {
+  id: string;
+  referencia_id: string;
+  capitulo_codigo: string;
+  titulo: string | null;
+  texto_html: string;
+  created_at: string;
+}
+
 export type CapituloTextoRow = {
   id: string;
   capitulo_id: string;
@@ -202,6 +222,20 @@ export type Database = {
         CapituloTextoRow,
         Omit<CapituloTextoRow, "id" | "created_at" | "updated_at"> & { id?: string },
         Partial<Omit<CapituloTextoRow, "id">>
+      >;
+      equipo_plantilla_referencia: TableDef<
+        EquipoPlantillaReferenciaRow,
+        Omit<EquipoPlantillaReferenciaRow, "id" | "created_at" | "updated_at" | "estado" | "error_mensaje"> & {
+          id?: string;
+          estado?: DiagnosticoEstado;
+          error_mensaje?: string | null;
+        },
+        Partial<Omit<EquipoPlantillaReferenciaRow, "id">>
+      >;
+      equipo_plantilla_secciones: TableDef<
+        EquipoPlantillaSeccionRow,
+        Omit<EquipoPlantillaSeccionRow, "id" | "created_at"> & { id?: string },
+        Partial<Omit<EquipoPlantillaSeccionRow, "id">>
       >;
     };
     Views: Record<string, never>;

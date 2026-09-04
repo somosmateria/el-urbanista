@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/AppShell";
 import { MiembroAccesos } from "@/components/MiembroAccesos";
+import { PlantillaReferenciaUploader } from "@/components/PlantillaReferenciaUploader";
 import {
   getUsuarioActual,
   listEquiposDeUsuario,
@@ -8,6 +9,7 @@ import {
 } from "@/lib/data/equipos";
 import { listMunicipiosConProgreso } from "@/lib/data/municipios";
 import { listAccesosPorMiembro } from "@/lib/data/municipio-accesos";
+import { getReferenciaDeEquipo, listSeccionesDeReferencia } from "@/lib/data/plantilla-referencia";
 import { cambiarEquipoActivoAction, crearEquipoAction, invitarAction, eliminarMiembroAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +28,10 @@ export default async function AjustesPage() {
   const accesosPorMiembro = esAdmin
     ? await listAccesosPorMiembro(municipios.map((mu) => mu.id))
     : new Map<string, Set<string>>();
+
+  const referencia = esAdmin ? await getReferenciaDeEquipo(equipoActivo.id) : null;
+  const capitulosIdentificados =
+    referencia?.estado === "listo" ? (await listSeccionesDeReferencia(referencia.id)).length : null;
 
   return (
     <AppShell>
@@ -110,7 +116,7 @@ export default async function AjustesPage() {
         </div>
 
         {esAdmin ? (
-          <form action={invitarAction} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <form action={invitarAction} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-14">
             <input
               name="email"
               type="email"
@@ -123,9 +129,34 @@ export default async function AjustesPage() {
             </button>
           </form>
         ) : (
-          <p className="text-[12.5px] text-text-faint">
+          <p className="text-[12.5px] text-text-faint mb-14">
             Solo un admin de {equipoActivo.nombre} puede invitar a gente nueva.
           </p>
+        )}
+
+        {esAdmin && (
+          <>
+            <div className="text-[10px] tracking-[0.2em] uppercase text-text-faint mb-2.5">
+              Avance de referencia de {equipoActivo.nombre}
+            </div>
+            <p className="text-[12.5px] text-text-faint mb-4 leading-relaxed max-w-[560px]">
+              Sube un Avance real que vuestro equipo haya redactado. Los capítulos de
+              plantilla (los que no dependen del diagnóstico de cada municipio) pasan a
+              basarse en el vuestro en vez del ejemplo por defecto, para todos los
+              municipios que generéis a partir de ahora — puedes volver a subirlo cuando
+              queráis para actualizarlo. MO.1 y MO.11 quedan siempre fuera: extraen datos
+              reales del diagnóstico de cada municipio, no texto de referencia.
+            </p>
+            <PlantillaReferenciaUploader
+              nombreArchivoExistente={referencia?.nombre_archivo ?? null}
+              capitulosIdentificados={capitulosIdentificados}
+            />
+            {referencia?.estado === "error" && (
+              <p className="text-[12px] text-coral-ink mt-2">
+                El último intento falló: {referencia.error_mensaje}
+              </p>
+            )}
+          </>
         )}
       </div>
     </AppShell>
