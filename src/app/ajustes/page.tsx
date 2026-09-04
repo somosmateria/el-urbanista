@@ -1,6 +1,8 @@
 import { AppShell } from "@/components/AppShell";
 import { MiembroAccesos } from "@/components/MiembroAccesos";
 import { PlantillaReferenciaUploader } from "@/components/PlantillaReferenciaUploader";
+import { SubmitButton } from "@/components/SubmitButton";
+import { EliminarEquipoBoton } from "@/components/EliminarEquipoBoton";
 import {
   getUsuarioActual,
   listEquiposDeUsuario,
@@ -10,7 +12,14 @@ import {
 import { listMunicipiosConProgreso } from "@/lib/data/municipios";
 import { listAccesosPorMiembro } from "@/lib/data/municipio-accesos";
 import { getReferenciaDeEquipo, listSeccionesDeReferencia } from "@/lib/data/plantilla-referencia";
-import { cambiarEquipoActivoAction, crearEquipoAction, invitarAction, eliminarMiembroAction } from "./actions";
+import {
+  cambiarEquipoActivoAction,
+  crearEquipoAction,
+  invitarAction,
+  eliminarMiembroAction,
+  renombrarEquipoAction,
+  eliminarEquipoAction,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -75,10 +84,29 @@ export default async function AjustesPage() {
             placeholder="Nombre del equipo nuevo"
             className="flex-1 box-border bg-transparent border border-line rounded px-3 py-2.5 text-[13.5px] text-text outline-none focus:border-violet"
           />
-          <button type="submit" className="btn btn-secondary shrink-0">
-            + Crear equipo
-          </button>
+          <SubmitButton className="btn btn-secondary shrink-0">+ Crear equipo</SubmitButton>
         </form>
+
+        {esAdmin && (
+          <>
+            <div className="text-[10px] tracking-[0.2em] uppercase text-text-faint mb-2.5">
+              Gestionar {equipoActivo.nombre}
+            </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-11">
+              <form action={renombrarEquipoAction} className="flex flex-1 items-stretch sm:items-center gap-3">
+                <input
+                  name="nombre"
+                  type="text"
+                  required
+                  defaultValue={equipoActivo.nombre}
+                  className="flex-1 box-border bg-transparent border border-line rounded px-3 py-2.5 text-[13.5px] text-text outline-none focus:border-violet"
+                />
+                <SubmitButton className="btn btn-secondary shrink-0">Renombrar</SubmitButton>
+              </form>
+              <EliminarEquipoBoton nombreEquipo={equipoActivo.nombre} action={eliminarEquipoAction} />
+            </div>
+          </>
+        )}
 
         <div className="text-[10px] tracking-[0.2em] uppercase text-text-faint mb-2.5">
           Miembros de {equipoActivo.nombre}
@@ -93,12 +121,12 @@ export default async function AjustesPage() {
                 </span>
                 {esAdmin && m.user_id !== user?.id && (
                   <form action={eliminarMiembroAction.bind(null, m.id)}>
-                    <button
-                      type="submit"
+                    <SubmitButton
+                      pendingLabel="Quitando…"
                       className="text-[10px] tracking-[0.14em] uppercase text-text-faint hover:text-text cursor-pointer"
                     >
                       Quitar
-                    </button>
+                    </SubmitButton>
                   </form>
                 )}
               </div>
@@ -124,9 +152,9 @@ export default async function AjustesPage() {
               placeholder="email@ejemplo.com"
               className="flex-1 box-border bg-transparent border border-line rounded px-3 py-2.5 text-[13.5px] text-text outline-none focus:border-violet"
             />
-            <button type="submit" className="btn btn-primary shrink-0">
+            <SubmitButton className="btn btn-primary shrink-0" pendingLabel="Invitando…">
               Invitar al equipo
-            </button>
+            </SubmitButton>
           </form>
         ) : (
           <p className="text-[12.5px] text-text-faint mb-14">

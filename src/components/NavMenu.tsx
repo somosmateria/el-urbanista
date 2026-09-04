@@ -13,6 +13,16 @@ const ENLACES = [
 const enlaceClase =
   "text-[10.5px] tracking-[0.16em] uppercase text-text hover:text-violet cursor-pointer";
 
+function IconoSalir() {
+  return (
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="M16 17l5-5-5-5" />
+      <path d="M21 12H9" />
+    </svg>
+  );
+}
+
 export function NavMenu() {
   const [abierto, setAbierto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -33,6 +43,13 @@ export function NavMenu() {
             {enlace.label}
           </Link>
         ))}
+        <span className="w-px h-[13px] bg-line-strong" />
+        <form action={signOutAction}>
+          <button type="submit" className={`${enlaceClase} flex items-center gap-1.5 text-text-faint hover:text-violet`}>
+            <IconoSalir />
+            Salir
+          </button>
+        </form>
       </nav>
 
       <div ref={ref} className="relative sm:hidden">
@@ -61,8 +78,9 @@ export function NavMenu() {
             <form action={signOutAction}>
               <button
                 type="submit"
-                className="block w-full text-left px-4 py-3 text-[11px] tracking-[0.14em] uppercase text-text-faint cursor-pointer"
+                className="flex items-center gap-2 w-full text-left px-4 py-3 text-[11px] tracking-[0.14em] uppercase text-text-faint cursor-pointer"
               >
+                <IconoSalir />
                 Salir
               </button>
             </form>

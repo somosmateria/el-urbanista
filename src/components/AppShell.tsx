@@ -1,6 +1,5 @@
 import clsx from "clsx";
 import Link from "next/link";
-import { signOutAction } from "@/app/login/actions";
 import { NavMenu } from "@/components/NavMenu";
 
 export function AppShell({
@@ -19,14 +18,6 @@ export function AppShell({
         </Link>
         <span className="flex-1" />
         <NavMenu />
-        <form action={signOutAction} className="hidden sm:block">
-          <button
-            type="submit"
-            className="text-[10.5px] tracking-[0.16em] uppercase text-text-faint hover:text-violet cursor-pointer"
-          >
-            Salir
-          </button>
-        </form>
       </header>
       <main className="min-h-[calc(100vh-63px)]">
         <div

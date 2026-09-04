@@ -167,3 +167,43 @@ export async function eliminarMiembroDeEquipo(equipoId: string, miembroId: strin
     .eq("equipo_id", equipoId);
   if (error) throw error;
 }
+
+export async function renombrarEquipo(equipoId: string, nombre: string) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("equipos").update({ nombre }).eq("id", equipoId);
+  if (error) throw error;
+}
+
+/**
+ * Borra el equipo entero — municipios, capítulos, tablas, textos,
+ * diagnósticos, accesos y miembros caen en cascada (FK on delete cascade,
+ * ver 0006/0009_*.sql), pero los ficheros en Storage (PDFs de diagnóstico
+ * de cada municipio y el Avance de referencia del equipo) no se borran
+ * solos — hay que hacerlo aparte, igual que en `eliminarMunicipio`.
+ */
+export async function eliminarEquipo(equipoId: string) {
+  const supabase = createServiceClient();
+
+  const { data: municipios, error: municipiosError } = await supabase
+    .from("municipios")
+    .select("id")
+    .eq("equipo_id", equipoId);
+  if (municipiosError) throw municipiosError;
+
+  for (const municipio of municipios ?? []) {
+    const { data: archivos } = await supabase.storage.from("diagnosticos").list(municipio.id);
+    if (archivos && archivos.length > 0) {
+      await supabase.storage.from("diagnosticos").remove(archivos.map((a) => `${municipio.id}/${a.name}`));
+    }
+  }
+
+  const { data: archivosReferencia } = await supabase.storage.from("plantillas-referencia").list(equipoId);
+  if (archivosReferencia && archivosReferencia.length > 0) {
+    await supabase.storage
+      .from("plantillas-referencia")
+      .remove(archivosReferencia.map((a) => `${equipoId}/${a.name}`));
+  }
+
+  const { error } = await supabase.from("equipos").delete().eq("id", equipoId);
+  if (error) throw error;
+}

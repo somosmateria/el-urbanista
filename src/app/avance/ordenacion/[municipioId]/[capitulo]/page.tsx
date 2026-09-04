@@ -7,6 +7,7 @@ import { DataTableEditor } from "@/components/DataTableEditor";
 import { TextoBlockEditor } from "@/components/TextoBlockEditor";
 import { RegenerarPanel } from "@/components/RegenerarPanel";
 import { EstadoPill } from "@/components/EstadoPill";
+import { SubmitButton } from "@/components/SubmitButton";
 import { getMunicipio, getCapituloPorCodigo } from "@/lib/data/municipios";
 import { listTablasDeCapitulo } from "@/lib/data/tablas";
 import { listTextosDeCapitulo } from "@/lib/data/textos";
@@ -127,9 +128,7 @@ export default async function CapituloPage({
                 placeholder="Ej. Áreas recreativas propuestas"
                 className="box-border bg-transparent border border-line rounded px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
               />
-              <button type="submit" className="btn btn-secondary whitespace-nowrap">
-                + Nueva tabla
-              </button>
+              <SubmitButton className="btn btn-secondary whitespace-nowrap">+ Nueva tabla</SubmitButton>
             </form>
             <form action={crearBloqueTextoAction.bind(null, municipioId, capitulo.id, null)} className="flex items-center gap-3">
               <input
@@ -138,17 +137,15 @@ export default async function CapituloPage({
                 placeholder="Ej. Justificación de la propuesta"
                 className="box-border bg-transparent border border-line rounded px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
               />
-              <button type="submit" className="btn btn-secondary whitespace-nowrap">
-                + Nuevo texto
-              </button>
+              <SubmitButton className="btn btn-secondary whitespace-nowrap">+ Nuevo texto</SubmitButton>
             </form>
           </div>
 
           {hayFilas && (
             <form action={generarTextoTablaAction.bind(null, municipioId, capitulo.id)}>
-              <button type="submit" className="btn btn-primary">
+              <SubmitButton className="btn btn-primary" pendingLabel="Generando…">
                 {capitulo.contenido_html ? "Regenerar texto con los cambios" : "Generar texto"}
-              </button>
+              </SubmitButton>
             </form>
           )}
         </>
@@ -246,9 +243,7 @@ export default async function CapituloPage({
                     placeholder="Ej. Sistemas generales de espacios libres"
                     className="box-border bg-transparent border border-line rounded px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
                   />
-                  <button type="submit" className="btn btn-secondary whitespace-nowrap">
-                    + Nueva tabla
-                  </button>
+                  <SubmitButton className="btn btn-secondary whitespace-nowrap">+ Nueva tabla</SubmitButton>
                 </form>
                 <form
                   action={crearBloqueTextoAction.bind(null, municipioId, capitulo.id, s.capitulo_codigo)}
@@ -260,9 +255,7 @@ export default async function CapituloPage({
                     placeholder="Ej. Justificación de la propuesta"
                     className="box-border bg-transparent border border-line rounded px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
                   />
-                  <button type="submit" className="btn btn-secondary whitespace-nowrap">
-                    + Nuevo texto
-                  </button>
+                  <SubmitButton className="btn btn-secondary whitespace-nowrap">+ Nuevo texto</SubmitButton>
                 </form>
               </div>
             </div>
