@@ -33,7 +33,7 @@ export function CapituloEditor({
     editorProps: {
       attributes: {
         class:
-          "doc-block editable rounded-b-[10px] border border-line p-7 outline-none min-h-[240px] font-serif text-[16.5px] leading-[1.8] focus:border-violet",
+          "doc-block editable pageblock border border-line border-t-0 p-11 outline-none min-h-[320px] doc-text focus:border-violet",
       },
     },
   });
@@ -57,12 +57,7 @@ export function CapituloEditor({
     <div>
       <EditorToolbar editor={editor} />
       <EditorContent editor={editor} />
-      <button
-        type="button"
-        onClick={guardar}
-        disabled={pending}
-        className="mt-[18px] inline-block bg-violet hover:bg-violet-hover disabled:opacity-50 text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg cursor-pointer"
-      >
+      <button type="button" onClick={guardar} disabled={pending} className="btn btn-primary mt-5">
         {pending ? "Guardando…" : "Guardar cambios"}
       </button>
       {error && <p className="text-[12px] text-coral-ink mt-2">{error}</p>}

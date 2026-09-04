@@ -1,33 +1,49 @@
 @import "tailwindcss";
 
+/*
+ * Sistema de diseño "papel" — importado del rediseño hecho en Claude Design
+ * (proyecto "El Urbanista rediseño minimalista"). Paleta cálida de papel y
+ * tinta, tipografía clásica (Cormorant Garamond en titulares, Lora en
+ * cuerpo). Se mantienen los NOMBRES de los tokens existentes (--color-bg,
+ * --color-violet, --color-cyan, etc.) para no tener que tocar cada
+ * componente uno a uno — solo cambian los valores. "violet" es ahora el
+ * acento tierra, "cyan"/"amber"/"coral" son los tres estados de capítulo.
+ */
 :root {
-  --color-bg: #100c18;
-  --color-rail: #0b0812;
-  --color-surface: #1b1526;
-  --color-surface-hi: #241d33;
-  --color-line: #2e2740;
-  --color-line-strong: #403655;
+  --color-bg: #efece5;
+  --color-rail: #efece5;
+  --color-surface: #f5f1e9;
+  --color-surface-hi: #e8e3d8;
+  --color-line: color-mix(in srgb, #241d19 16%, transparent);
+  --color-line-strong: color-mix(in srgb, #241d19 30%, transparent);
 
-  --color-text: #f3f0fa;
-  --color-text-soft: #b3a8c9;
-  --color-text-faint: #6e6485;
+  --color-text: #241d19;
+  --color-text-soft: #574d43;
+  --color-text-faint: #7d7167;
 
-  --color-violet: #b84bff;
-  --color-violet-hover: #a233f0;
-  --color-violet-ink: #ebd4ff;
-  --color-violet-wash: #271a3d;
+  /* Acento — antes violeta, ahora el marrón tinta del rediseño */
+  --color-violet: #4a3b30;
+  --color-violet-hover: #241d19;
+  /* text-violet-ink se usa como texto de enlace/acento sobre fondos claros
+     (nunca como texto sobre un botón relleno, que usa text-white a mano),
+     así que va al mismo tono que el acento — no al claro de un tema oscuro. */
+  --color-violet-ink: #4a3b30;
+  --color-violet-wash: color-mix(in srgb, #4a3b30 10%, transparent);
 
-  --color-cyan: #1fefcb;
-  --color-cyan-ink: #c4fff4;
-  --color-cyan-wash: #0f2b26;
+  /* Estado "Listo" — antes cian */
+  --color-cyan: #241d19;
+  --color-cyan-ink: #241d19;
+  --color-cyan-wash: #e2dcce;
 
-  --color-amber: #ffb020;
-  --color-amber-ink: #ffd98f;
-  --color-amber-wash: #312309;
+  /* Estado "Revisar" — antes ámbar */
+  --color-amber: #8a7563;
+  --color-amber-ink: #4a3b30;
+  --color-amber-wash: transparent;
 
-  --color-coral: #ff5c7a;
-  --color-coral-ink: #ffb3c0;
-  --color-coral-wash: #30141b;
+  /* Peligro / error — antes coral */
+  --color-coral: #8c4331;
+  --color-coral-ink: #8c4331;
+  --color-coral-wash: color-mix(in srgb, #8c4331 8%, transparent);
 }
 
 @theme inline {
@@ -59,14 +75,13 @@
   --color-coral-ink: var(--color-coral-ink);
   --color-coral-wash: var(--color-coral-wash);
 
-  /* Tipografía sans-serif en toda la app — incluida .doc-text (el cuerpo
-     de las memorias generadas), que hasta ahora usaba font-serif. Un solo
-     punto de control: cualquier `font-serif` de Tailwind o `var(--font-serif)`
-     en este archivo pasa a resolver a la misma sans que el resto de la UI,
-     sin tocar componente por componente. */
-  --font-serif: var(--font-plex-sans);
-  --font-sans: var(--font-plex-sans);
-  --font-mono: var(--font-plex-mono);
+  /* Un solo punto de control: font-serif → titulares clásicos,
+     font-sans/font-mono → cuerpo. El rediseño no usa monoespaciada en
+     ningún sitio — las etiquetas se distinguen por versalitas y tracking,
+     no por la familia tipográfica. */
+  --font-serif: var(--font-cormorant);
+  --font-sans: var(--font-lora);
+  --font-mono: var(--font-lora);
 }
 
 body {
@@ -74,11 +89,119 @@ body {
   color: var(--color-text);
 }
 
+/* Las etiquetas/metadatos que usaban font-mono para diferenciarse ahora se
+   distinguen por versalitas + tracking, como en el rediseño. */
+.font-mono {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 mark {
-  background: color-mix(in srgb, var(--color-amber) 18%, transparent);
-  color: var(--color-amber-ink);
-  padding: 1px 4px;
+  background: #e7dfce;
+  color: var(--color-text);
+  box-shadow: inset 0 -1px 0 #a8927a;
+  padding: 0 2px;
+  border-radius: 0;
+}
+
+/* Tooltip de ayuda — icono de información con burbuja al pasar el ratón,
+   usado junto a las etiquetas de motor/estado. */
+.tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: help;
+  outline: none;
+}
+.tip .tipb {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 242px;
+  padding: 11px 13px;
+  background: var(--color-text);
+  color: var(--color-bg);
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  line-height: 1.55;
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: left;
   border-radius: 4px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s;
+  z-index: 40;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-text) 22%, transparent);
+  font-weight: 400;
+}
+.tip:hover .tipb,
+.tip:focus-visible .tipb {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+}
+.tip-r .tipb {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+.tip:focus-visible {
+  outline: 2px solid var(--color-violet);
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+
+/* Bloque de página — fondo del texto generado y de las tarjetas
+   editoriales, ligeramente más claro que el resto de la superficie. */
+.pageblock {
+  background-color: var(--color-surface);
+}
+
+/* Botones editoriales — contorno, no relleno; el acento tierra vive en el
+   texto y el borde, no en un bloque de color. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.2;
+  border-radius: 4px;
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  background: transparent;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn-primary {
+  color: var(--color-violet);
+  border-color: var(--color-violet);
+}
+.btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-violet) 12%, transparent);
+}
+.btn-secondary {
+  color: var(--color-text-soft);
+  border-color: var(--color-line-strong);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+}
+.btn-ghost {
+  color: var(--color-violet);
+  padding-inline: 4px;
+}
+.btn-ghost:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-violet) 10%, transparent);
 }
 
 /*
@@ -87,16 +210,20 @@ mark {
  * contenido_html tenga que conocer su estructura interna.
  */
 .doc-eyebrow {
-  font-family: var(--font-mono);
-  font-size: 11px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   color: var(--color-text-faint);
   margin-bottom: 14px;
 }
 
 .doc-text {
   font-family: var(--font-serif);
-  font-size: 16.5px;
-  line-height: 1.8;
+  font-size: 16px;
+  line-height: 1.85;
+  text-align: justify;
+  hyphens: auto;
 }
 
 .doc-text p {
@@ -111,9 +238,11 @@ mark {
   margin-top: 20px;
   padding-top: 14px;
   border-top: 1px dashed var(--color-line-strong);
-  font-size: 12px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--color-text-faint);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
 }
 
 /* Tabla de propuesta técnica (Motor 3) ya generada — ver src/lib/motores/tabla. */
@@ -127,9 +256,11 @@ table.data {
 
 table.data th {
   text-align: left;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-weight: 400;
   font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--color-text-faint);
   padding: 7px 10px;
   border-bottom: 1px solid var(--color-line-strong);

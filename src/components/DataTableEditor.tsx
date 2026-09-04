@@ -93,7 +93,7 @@ export function DataTableEditor({
   }
 
   return (
-    <div className="rounded-xl border border-line bg-surface p-6 mb-5">
+    <div className="pageblock border border-line p-6 mb-5">
       <div className="flex items-center justify-between mb-3">
         <div className="font-mono text-[11px] text-text-faint">{tabla.nombre_bloque.toUpperCase()}</div>
         <button
@@ -220,12 +220,7 @@ export function DataTableEditor({
           </button>
         )}
         <span className="flex-1" />
-        <button
-          type="button"
-          onClick={guardar}
-          disabled={!dirty || pending}
-          className="text-[12.5px] px-3.5 py-1.5 rounded-lg bg-violet hover:bg-violet-hover disabled:opacity-40 disabled:cursor-not-allowed text-white cursor-pointer"
-        >
+        <button type="button" onClick={guardar} disabled={!dirty || pending} className="btn btn-primary">
           {pending ? "Guardando…" : guardado ? "Guardado" : "Guardar cambios"}
         </button>
       </div>

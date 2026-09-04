@@ -148,53 +148,40 @@ export function DiagnosticoUploader({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={estado === "subiendo" || estado === "procesando"}
-        className="w-full text-left rounded-xl border border-line bg-surface overflow-hidden hover:border-line-strong disabled:cursor-not-allowed"
+        className="pageblock w-full text-left border border-line overflow-hidden hover:border-line-strong disabled:cursor-not-allowed"
       >
-        <div className="flex items-center justify-between px-[18px] py-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-[38px] h-[38px] rounded-md bg-white/5 flex items-center justify-center shrink-0">
-              {estado === "subiendo" || estado === "procesando" ? (
-                <span className="inline-block w-[9px] h-[9px] rounded-full border-[1.5px] border-line-strong border-t-violet animate-spin" />
-              ) : (
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  strokeWidth={1.6}
-                  className="w-[19px] h-[19px] stroke-text-soft"
-                >
-                  <path d="M4 19V5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
-                  <path d="M14 3v6h6" />
-                </svg>
-              )}
+        <div className="flex items-center gap-4 px-[22px] py-5">
+          <div className="flex-1 min-w-0">
+            <div className="font-serif font-semibold text-[19px] truncate">
+              {nombreMostrado ?? "Vincular diagnóstico (PDF)"}
             </div>
-            <div className="min-w-0">
-              <div className="text-[15px] truncate">
-                {nombreMostrado ?? "Subir diagnóstico (PDF)"}
-              </div>
-              <div className="text-[12.5px] text-text-faint font-mono">
-                {estado === "idle" && (nombreArchivoExistente ? "Toca para sustituirlo" : "Toca para elegir el archivo")}
-                {estado === "subiendo" && `Subiendo… ${progreso}%`}
-                {estado === "procesando" && `${mensajeLectura} ${progresoLectura}%`}
-                {estado === "listo" && "Procesado correctamente"}
-                {estado === "error" && "Hubo un error — toca para reintentar"}
-              </div>
+            <div className="text-[11px] tracking-[0.12em] uppercase text-text-faint mt-1">
+              {estado === "idle" && (nombreArchivoExistente ? "Toca para sustituirlo" : "Toca para elegir el archivo · PDF")}
+              {estado === "subiendo" && `Subiendo el archivo · ${progreso}%`}
+              {estado === "procesando" && `${mensajeLectura} · ${progresoLectura}%`}
+              {estado === "listo" && "Procesado correctamente"}
+              {estado === "error" && "Hubo un error — toca para reintentar"}
             </div>
           </div>
           {estado === "listo" && (
-            <span className="font-mono text-[10.5px] px-2.5 py-1 rounded-full bg-cyan-wash text-cyan-ink border border-cyan/40 shrink-0">
+            <span className="text-[10.5px] tracking-[0.14em] uppercase px-2.5 py-1 rounded-full border border-violet text-violet shrink-0">
               Encontrado
             </span>
           )}
+          {(estado === "subiendo" || estado === "procesando") && (
+            <span className="w-[15px] h-[15px] rounded-full border-[1.5px] border-line-strong border-t-violet animate-spin shrink-0" />
+          )}
         </div>
-        {(estado === "subiendo" || estado === "procesando") && (
-          <div className="h-[3px] bg-white/5">
-            <div
-              className="h-full bg-violet transition-[width] duration-150"
-              style={{ width: `${estado === "subiendo" ? progreso : progresoLectura}%` }}
-            />
-          </div>
-        )}
+        <div className="h-[2px] bg-line">
+          <div
+            className="h-full bg-violet transition-[width] duration-150"
+            style={{ width: `${estado === "subiendo" ? progreso : estado === "procesando" ? progresoLectura : estado === "listo" ? 100 : 0}%` }}
+          />
+        </div>
       </button>
+      <p className="text-[11.5px] text-text-faint mt-3.5 leading-relaxed">
+        PDF de hasta 500 MB. Se lee, se extrae el texto y se segmenta por epígrafes antes de generar nada.
+      </p>
 
       {errorMsg && <p className="text-[12px] text-coral-ink mt-2">{errorMsg}</p>}
     </div>

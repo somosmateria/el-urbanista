@@ -25,24 +25,29 @@ export default async function NuevoMunicipioDiagnosticoPage({
   return (
     <AppShell>
       <BackLink href="/avance/ordenacion/nuevo" />
-      <h1 className="font-serif font-medium text-[27px] mb-2">{municipio.nombre}</h1>
-      <p className="text-text-soft text-[14.5px] mb-8 max-w-[540px] leading-relaxed">
-        Vincula el diagnóstico ya redactado de este municipio, o continúa sin él — los
-        capítulos que dependen de datos del diagnóstico se marcarán para revisar más
-        tarde.
-      </p>
+      <div className="max-w-[660px]">
+        <h1 className="font-serif font-normal text-[40px] sm:text-[48px] leading-[1.05] tracking-[-0.02em] mb-3.5">
+          {municipio.nombre}
+        </h1>
+        <p className="text-[15px] leading-[1.7] text-text-soft mb-10">
+          Vincula el diagnóstico ya redactado de este municipio, o continúa sin él — los
+          capítulos que dependen de sus datos quedarán marcados para revisar más tarde.
+        </p>
 
-      <div className="font-mono text-[11px] text-text-faint mb-2">DIAGNÓSTICO DE ORIGEN</div>
-      <div className="mb-5">
-        <DiagnosticoUploader municipioId={municipioId} nombreArchivoExistente={diagnostico?.nombre_archivo ?? null} />
-        {diagnostico?.estado === "error" && (
-          <p className="text-[12px] text-coral-ink mt-2">
-            El último intento falló: {diagnostico.error_mensaje}
-          </p>
-        )}
+        <div className="text-[10px] tracking-[0.2em] uppercase text-text-faint mb-3">
+          Diagnóstico de origen
+        </div>
+        <div className="mb-10">
+          <DiagnosticoUploader municipioId={municipioId} nombreArchivoExistente={diagnostico?.nombre_archivo ?? null} />
+          {diagnostico?.estado === "error" && (
+            <p className="text-[12px] text-coral-ink mt-2">
+              El último intento falló: {diagnostico.error_mensaje}
+            </p>
+          )}
+        </div>
+
+        <GenerarMemoriaBoton action={generarMemoriaAction.bind(null, municipioId)} />
       </div>
-
-      <GenerarMemoriaBoton action={generarMemoriaAction.bind(null, municipioId)} />
     </AppShell>
   );
 }

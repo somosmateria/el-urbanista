@@ -13,48 +13,49 @@ const MENSAJES = [
 /**
  * No hay forma de reportar progreso real de esto (una sola petición de
  * servidor que encadena varias llamadas a Claude y termina en un
- * redirect) — se muestra una animación con mensajes rotativos en vez de
- * un porcentaje inventado, para que la espera (que puede ser de más de
- * un minuto) no parezca que la página se ha quedado colgada.
+ * redirect) — el porcentaje es una estimación por tiempo transcurrido,
+ * pensada para que la espera (que puede ser de más de un minuto) se lea
+ * como progreso y no como que la página se ha quedado colgada.
  */
+const DURACION_ESTIMADA_MS = 70_000;
+
 export function GenerarMemoriaBoton({ action }: { action: () => Promise<void> }) {
   const [pending, startTransition] = useTransition();
-  const [mensajeIdx, setMensajeIdx] = useState(0);
+  const [pct, setPct] = useState(0);
 
   useEffect(() => {
     if (!pending) return;
+    const inicio = Date.now();
     const intervalo = setInterval(() => {
-      setMensajeIdx((i) => Math.min(i + 1, MENSAJES.length - 1));
-    }, 3500);
+      const transcurrido = Date.now() - inicio;
+      setPct(Math.min(96, Math.round((transcurrido / DURACION_ESTIMADA_MS) * 100)));
+    }, 150);
     return () => clearInterval(intervalo);
   }, [pending]);
 
   if (pending) {
+    const mensajeIdx = Math.min(MENSAJES.length - 1, Math.floor(pct / (100 / MENSAJES.length)));
     return (
-      <div className="rounded-xl border border-line bg-surface p-6 max-w-[420px]">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="inline-block w-4 h-4 rounded-full border-2 border-line-strong border-t-violet animate-spin shrink-0" />
-          <span className="text-[13.5px] text-text">{MENSAJES[mensajeIdx]}</span>
+      <div className="max-w-[520px]">
+        <div className="text-[10px] tracking-[0.22em] uppercase text-violet mb-6">
+          Generando la memoria
         </div>
-        <div className="h-[3px] bg-white/5 rounded-full overflow-hidden">
-          <div className="h-full w-1/3 bg-violet rounded-full animate-[deslizar_1.4s_ease-in-out_infinite]" />
+        <div className="flex items-end gap-3 mb-2.5">
+          <span className="font-serif font-normal text-[64px] sm:text-[80px] leading-[0.86] tracking-[-0.04em] tabular-nums">
+            {pct}
+          </span>
+          <span className="font-serif text-[24px] leading-none pb-2 text-text-faint">%</span>
         </div>
-        <style>{`
-          @keyframes deslizar {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(300%); }
-          }
-        `}</style>
+        <div className="h-[2px] bg-line mb-3.5">
+          <div className="h-full bg-violet transition-[width] duration-150" style={{ width: `${pct}%` }} />
+        </div>
+        <p className="text-[14px] text-text-soft">{MENSAJES[mensajeIdx]}</p>
       </div>
     );
   }
 
   return (
-    <button
-      type="button"
-      onClick={() => startTransition(() => action())}
-      className="inline-block bg-violet hover:bg-violet-hover text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg cursor-pointer"
-    >
+    <button type="button" onClick={() => startTransition(() => action())} className="btn btn-primary">
       Generar memoria de ordenación
     </button>
   );

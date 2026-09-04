@@ -3,6 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { BackLink } from "@/components/BackLink";
 import { ChapterRow } from "@/components/ChapterRow";
 import { EliminarMunicipioBoton } from "@/components/EliminarMunicipioBoton";
+import { ESTADO_UI } from "@/lib/capitulos/estado-ui";
 import { getMunicipio, listCapitulosDeMunicipio } from "@/lib/data/municipios";
 import { requireEquipoActivo } from "@/lib/data/equipos";
 import { eliminarMunicipioAction } from "./editar/actions";
@@ -19,74 +20,94 @@ export default async function MunicipioPage({
 
   const capitulos = await listCapitulosDeMunicipio(municipioId);
   const contables = capitulos.filter((c) => c.sin_info_motivo !== "no_aplica");
-  const abiertos = contables.filter((c) => c.estado !== "listo").length;
+  const cerrados = contables.filter((c) => c.estado === "listo").length;
+  const abiertos = contables.length - cerrados;
+  const pctCerrados = contables.length > 0 ? Math.round((cerrados / contables.length) * 100) : 0;
   const hayAlgoDescargable = capitulos.some((c) => c.contenido_html);
+
+  const estadosPresentes = Array.from(new Set(capitulos.map((c) => c.estado)));
 
   return (
     <AppShell>
       <BackLink href="/avance/ordenacion" />
-      <div className="flex items-start justify-between gap-5 mb-8">
+      <div className="flex flex-wrap items-start justify-between gap-7 mb-[30px]">
         <div>
-          <h1 className="font-serif font-medium text-[27px] mb-2">
-            {municipio.nombre} — Memoria de ordenación
+          <div className="text-[10px] tracking-[0.22em] uppercase text-violet mb-3.5">
+            Avance · Memoria de ordenación
+          </div>
+          <h1 className="font-serif font-normal text-[38px] sm:text-[46px] leading-[1.02] tracking-[-0.025em] mb-3">
+            {municipio.nombre}
           </h1>
-          <p className="text-text-soft text-[14.5px] max-w-[540px] leading-relaxed">
-            Doce capítulos.{" "}
+          <p className="text-[14px] text-text-soft">
+            {capitulos.length} capítulos ·{" "}
             {abiertos === 0
-              ? "Todos cerrados."
-              : `${abiertos} ${abiertos === 1 ? "sigue" : "siguen"} abierto${abiertos === 1 ? "" : "s"}.`}
+              ? "todos cerrados"
+              : `${abiertos} ${abiertos === 1 ? "sigue" : "siguen"} abierto${abiertos === 1 ? "" : "s"}`}
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex gap-2.5 flex-none">
           <EliminarMunicipioBoton
             nombreMunicipio={municipio.nombre}
             action={eliminarMunicipioAction.bind(null, municipio.id)}
           />
-          <a
-            href={`/avance/ordenacion/${municipio.id}/editar`}
-            className="whitespace-nowrap inline-flex items-center border border-line-strong hover:border-text-faint text-text-soft text-[13.5px] font-medium px-4 py-2.5 rounded-lg"
-          >
-            Editar
+          <a href={`/avance/ordenacion/${municipio.id}/editar`} className="btn btn-secondary whitespace-nowrap">
+            Editar municipio
           </a>
           {hayAlgoDescargable ? (
-          <a
-            href={`/api/municipios/${municipio.id}/docx`}
-            className="whitespace-nowrap inline-flex items-center bg-violet hover:bg-violet-hover text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              strokeWidth={2}
-              className="w-3.5 h-3.5 stroke-white mr-1.5"
+            <a href={`/api/municipios/${municipio.id}/docx`} className="btn btn-primary whitespace-nowrap">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                <path d="M14 2v5h6" />
+                <path d="M12 11.5v6" />
+                <path d="m9 14.5 3 3 3-3" />
+              </svg>
+              Descargar todo
+            </a>
+          ) : (
+            <button
+              disabled
+              title="La descarga se activa cuando los capítulos tengan contenido"
+              className="btn btn-primary whitespace-nowrap"
             >
-              <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" />
-            </svg>
-            Descargar todo
-          </a>
-        ) : (
-          <button
-            disabled
-            title="La descarga se activa cuando los capítulos tengan contenido"
-            className="whitespace-nowrap inline-flex items-center bg-violet/40 text-white/70 text-[13.5px] font-medium px-5 py-2.5 rounded-lg cursor-not-allowed"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              strokeWidth={2}
-              className="w-3.5 h-3.5 stroke-white mr-1.5"
-            >
-              <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" />
-            </svg>
-            Descargar todo
-          </button>
+              Descargar todo
+            </button>
           )}
         </div>
       </div>
 
-      <div className="rounded-xl border border-line bg-surface overflow-hidden">
+      <div className="flex items-center gap-4 py-4 border-t border-b border-line mb-[38px]">
+        <span className="flex items-center gap-1.5 text-[10px] tracking-[0.18em] uppercase text-text-faint shrink-0">
+          Cerrados
+        </span>
+        <span className="flex-1 h-[2px] bg-line relative">
+          <span className="absolute inset-y-0 left-0 bg-violet" style={{ width: `${pctCerrados}%` }} />
+        </span>
+        <span className="font-serif text-[22px] tabular-nums shrink-0">
+          {cerrados}
+          <span className="text-text-faint">/{contables.length}</span>
+        </span>
+        <span className="text-[11.5px] tabular-nums text-text-soft shrink-0">{pctCerrados}%</span>
+      </div>
+
+      <div className="border-t border-line">
         {capitulos.map((capitulo) => (
           <ChapterRow key={capitulo.id} municipioId={municipio.id} capitulo={capitulo} />
         ))}
+      </div>
+
+      <div className="flex flex-wrap gap-[26px] mt-[34px] pt-[18px] border-t border-line">
+        {estadosPresentes.map((estado) => {
+          const ui = ESTADO_UI[estado];
+          return (
+            <span key={estado} className="flex items-center gap-2.5 text-[10px] tracking-[0.14em] uppercase text-text-soft">
+              <span className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full border-[1.5px] ${ui.dotColor}`} />
+                <span className={ui.ink}>{ui.label}</span>
+              </span>
+              <span className="text-text-faint normal-case tracking-normal">{ui.desc}</span>
+            </span>
+          );
+        })}
       </div>
     </AppShell>
   );

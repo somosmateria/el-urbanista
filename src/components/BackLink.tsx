@@ -4,11 +4,9 @@ export function BackLink({ href, children = "Volver" }: { href: string; children
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-1.5 text-[12.5px] text-text-faint hover:text-text-soft mb-4"
+      className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.16em] uppercase text-violet hover:text-violet-hover mb-8"
     >
-      <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} className="w-[13px] h-[13px] stroke-current">
-        <path d="M15 6l-6 6 6 6" />
-      </svg>
+      <span aria-hidden>←</span>
       {children}
     </Link>
   );

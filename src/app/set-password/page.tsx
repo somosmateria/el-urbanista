@@ -8,43 +8,50 @@ export default async function SetPasswordPage({
   const { error } = await searchParams;
 
   return (
-    <div className="min-h-screen bg-rail flex items-center justify-center px-6">
-      <div className="w-full max-w-[380px]">
-        <div className="font-serif text-2xl text-text text-center mb-1">El Urbanista</div>
-        <p className="text-text-faint text-[13px] text-center mb-8">
-          Elige tu contraseña para terminar de crear tu cuenta
-        </p>
+    <div className="min-h-screen bg-bg flex items-center justify-center px-6">
+      <div className="w-full max-w-[392px]">
+        <div className="text-center mb-[34px]">
+          <div className="font-serif font-normal text-[44px] leading-[1.05] tracking-[-0.02em]">
+            El Urbanista
+          </div>
+          <div className="text-[10px] tracking-[0.24em] uppercase text-text-faint mt-3">
+            Elige tu contraseña para terminar de crear tu cuenta
+          </div>
+        </div>
 
-        <form action={setPasswordAction} className="rounded-xl border border-line bg-surface p-6">
-          <label className="block font-mono text-[11px] text-text-faint mb-2">
-            NUEVA CONTRASEÑA
-          </label>
-          <input
-            name="password"
-            type="password"
-            required
-            minLength={8}
-            autoFocus
-            className="w-full box-border bg-surface-hi border border-line-strong rounded-lg px-3 py-2.5 text-[14px] text-text outline-none focus:border-violet mb-4"
-          />
+        <hr className="border-t border-line mb-[30px]" />
 
-          <label className="block font-mono text-[11px] text-text-faint mb-2">
-            REPITE LA CONTRASEÑA
-          </label>
-          <input
-            name="confirmacion"
-            type="password"
-            required
-            minLength={8}
-            className="w-full box-border bg-surface-hi border border-line-strong rounded-lg px-3 py-2.5 text-[14px] text-text outline-none focus:border-violet"
-          />
+        <form action={setPasswordAction}>
+          <div className="mb-[18px]">
+            <label className="block text-[10px] tracking-[0.16em] uppercase text-text-faint mb-[7px]">
+              Nueva contraseña
+            </label>
+            <input
+              name="password"
+              type="password"
+              required
+              minLength={8}
+              autoFocus
+              className="w-full box-border bg-transparent border border-line rounded px-3 py-2.5 text-[14px] text-text outline-none focus:border-violet"
+            />
+          </div>
 
-          {error && <p className="text-[12.5px] text-coral-ink mt-3">{error}</p>}
+          <div className="mb-[26px]">
+            <label className="block text-[10px] tracking-[0.16em] uppercase text-text-faint mb-[7px]">
+              Repite la contraseña
+            </label>
+            <input
+              name="confirmacion"
+              type="password"
+              required
+              minLength={8}
+              className="w-full box-border bg-transparent border border-line rounded px-3 py-2.5 text-[14px] text-text outline-none focus:border-violet"
+            />
+          </div>
 
-          <button
-            type="submit"
-            className="w-full mt-5 bg-violet hover:bg-violet-hover text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg cursor-pointer"
-          >
+          {error && <p className="text-[12.5px] text-coral-ink mb-4">{error}</p>}
+
+          <button type="submit" className="btn btn-primary w-full">
             Guardar y entrar
           </button>
         </form>

@@ -6,49 +6,40 @@ export default function AvancePage() {
   return (
     <AppShell>
       <BackLink href="/" />
-      <h1 className="font-serif font-medium text-[27px] mb-2">Avance — ¿qué memoria?</h1>
-      <p className="text-text-soft text-[14.5px] mb-8 max-w-[540px] leading-relaxed">
-        El Documento de Avance se compone de tres memorias. Ordenación es la que está
-        desarrollada.
-      </p>
+      <div className="max-w-[620px] mb-10">
+        <h1 className="font-serif font-normal text-[40px] sm:text-[48px] leading-[1.05] tracking-[-0.02em] mb-3.5">
+          Documento de Avance
+        </h1>
+        <p className="text-[15px] leading-[1.7] text-text-soft">
+          Se compone de tres memorias. Ordenación es la que está desarrollada.
+        </p>
+      </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <hr className="border-t border-line mb-[34px]" />
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-[18px]">
         <DocCard
-          variant="disabled"
-          badge={{ label: "Próximamente", tone: "soon" }}
+          n="01"
           name="Información"
           desc="Descripción del municipio y su diagnóstico resumido."
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.6}>
-              <path d="M4 4h16v16H4z" />
-              <path d="M8 9h8M8 13h8M8 17h5" />
-            </svg>
-          }
+          info="Resume el diagnóstico dentro del Avance: territorio, población y planeamiento vigente. Pendiente de desarrollo."
+          disponible={false}
         />
         <DocCard
           href="/avance/ordenacion"
-          variant="hero"
-          badge={{ label: "Disponible", tone: "on-cyan" }}
+          n="02"
           name="Ordenación"
-          desc="Los 12 capítulos que definen el modelo de ordenación propuesto."
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.6}>
-              <path d="M3 11h18M6 11V4h12v7M4 21h16v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6Z" />
-            </svg>
-          }
+          desc="Los doce capítulos que definen el modelo de ordenación propuesto."
+          info="La propuesta: qué se clasifica cómo, qué usos se regulan y qué sistemas generales se proponen. Doce capítulos, cada uno con su forma de generarse."
+          cta="Abrir Ordenación →"
+          disponible
         />
         <DocCard
-          variant="disabled"
-          badge={{ label: "Próximamente", tone: "soon" }}
+          n="03"
           name="Participación"
           desc="Registro del proceso de participación ciudadana."
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.6}>
-              <circle cx="9" cy="8" r="3" />
-              <circle cx="17" cy="9" r="2.5" />
-              <path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1M16 15.5c2.2.3 4 1.8 4 3.7V20" />
-            </svg>
-          }
+          info="Deja constancia del proceso de participación: sesiones, aportaciones y respuesta a las mismas. Pendiente de desarrollo."
+          disponible={false}
         />
       </div>
     </AppShell>

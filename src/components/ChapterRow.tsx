@@ -14,27 +14,28 @@ export function ChapterRow({
   const puedeDescargar = capitulo.estado === "listo" || capitulo.estado === "revisar";
 
   return (
-    <div className="flex items-center border-b border-line last:border-b-0">
+    <div className="flex items-center gap-[18px] border-b border-line last:border-b-0 pl-1.5">
       <Link
         href={`/avance/ordenacion/${municipioId}/${encodeURIComponent(capitulo.codigo)}`}
-        className="flex-1 flex items-center gap-3 px-[18px] py-3.5 hover:bg-surface-hi min-w-0"
+        className="flex-1 flex items-center gap-[18px] py-[15px] hover:bg-surface-hi min-w-0 -ml-1.5 pl-1.5"
       >
-        <span className={clsx("w-2 h-2 rounded-full shrink-0", ui.dot)} />
-        <span className="font-medium text-[13.5px] truncate">
-          {capitulo.codigo} — {capitulo.titulo}
+        <span className={clsx("w-[9px] h-[9px] rounded-full border-[1.5px] shrink-0", ui.dotColor)} />
+        <span className="shrink-0 text-[11px] tracking-[0.12em] text-text-faint tabular-nums w-[52px]">
+          {capitulo.codigo}
         </span>
-        <span className="flex-1" />
-        <span
-          className={clsx(
-            "font-mono text-[11px] px-2.5 py-1 rounded-full shrink-0",
-            ui.tagBg,
-            ui.tagText
-          )}
-        >
+        <span className="flex-1 min-w-0 font-serif font-semibold text-[18px] leading-[1.25] truncate">
+          {capitulo.titulo}
+        </span>
+        <span className="hidden sm:flex items-center gap-2.5 w-[120px] shrink-0">
+          <span className="flex-1 h-[2px] bg-line relative overflow-hidden">
+            <span className={clsx("absolute inset-y-0 left-0", ui.meterColor)} style={{ width: `${ui.pct}%` }} />
+          </span>
+        </span>
+        <span className={clsx("shrink-0 w-[110px] sm:w-[132px] text-right text-[10.5px] tracking-[0.14em] uppercase", ui.ink)}>
           {ui.label}
         </span>
       </Link>
-      <div className="w-10 pr-[14px] shrink-0 text-right">
+      <div className="w-10 pr-3.5 shrink-0 text-right">
         {puedeDescargar ? (
           <a
             href={`/api/capitulos/${capitulo.id}/docx`}
@@ -44,7 +45,7 @@ export function ChapterRow({
             <svg
               viewBox="0 0 24 24"
               fill="none"
-              strokeWidth={1.8}
+              strokeWidth={1.6}
               className="w-[15px] h-[15px] stroke-text-faint"
             >
               <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" />
@@ -59,7 +60,7 @@ export function ChapterRow({
             <svg
               viewBox="0 0 24 24"
               fill="none"
-              strokeWidth={1.8}
+              strokeWidth={1.6}
               className="w-[15px] h-[15px] stroke-text-faint opacity-35"
             >
               <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" />

@@ -1,19 +1,16 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import clsx from "clsx";
 import { AppShell } from "@/components/AppShell";
 import { BackLink } from "@/components/BackLink";
 import { DataTableEditor } from "@/components/DataTableEditor";
 import { RegenerarPanel } from "@/components/RegenerarPanel";
+import { ESTADO_UI } from "@/lib/capitulos/estado-ui";
 import { getMunicipio, getCapituloPorCodigo } from "@/lib/data/municipios";
 import { listTablasDeCapitulo } from "@/lib/data/tablas";
 import { getSubepigrafes } from "@/lib/data/mapeo";
 import { requireEquipoActivo } from "@/lib/data/equipos";
-import {
-  marcarMotivoAction,
-  crearBloqueTablaAction,
-  eliminarBloqueTablaAction,
-  generarTextoTablaAction,
-} from "./actions";
+import { marcarMotivoAction, crearBloqueTablaAction, generarTextoTablaAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +29,12 @@ export default async function CapituloPage({
 
   const tablas = capitulo.motor === "tabla" ? await listTablasDeCapitulo(capitulo.id) : [];
   const hayFilas = tablas.some((t) => t.filas.length > 0);
+  const ui = ESTADO_UI[capitulo.estado];
+  const MOTOR_LABEL: Record<string, string> = {
+    plantilla: "Plantilla",
+    rag: "RAG dirigido",
+    tabla: "Motor asistido por tabla",
+  };
 
   // Un capítulo mixto (p.ej. MO.3) puede tener subepígrafes de motor
   // "tabla" propios, aparte del motor del capítulo en sí (rag/plantilla).
@@ -44,25 +47,44 @@ export default async function CapituloPage({
   return (
     <AppShell>
       <BackLink href={`/avance/ordenacion/${municipio.id}`} />
-      <div className="flex items-start justify-between gap-5 mb-2">
-        <h1 className="font-serif font-medium text-[27px]">
-          {capitulo.codigo} — {capitulo.titulo}
-        </h1>
-        {capitulo.motor !== "tabla" && capitulo.contenido_html && (
-          <Link
-            href={`/avance/ordenacion/${municipioId}/${capitulo.codigo}/editar`}
-            className="whitespace-nowrap inline-flex items-center gap-1.5 bg-violet hover:bg-violet-hover text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg"
-          >
-            <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} className="w-3.5 h-3.5 stroke-white">
-              <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z" />
-            </svg>
-            Editar
-          </Link>
-        )}
+      <div className="text-[10px] tracking-[0.22em] uppercase text-violet mb-4">
+        {municipio.nombre} · {capitulo.codigo}
+      </div>
+      <h1 className="font-serif font-normal text-[32px] sm:text-[42px] leading-[1.08] tracking-[-0.02em] mb-4 max-w-[780px]">
+        {capitulo.titulo}
+      </h1>
+
+      <div className="flex flex-wrap items-center gap-[18px] py-3.5 border-t border-b border-line mb-8">
+        <span className={clsx("flex items-center gap-2 text-[10.5px] tracking-[0.14em] uppercase", ui.ink)}>
+          <span className={clsx("w-2 h-2 rounded-full border-[1.5px]", ui.dotColor)} />
+          {ui.label}
+        </span>
+        <span className="text-[10.5px] tracking-[0.14em] uppercase text-text-faint">
+          {MOTOR_LABEL[capitulo.motor]}
+        </span>
+        <span className="flex-1" />
+        <span className="flex gap-2.5 flex-wrap">
+          {capitulo.motor !== "tabla" && capitulo.contenido_html && (
+            <a href={`/api/capitulos/${capitulo.id}/docx`} className="btn btn-secondary">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                <path d="M14 2v5h6" />
+                <path d="M12 11.5v6" />
+                <path d="m9 14.5 3 3 3-3" />
+              </svg>
+              Descargar .docx
+            </a>
+          )}
+          {capitulo.motor !== "tabla" && capitulo.contenido_html && (
+            <Link href={`/avance/ordenacion/${municipioId}/${capitulo.codigo}/editar`} className="btn btn-primary">
+              Editar
+            </Link>
+          )}
+        </span>
       </div>
 
       {capitulo.motor !== "tabla" && capitulo.contenido_html && (
-        <p className="text-text-soft text-[14.5px] mb-8 max-w-[540px] leading-relaxed">
+        <p className="text-text-soft text-[13.5px] mb-[26px] max-w-[560px] leading-relaxed">
           {capitulo.estado === "revisar"
             ? "Redactado a partir del diagnóstico. Lo resaltado viene citado de allí — confírmalo antes de cerrar el capítulo."
             : "Listo para entregar. Puedes editarlo igualmente si quieres matizar algo."}
@@ -71,14 +93,14 @@ export default async function CapituloPage({
 
       {capitulo.motor === "tabla" && (
         <>
-          <p className="text-text-soft text-[14.5px] mb-6 max-w-[540px] leading-relaxed">
+          <p className="text-text-soft text-[13.5px] mb-[26px] max-w-[560px] leading-relaxed">
             Esta propuesta no está en el diagnóstico. Añade los elementos que definís
             para el municipio.
           </p>
 
           {capitulo.contenido_html && (
             <div
-              className="rounded-xl border border-line bg-surface p-7 mb-6"
+              className="pageblock border border-line p-7 mb-6"
               dangerouslySetInnerHTML={{ __html: capitulo.contenido_html }}
             />
           )}
@@ -107,10 +129,7 @@ export default async function CapituloPage({
 
           {hayFilas && (
             <form action={generarTextoTablaAction.bind(null, municipioId, capitulo.id)}>
-              <button
-                type="submit"
-                className="inline-block bg-violet hover:bg-violet-hover text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg cursor-pointer"
-              >
+              <button type="submit" className="btn btn-primary">
                 {capitulo.contenido_html ? "Regenerar texto con los cambios" : "Generar texto"}
               </button>
             </form>
@@ -121,7 +140,7 @@ export default async function CapituloPage({
       {capitulo.motor !== "tabla" && capitulo.contenido_html && (
         <>
           <div
-            className="rounded-xl border border-line bg-surface p-7"
+            className="pageblock border border-line p-[52px] px-8 sm:px-14"
             dangerouslySetInnerHTML={{ __html: capitulo.contenido_html }}
           />
           <RegenerarPanel municipioId={municipioId} capituloId={capitulo.id} />
@@ -130,14 +149,14 @@ export default async function CapituloPage({
 
       {capitulo.motor !== "tabla" && !capitulo.contenido_html && (
         <>
-          <p className="text-text-soft text-[14.5px] mb-6 max-w-[540px] leading-relaxed">
+          <p className="text-text-soft text-[13.5px] mb-6 max-w-[540px] leading-relaxed">
             {capitulo.sin_info_motivo === "no_aplica"
               ? "Marcado como decisión editorial: este capítulo no aplica o se fusiona con otro para este municipio."
               : "Todavía no se ha generado. La ingesta del diagnóstico y los motores de generación llegan en las siguientes fases del desarrollo."}
           </p>
-          <div className="rounded-xl border border-line bg-surface p-6">
-            <div className="font-mono text-[11px] text-text-faint mb-3">
-              SIN INFORMACIÓN / NO APLICA
+          <div className="pageblock border border-line p-6">
+            <div className="text-[10px] tracking-[0.2em] uppercase text-text-faint mb-3">
+              Sin información / no aplica
             </div>
             <p className="text-text-faint text-[13.5px] mb-4">
               ¿Cuál es el motivo? Esto no bloquea el resto del proceso.
@@ -146,11 +165,10 @@ export default async function CapituloPage({
               <form action={marcarMotivoAction.bind(null, municipioId, capitulo.id, "falta_dato")}>
                 <button
                   type="submit"
-                  className={`text-[12.5px] px-3.5 py-2 rounded-lg border ${
-                    capitulo.sin_info_motivo === "falta_dato"
-                      ? "border-violet bg-violet-wash text-violet-ink"
-                      : "border-line-strong text-text-soft hover:bg-surface-hi"
-                  }`}
+                  className={clsx(
+                    "btn",
+                    capitulo.sin_info_motivo === "falta_dato" ? "btn-primary" : "btn-secondary"
+                  )}
                 >
                   Falta un dato real
                 </button>
@@ -158,11 +176,10 @@ export default async function CapituloPage({
               <form action={marcarMotivoAction.bind(null, municipioId, capitulo.id, "no_aplica")}>
                 <button
                   type="submit"
-                  className={`text-[12.5px] px-3.5 py-2 rounded-lg border ${
-                    capitulo.sin_info_motivo === "no_aplica"
-                      ? "border-violet bg-violet-wash text-violet-ink"
-                      : "border-line-strong text-text-soft hover:bg-surface-hi"
-                  }`}
+                  className={clsx(
+                    "btn",
+                    capitulo.sin_info_motivo === "no_aplica" ? "btn-primary" : "btn-secondary"
+                  )}
                 >
                   No aplica / se fusiona con otro
                 </button>

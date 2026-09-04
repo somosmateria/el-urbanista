@@ -29,15 +29,15 @@ export default async function EditarCapituloPage({
       <BackLink href={`/avance/ordenacion/${municipioId}/${capitulo.codigo}`}>
         Volver sin guardar
       </BackLink>
-      <h1 className="font-serif font-medium text-[27px] mb-2">
-        {capitulo.codigo} — {capitulo.titulo}
+      <div className="text-[10px] tracking-[0.22em] uppercase text-violet mb-3.5">
+        Editando · {capitulo.codigo}
+      </div>
+      <h1 className="font-serif font-normal text-[30px] sm:text-[38px] leading-[1.1] tracking-[-0.02em] mb-8">
+        {capitulo.titulo}
       </h1>
-      <p className="text-text-soft text-[14.5px] mb-8 max-w-[540px] leading-relaxed">
-        Cada vez que guardas, la versión anterior se conserva en el historial.
-      </p>
 
-      <div className="flex gap-5 items-start">
-        <div className="flex-1 min-w-0">
+      <div className="flex flex-col sm:flex-row gap-11 items-start">
+        <div className="flex-1 min-w-0 w-full">
           <CapituloEditor
             municipioId={municipioId}
             capituloId={capitulo.id}

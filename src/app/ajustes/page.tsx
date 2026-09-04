@@ -17,104 +17,95 @@ export default async function AjustesPage() {
   const esAdmin = equipoActivo.rol === "admin";
 
   return (
-    <AppShell titulo="Ajustes">
-      <div className="font-mono text-[11px] text-text-faint mb-2">TU CUENTA</div>
-      <div className="rounded-xl border border-line bg-surface p-6 mb-10">
-        <p className="text-[14px] text-text">{user?.email}</p>
-      </div>
+    <AppShell>
+      <div className="max-w-[720px]">
+        <h1 className="font-serif font-normal text-[40px] sm:text-[48px] leading-[1.05] tracking-[-0.02em] mb-[34px]">
+          Ajustes
+        </h1>
 
-      <div className="font-mono text-[11px] text-text-faint mb-2">TUS EQUIPOS</div>
-      <div className="rounded-xl border border-line bg-surface overflow-hidden mb-4">
-        {equipos.map((e) => (
-          <form key={e.id} action={cambiarEquipoActivoAction.bind(null, e.id)}>
-            <button
-              type="submit"
-              disabled={e.id === equipoActivo.id}
-              className={`w-full text-left flex items-center justify-between px-[18px] py-4 border-b border-line last:border-b-0 ${
-                e.id === equipoActivo.id ? "bg-violet-wash" : "hover:bg-surface-hi cursor-pointer"
-              }`}
-            >
-              <span className="font-serif text-[15px]">{e.nombre}</span>
-              <span className="flex items-center gap-2">
-                <span className="text-[11px] font-mono text-text-faint">
-                  {e.rol === "admin" ? "ADMIN" : "MIEMBRO"}
+        <div className="text-[10px] tracking-[0.2em] uppercase text-text-faint mb-2.5">Tu cuenta</div>
+        <div className="pageblock border border-line px-[22px] py-[18px] text-[15px] mb-11">
+          {user?.email}
+        </div>
+
+        <div className="text-[10px] tracking-[0.2em] uppercase text-text-faint mb-2.5">Tus equipos</div>
+        <div className="border-t border-line mb-5">
+          {equipos.map((e) => (
+            <form key={e.id} action={cambiarEquipoActivoAction.bind(null, e.id)}>
+              <button
+                type="submit"
+                disabled={e.id === equipoActivo.id}
+                className="w-full text-left flex items-center gap-4 px-1 py-[15px] border-b border-line last:border-b-0 hover:bg-surface-hi disabled:cursor-default"
+              >
+                <span className="font-serif font-semibold text-lg flex-1">{e.nombre}</span>
+                <span className="text-[10px] tracking-[0.14em] uppercase text-text-faint">
+                  {e.rol === "admin" ? "Admin" : "Miembro"}
                 </span>
                 {e.id === equipoActivo.id && (
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-violet text-white">
-                    ACTIVO
+                  <span className="text-[10px] tracking-[0.14em] uppercase px-2.5 py-1 rounded-full border border-violet text-violet">
+                    Activo
                   </span>
                 )}
-              </span>
-            </button>
-          </form>
-        ))}
-      </div>
+              </button>
+            </form>
+          ))}
+        </div>
 
-      <form action={crearEquipoAction} className="flex items-center gap-3 mb-10">
-        <input
-          name="nombre"
-          type="text"
-          placeholder="Nombre del equipo nuevo"
-          className="flex-1 box-border bg-surface border border-line-strong rounded-lg px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
-        />
-        <button
-          type="submit"
-          className="text-[12.5px] px-3.5 py-2 rounded-lg border border-line-strong text-text-soft hover:bg-surface-hi cursor-pointer whitespace-nowrap"
-        >
-          + Crear equipo
-        </button>
-      </form>
+        <form action={crearEquipoAction} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-11">
+          <input
+            name="nombre"
+            type="text"
+            placeholder="Nombre del equipo nuevo"
+            className="flex-1 box-border bg-transparent border border-line rounded px-3 py-2.5 text-[13.5px] text-text outline-none focus:border-violet"
+          />
+          <button type="submit" className="btn btn-secondary shrink-0">
+            + Crear equipo
+          </button>
+        </form>
 
-      <div className="font-mono text-[11px] text-text-faint mb-2">
-        MIEMBROS DE {equipoActivo.nombre.toUpperCase()}
-      </div>
-      <div className="rounded-xl border border-line bg-surface overflow-hidden mb-4">
-        {miembros.map((m) => (
-          <div
-            key={m.id}
-            className="flex items-center justify-between px-[18px] py-4 border-b border-line last:border-b-0"
-          >
-            <span className="text-[14px] text-text">{m.email}</span>
-            <span className="flex items-center gap-3">
-              <span className="text-[11px] font-mono text-text-faint">
-                {m.rol === "admin" ? "ADMIN" : "MIEMBRO"}
+        <div className="text-[10px] tracking-[0.2em] uppercase text-text-faint mb-2.5">
+          Miembros de {equipoActivo.nombre}
+        </div>
+        <div className="border-t border-line mb-5">
+          {miembros.map((m) => (
+            <div key={m.id} className="flex items-center gap-4 px-1 py-[15px] border-b border-line last:border-b-0">
+              <span className="flex-1 text-[14.5px]">{m.email}</span>
+              <span className="text-[10px] tracking-[0.14em] uppercase text-text-faint">
+                {m.rol === "admin" ? "Admin" : "Miembro"}
               </span>
               {esAdmin && m.user_id !== user?.id && (
                 <form action={eliminarMiembroAction.bind(null, m.id)}>
                   <button
                     type="submit"
-                    className="text-[12px] text-text-faint hover:text-coral-ink cursor-pointer"
+                    className="text-[10px] tracking-[0.14em] uppercase text-text-faint hover:text-text cursor-pointer"
                   >
                     Quitar
                   </button>
                 </form>
               )}
-            </span>
-          </div>
-        ))}
-      </div>
+            </div>
+          ))}
+        </div>
 
-      {esAdmin ? (
-        <form action={invitarAction} className="flex items-center gap-3">
-          <input
-            name="email"
-            type="email"
-            required
-            placeholder="email@ejemplo.com"
-            className="flex-1 box-border bg-surface border border-line-strong rounded-lg px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
-          />
-          <button
-            type="submit"
-            className="text-[12.5px] px-3.5 py-2 rounded-lg bg-violet hover:bg-violet-hover text-white cursor-pointer whitespace-nowrap"
-          >
-            Invitar a {equipoActivo.nombre}
-          </button>
-        </form>
-      ) : (
-        <p className="text-[12.5px] text-text-faint">
-          Solo un admin de {equipoActivo.nombre} puede invitar a gente nueva.
-        </p>
-      )}
+        {esAdmin ? (
+          <form action={invitarAction} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <input
+              name="email"
+              type="email"
+              required
+              placeholder="email@ejemplo.com"
+              className="flex-1 box-border bg-transparent border border-line rounded px-3 py-2.5 text-[13.5px] text-text outline-none focus:border-violet"
+            />
+            <button type="submit" className="btn btn-primary shrink-0">
+              Invitar al equipo
+            </button>
+          </form>
+        ) : (
+          <p className="text-[12.5px] text-text-faint">
+            Solo un admin de {equipoActivo.nombre} puede invitar a gente nueva.
+          </p>
+        )}
+      </div>
     </AppShell>
   );
 }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
 import { BackLink } from "@/components/BackLink";
 import { TownRow, NewTownRow } from "@/components/TownRow";
@@ -15,18 +16,27 @@ export default async function OrdenacionPage() {
   return (
     <AppShell>
       <BackLink href="/avance" />
-      <h1 className="font-serif font-medium text-[27px] mb-2">Municipios</h1>
-      <p className="text-text-soft text-[14.5px] mb-8 max-w-[540px] leading-relaxed">
-        Memoria de ordenación en curso o terminada.
-      </p>
+      <div className="flex flex-wrap items-end justify-between gap-6 mb-8">
+        <div>
+          <h1 className="font-serif font-normal text-[40px] sm:text-[48px] leading-[1.05] tracking-[-0.02em] mb-3">
+            Municipios
+          </h1>
+          <p className="text-[15px] text-text-soft">Memoria de ordenación en curso o terminada.</p>
+        </div>
+        <Link href="/avance/ordenacion/nuevo" className="btn btn-primary">
+          + Nuevo municipio
+        </Link>
+      </div>
 
-      <div className="rounded-xl border border-line bg-surface overflow-hidden">
-        {municipios.map((m) => (
+      <div className="border-t border-line">
+        {municipios.map((m, i) => (
           <TownRow
             key={m.id}
             href={`/avance/ordenacion/${m.id}`}
+            n={String(i + 1).padStart(2, "0")}
             nombre={m.nombre}
-            meta={`${m.progreso.listos} / ${m.progreso.total} capítulos listos`}
+            pct={m.progreso.total > 0 ? Math.round((m.progreso.listos / m.progreso.total) * 100) : 0}
+            meta={`${m.progreso.listos} / ${m.progreso.total} capítulos`}
           />
         ))}
         <NewTownRow href="/avance/ordenacion/nuevo" />

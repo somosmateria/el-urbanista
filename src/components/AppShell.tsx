@@ -2,38 +2,26 @@ import Link from "next/link";
 import { signOutAction } from "@/app/login/actions";
 import { NavMenu } from "@/components/NavMenu";
 
-export function AppShell({
-  titulo,
-  children,
-}: {
-  titulo?: string;
-  children: React.ReactNode;
-}) {
+export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-rail">
-      <header className="border-b border-line px-8 py-4 flex items-center gap-4">
-        <NavMenu />
-        <Link href="/" className="font-medium text-[15px] text-text">
-          El Urbanista
+    <div className="min-h-screen bg-bg">
+      <header className="flex items-center gap-7 px-6 sm:px-10 py-[18px] border-b border-line">
+        <Link href="/" className="font-serif font-semibold text-[19px] tracking-[0.01em] text-text">
+          El&nbsp;Urbanista
         </Link>
-        {titulo && (
-          <>
-            <span className="text-line-strong">/</span>
-            <span className="text-[14px] text-text-soft">{titulo}</span>
-          </>
-        )}
         <span className="flex-1" />
-        <form action={signOutAction}>
+        <NavMenu />
+        <form action={signOutAction} className="hidden sm:block">
           <button
             type="submit"
-            className="font-mono text-[11px] text-text-faint hover:text-text-soft cursor-pointer"
+            className="text-[10.5px] tracking-[0.16em] uppercase text-text-faint hover:text-violet cursor-pointer"
           >
-            Cerrar sesión
+            Salir
           </button>
         </form>
       </header>
-      <main className="bg-bg min-h-[calc(100vh-57px)]">
-        <div className="max-w-3xl mx-auto px-10 py-11">{children}</div>
+      <main className="min-h-[calc(100vh-63px)]">
+        <div className="max-w-3xl mx-auto px-6 sm:px-10 py-10 sm:py-11">{children}</div>
       </main>
     </div>
   );

@@ -34,7 +34,7 @@ function ToolButton({
 
 export function EditorToolbar({ editor }: { editor: Editor }) {
   return (
-    <div className="flex items-center gap-0.5 bg-surface border border-line border-b-0 rounded-t-[10px] p-2">
+    <div className="flex items-center gap-0.5 bg-surface-hi border border-line border-b-0 p-2">
       <ToolButton
         editor={editor}
         title="Negrita"

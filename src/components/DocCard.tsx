@@ -3,75 +3,52 @@ import clsx from "clsx";
 
 export function DocCard({
   href,
-  icon,
+  n,
   name,
   desc,
-  badge,
-  variant = "normal",
+  info,
+  cta,
+  disponible,
 }: {
   href?: string;
-  icon: React.ReactNode;
+  n: string;
   name: string;
   desc: string;
-  badge: { label: string; tone: "soon" | "on" | "on-cyan" };
-  variant?: "normal" | "hero" | "disabled";
+  info: string;
+  cta?: string;
+  disponible: boolean;
 }) {
   const content = (
     <div
       className={clsx(
-        "relative rounded-xl border p-5 transition-colors",
-        variant === "hero" &&
-          "bg-violet-wash border-violet shadow-[0_0_0_1px_rgba(180,85,242,0.25)]",
-        variant === "disabled" && "border-line bg-surface opacity-40",
-        variant === "normal" &&
-          "border-line bg-surface hover:border-line-strong hover:-translate-y-0.5"
+        "pageblock flex flex-col p-6 pb-[22px] border border-line rounded",
+        disponible && href && "transition-colors hover:border-line-strong",
+        !disponible && "opacity-45"
       )}
     >
-      {variant === "hero" && (
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          strokeWidth={2}
-          className="absolute top-[20px] right-[18px] w-3.5 h-3.5 stroke-violet-ink"
-        >
-          <path d="M9 6l6 6-6 6" />
-        </svg>
-      )}
-      <div
-        className={clsx(
-          "w-[38px] h-[38px] rounded-md flex items-center justify-center",
-          variant === "hero" ? "bg-violet/18" : "bg-white/5"
-        )}
-      >
-        <div
-          className={clsx(
-            "w-[19px] h-[19px] [&>svg]:w-full [&>svg]:h-full [&>svg]:stroke-current",
-            variant === "hero" ? "text-violet-ink" : "text-text-soft"
-          )}
-        >
-          {icon}
-        </div>
+      <div className="flex items-center justify-between mb-5">
+        <span className="text-[11px] tracking-[0.14em] text-text-faint tabular-nums">({n})</span>
+        <span className="tip" tabIndex={0}>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" className="text-text-faint">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 16.5v-5.5" />
+            <path d="M12 8h.01" />
+          </svg>
+          <span className="tipb">{info}</span>
+        </span>
       </div>
-      <div className="font-serif text-[17px] mt-3.5 mb-1.5">{name}</div>
-      <div className="text-[12.5px] text-text-faint leading-relaxed mb-2.5">{desc}</div>
-      <span
-        className={clsx(
-          "inline-block text-[10.5px] font-mono px-2.5 py-1 rounded-full",
-          badge.tone === "soon" && "bg-white/[0.06] text-text-faint",
-          badge.tone === "on" &&
-            "bg-violet-wash text-violet-ink border border-violet/40",
-          badge.tone === "on-cyan" &&
-            "bg-cyan-wash text-cyan-ink border border-cyan/40"
-        )}
-      >
-        {badge.label}
-      </span>
+      <h3 className="font-serif font-semibold text-2xl leading-[1.15] mb-3">{name}</h3>
+      <p className="text-[13.5px] leading-relaxed text-text-soft mb-5 min-h-[66px]">{desc}</p>
+      {disponible ? (
+        <span className="btn btn-primary self-start">{cta}</span>
+      ) : (
+        <span className="text-[10px] tracking-[0.16em] uppercase text-text-faint border-b border-line-strong pb-[3px] self-start">
+          Próximamente
+        </span>
+      )}
     </div>
   );
 
-  if (variant === "disabled" || !href) {
-    return <div>{content}</div>;
-  }
-
+  if (!disponible || !href) return content;
   return <Link href={href}>{content}</Link>;
 }

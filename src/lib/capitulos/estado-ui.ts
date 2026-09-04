@@ -2,30 +2,62 @@ import type { CapituloEstado } from "@/lib/supabase/types";
 
 export const ESTADO_UI: Record<
   CapituloEstado,
-  { dot: string; tagBg: string; tagText: string; label: string }
+  {
+    /** Punto relleno (estado con contenido) u hueco (a la espera de algo). */
+    dotFilled: boolean;
+    dotColor: string;
+    ink: string;
+    meterColor: string;
+    pct: number;
+    label: string;
+    desc: string;
+    /** Clases Tailwind para el pill de texto usado en listas compactas. */
+    tagBg: string;
+    tagText: string;
+  }
 > = {
   listo: {
-    dot: "bg-cyan shadow-[0_0_8px_rgba(31,239,203,0.6)]",
+    dotFilled: true,
+    dotColor: "bg-text border-text",
+    ink: "text-text",
+    meterColor: "bg-text",
+    pct: 100,
+    label: "Listo",
+    desc: "cerrado, se puede entregar",
     tagBg: "bg-cyan-wash",
     tagText: "text-cyan-ink",
-    label: "Listo",
   },
   revisar: {
-    dot: "bg-amber shadow-[0_0_8px_rgba(255,176,32,0.6)]",
+    dotFilled: true,
+    dotColor: "bg-amber border-amber",
+    ink: "text-violet",
+    meterColor: "bg-amber",
+    pct: 70,
+    label: "Revisar",
+    desc: "confirma los datos del diagnóstico",
     tagBg: "bg-amber-wash",
     tagText: "text-amber-ink",
-    label: "Revisar",
   },
   tu_aportacion: {
-    dot: "bg-violet shadow-[0_0_8px_rgba(184,75,255,0.6)]",
+    dotFilled: false,
+    dotColor: "bg-transparent border-text",
+    ink: "text-text",
+    meterColor: "bg-text",
+    pct: 0,
+    label: "Tu aportación",
+    desc: "espera una tabla tuya",
     tagBg: "bg-violet-wash",
     tagText: "text-violet-ink",
-    label: "Tu aportación",
   },
   sin_info: {
-    dot: "bg-text-faint",
-    tagBg: "bg-white/5",
-    tagText: "text-text-faint",
+    dotFilled: false,
+    dotColor: "bg-transparent border-line-strong",
+    ink: "text-text-faint",
+    meterColor: "bg-text-faint",
+    pct: 0,
     label: "Sin información",
+    desc: "falta un dato del diagnóstico",
+    tagBg: "bg-transparent",
+    tagText: "text-text-faint",
   },
 };

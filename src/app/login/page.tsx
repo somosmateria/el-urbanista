@@ -8,47 +8,55 @@ export default async function LoginPage({
   const { error, next } = await searchParams;
 
   return (
-    <div className="min-h-screen bg-rail flex items-center justify-center px-6">
-      <div className="w-full max-w-[380px]">
-        <div className="font-serif text-2xl text-text text-center mb-1">El Urbanista</div>
-        <p className="text-text-faint text-[13px] text-center mb-8">
-          Acceso interno del estudio
-        </p>
+    <div className="min-h-screen bg-bg flex items-center justify-center px-6">
+      <div className="w-full max-w-[392px]">
+        <div className="text-center mb-[34px]">
+          <div className="font-serif font-normal text-[44px] leading-[1.05] tracking-[-0.02em]">
+            El Urbanista
+          </div>
+          <div className="text-[10px] tracking-[0.24em] uppercase text-text-faint mt-3">
+            Acceso interno del estudio
+          </div>
+        </div>
 
-        <form
-          action={loginAction}
-          className="rounded-xl border border-line bg-surface p-6"
-        >
+        <hr className="border-t border-line mb-[30px]" />
+
+        <form action={loginAction}>
           <input type="hidden" name="next" value={next ?? "/"} />
 
-          <label className="block font-mono text-[11px] text-text-faint mb-2">EMAIL</label>
-          <input
-            name="email"
-            type="email"
-            required
-            autoFocus
-            className="w-full box-border bg-surface-hi border border-line-strong rounded-lg px-3 py-2.5 text-[14px] text-text outline-none focus:border-violet mb-4"
-          />
+          <div className="mb-[18px]">
+            <label className="block text-[10px] tracking-[0.16em] uppercase text-text-faint mb-[7px]">
+              Correo
+            </label>
+            <input
+              name="email"
+              type="email"
+              required
+              autoFocus
+              className="w-full box-border bg-transparent border border-line rounded px-3 py-2.5 text-[14px] text-text outline-none focus:border-violet"
+            />
+          </div>
 
-          <label className="block font-mono text-[11px] text-text-faint mb-2">CONTRASEÑA</label>
-          <input
-            name="password"
-            type="password"
-            required
-            className="w-full box-border bg-surface-hi border border-line-strong rounded-lg px-3 py-2.5 text-[14px] text-text outline-none focus:border-violet"
-          />
+          <div className="mb-[26px]">
+            <label className="block text-[10px] tracking-[0.16em] uppercase text-text-faint mb-[7px]">
+              Contraseña
+            </label>
+            <input
+              name="password"
+              type="password"
+              required
+              className="w-full box-border bg-transparent border border-line rounded px-3 py-2.5 text-[14px] text-text outline-none focus:border-violet"
+            />
+          </div>
 
-          {error && <p className="text-[12.5px] text-coral-ink mt-3">{error}</p>}
+          {error && <p className="text-[12.5px] text-coral-ink mb-4">{error}</p>}
 
-          <button
-            type="submit"
-            className="w-full mt-5 bg-violet hover:bg-violet-hover text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg cursor-pointer"
-          >
+          <button type="submit" className="btn btn-primary w-full">
             Entrar
           </button>
         </form>
 
-        <p className="text-text-faint text-[12px] text-center mt-5">
+        <p className="text-center text-[11.5px] text-text-faint mt-6">
           Herramienta de uso interno — el alta se hace por invitación.
         </p>
       </div>

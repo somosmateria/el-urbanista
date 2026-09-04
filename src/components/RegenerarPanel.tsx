@@ -92,20 +92,10 @@ export function RegenerarPanel({
           </div>
         </div>
         <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={aplicar}
-            disabled={pending}
-            className="text-[13px] px-4 py-2 rounded-lg bg-violet hover:bg-violet-hover text-white cursor-pointer disabled:opacity-50"
-          >
+          <button type="button" onClick={aplicar} disabled={pending} className="btn btn-primary">
             {pending ? "Aplicando…" : "Aplicar la versión regenerada"}
           </button>
-          <button
-            type="button"
-            onClick={() => setPreview(null)}
-            disabled={pending}
-            className="text-[13px] px-4 py-2 rounded-lg border border-line-strong text-text-soft hover:bg-surface-hi cursor-pointer"
-          >
+          <button type="button" onClick={() => setPreview(null)} disabled={pending} className="btn btn-secondary">
             Mantener mi versión editada
           </button>
         </div>

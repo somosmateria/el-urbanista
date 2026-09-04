@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Cormorant_Garamond, Lora } from "next/font/google";
 import { AuthHashHandler } from "@/components/AuthHashHandler";
 import "./globals.css";
 
-const plexSans = IBM_Plex_Sans({
-  variable: "--font-plex-sans",
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
 });
 
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
+const lora = Lora({
+  variable: "--font-lora",
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -24,7 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${plexSans.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${cormorant.variable} ${lora.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-rail font-sans text-text">
         <AuthHashHandler />
