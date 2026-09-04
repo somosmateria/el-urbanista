@@ -138,3 +138,23 @@ export async function getSeccionReferenciaDeEquipo(equipoId: string, codigo: str
   if (error) throw error;
   return data;
 }
+
+/**
+ * Todos los títulos calcados del Avance de referencia del equipo, de
+ * golpe — para pintar una lista de capítulos/subepígrafes (semáforo,
+ * cabeceras) sin una consulta por cada uno. Mapa vacío si el equipo no
+ * tiene referencia lista, no si falla — nunca debe romper una página que
+ * solo quiere mostrar títulos.
+ */
+export async function getTitulosReferenciaDeEquipo(equipoId: string): Promise<Map<string, string>> {
+  const referencia = await getReferenciaDeEquipo(equipoId);
+  if (!referencia || referencia.estado !== "listo") return new Map();
+
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("equipo_plantilla_secciones")
+    .select("capitulo_codigo, titulo")
+    .eq("referencia_id", referencia.id);
+  if (error) throw error;
+  return new Map(data.filter((s): s is typeof s & { titulo: string } => !!s.titulo).map((s) => [s.capitulo_codigo, s.titulo]));
+}

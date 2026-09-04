@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import type { CapituloEstado, MotorTipo, MunicipioRow } from "@/lib/supabase/types";
 import type { EquipoActivo } from "@/lib/data/equipos";
 import { tieneAccesoAMunicipio, listMunicipioIdsAccesibles, concederAcceso } from "@/lib/data/municipio-accesos";
+import { getTitulosReferenciaDeEquipo } from "@/lib/data/plantilla-referencia";
 import { resolverPlantilla } from "@/lib/motores/plantilla";
 import { extraerPlanVigente } from "@/lib/motores/plantilla/mo1";
 import { generarCapituloRAG } from "@/lib/motores/rag";
@@ -76,7 +77,15 @@ export async function getMunicipio(id: string, equipo: EquipoActivo) {
   return data;
 }
 
-export async function listCapitulosDeMunicipio(municipioId: string) {
+/**
+ * `equipoId` es opcional solo porque algunos llamadores (p.ej. dentro de
+ * generarCapitulosIniciales, antes de que exista fila de capítulos)
+ * todavía no lo necesitan — cuando se pasa, el título de cada capítulo
+ * se calca del Avance de referencia del equipo si existe uno para ese
+ * código (ver getTitulosReferenciaDeEquipo), en vez del título fijo con
+ * el que se creó la fila.
+ */
+export async function listCapitulosDeMunicipio(municipioId: string, equipoId?: string) {
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("capitulos")
@@ -84,7 +93,11 @@ export async function listCapitulosDeMunicipio(municipioId: string) {
     .eq("municipio_id", municipioId)
     .order("orden");
   if (error) throw error;
-  return data;
+  if (!equipoId) return data;
+
+  const titulos = await getTitulosReferenciaDeEquipo(equipoId);
+  if (titulos.size === 0) return data;
+  return data.map((c) => ({ ...c, titulo: titulos.get(c.codigo) ?? c.titulo }));
 }
 
 /**
@@ -108,7 +121,7 @@ export async function verificarCapituloDeEquipo(capituloId: string, equipo: Equi
   return municipio ? capitulo : null;
 }
 
-export async function getCapituloPorCodigo(municipioId: string, codigo: string) {
+export async function getCapituloPorCodigo(municipioId: string, codigo: string, equipoId?: string) {
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("capitulos")
@@ -117,7 +130,11 @@ export async function getCapituloPorCodigo(municipioId: string, codigo: string) 
     .eq("codigo", codigo)
     .maybeSingle();
   if (error) throw error;
-  return data;
+  if (!data || !equipoId) return data;
+
+  const titulos = await getTitulosReferenciaDeEquipo(equipoId);
+  const tituloReferencia = titulos.get(data.codigo);
+  return tituloReferencia ? { ...data, titulo: tituloReferencia } : data;
 }
 
 export async function crearMunicipio(

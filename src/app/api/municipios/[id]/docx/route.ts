@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { generarDocxCapitulo, nombreArchivoCapitulo } from "@/lib/export/docx";
 import { getMunicipio } from "@/lib/data/municipios";
 import { requireEquipoActivo } from "@/lib/data/equipos";
+import { getTitulosReferenciaDeEquipo } from "@/lib/data/plantilla-referencia";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -29,10 +30,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Todavía no hay ningún capítulo con contenido." }, { status: 404 });
   }
 
+  const titulos = await getTitulosReferenciaDeEquipo(equipo.id);
+
   const zip = new JSZip();
   for (const capitulo of conContenido) {
     const buffer = await generarDocxCapitulo(
-      `${capitulo.codigo} — ${capitulo.titulo}`,
+      `${capitulo.codigo} — ${titulos.get(capitulo.codigo) ?? capitulo.titulo}`,
       capitulo.contenido_html!
     );
     zip.file(nombreArchivoCapitulo(capitulo.codigo), buffer);

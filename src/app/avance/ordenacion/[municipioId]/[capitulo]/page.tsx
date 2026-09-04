@@ -12,6 +12,7 @@ import { getMunicipio, getCapituloPorCodigo } from "@/lib/data/municipios";
 import { listTablasDeCapitulo } from "@/lib/data/tablas";
 import { listTextosDeCapitulo } from "@/lib/data/textos";
 import { getSubepigrafes } from "@/lib/data/mapeo";
+import { getTitulosReferenciaDeEquipo } from "@/lib/data/plantilla-referencia";
 import { requireEquipoActivo } from "@/lib/data/equipos";
 import {
   marcarMotivoAction,
@@ -32,7 +33,7 @@ export default async function CapituloPage({
   const municipio = await getMunicipio(municipioId, equipo);
   if (!municipio) notFound();
 
-  const capitulo = await getCapituloPorCodigo(municipioId, codigo);
+  const capitulo = await getCapituloPorCodigo(municipioId, codigo, equipo.id);
   if (!capitulo) notFound();
 
   const tablas = capitulo.motor === "tabla" ? await listTablasDeCapitulo(capitulo.id) : [];
@@ -54,6 +55,7 @@ export default async function CapituloPage({
   const textosPorSubepigrafe = await Promise.all(
     subepigrafesDeTabla.map((s) => listTextosDeCapitulo(capitulo.id, s.capitulo_codigo))
   );
+  const titulosReferencia = await getTitulosReferenciaDeEquipo(equipo.id);
 
   return (
     <AppShell>
@@ -222,7 +224,7 @@ export default async function CapituloPage({
           {subepigrafesDeTabla.map((s, i) => (
             <div key={s.capitulo_codigo} className="mb-8">
               <h3 className="font-serif text-[16px] mb-3">
-                {s.capitulo_codigo.replace(/^MO\./, "")} · {s.titulo_canonico}
+                {s.capitulo_codigo.replace(/^MO\./, "")} · {titulosReferencia.get(s.capitulo_codigo) ?? s.titulo_canonico}
               </h3>
 
               {tablasPorSubepigrafe[i].map((tabla) => (

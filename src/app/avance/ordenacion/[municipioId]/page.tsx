@@ -19,7 +19,7 @@ export default async function MunicipioPage({
   const municipio = await getMunicipio(municipioId, equipo);
   if (!municipio) notFound();
 
-  const capitulos = await listCapitulosDeMunicipio(municipioId);
+  const capitulos = await listCapitulosDeMunicipio(municipioId, equipo.id);
   const contables = capitulos.filter((c) => c.sin_info_motivo !== "no_aplica");
   const cerrados = contables.filter((c) => c.estado === "listo").length;
   const abiertos = contables.length - cerrados;

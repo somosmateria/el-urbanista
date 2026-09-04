@@ -19,7 +19,7 @@ export default async function EditarCapituloPage({
   const municipio = await getMunicipio(municipioId, equipo);
   if (!municipio) notFound();
 
-  const capitulo = await getCapituloPorCodigo(municipioId, codigo);
+  const capitulo = await getCapituloPorCodigo(municipioId, codigo, equipo.id);
   if (!capitulo || capitulo.motor === "tabla" || !capitulo.contenido_html) notFound();
 
   const versiones = await listVersionesDeCapitulo(capitulo.id);
