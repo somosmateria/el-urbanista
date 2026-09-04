@@ -40,7 +40,7 @@ export async function invitarAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   if (!email) throw new Error("Falta el email.");
 
-  await invitarAEquipo(equipo.id, email);
+  await invitarAEquipo(equipo.id, email, equipo.userId);
   revalidatePath("/ajustes");
 }
 

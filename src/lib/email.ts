@@ -49,3 +49,36 @@ ${params.municipioNombre}</p>
   });
   if (error) throw new Error(error.message);
 }
+
+/**
+ * Invitación a un equipo — reemplaza el email por defecto de Supabase Auth
+ * (genérico, sin marca) por uno propio. `enlace` es, según el caso: el
+ * action_link de `generateLink({type:"invite"})` si la cuenta se crea de
+ * cero (deja al usuario con sesión iniciada y contraseña puesta al
+ * abrirlo), o un enlace normal a /login si la persona ya tenía cuenta (solo
+ * necesita entrar; la invitación pendiente se le mostrará dentro de la
+ * app — ver src/components/InvitacionBanner.tsx).
+ */
+export async function enviarInvitacionEquipo(params: {
+  email: string;
+  equipoNombre: string;
+  enlace: string;
+  esCuentaNueva: boolean;
+}) {
+  const resend = getResendClient();
+  const { error } = await resend.emails.send({
+    from: REMITENTE,
+    to: params.email,
+    subject: `Te han invitado al equipo ${params.equipoNombre} en El Urbanista`,
+    html: `
+<p>Te han invitado a unirte al equipo <strong>${params.equipoNombre}</strong> en El Urbanista.</p>
+<p>${
+      params.esCuentaNueva
+        ? "Crea tu cuenta para entrar:"
+        : "Entra con tu cuenta para ver la invitación y aceptarla:"
+    }</p>
+<p><a href="${params.enlace}">${params.esCuentaNueva ? "Crear cuenta" : "Entrar"}</a></p>
+`.trim(),
+  });
+  if (error) throw new Error(error.message);
+}

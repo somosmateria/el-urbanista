@@ -1,8 +1,10 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { NavMenu } from "@/components/NavMenu";
+import { InvitacionBanner } from "@/components/InvitacionBanner";
+import { getUsuarioActual, listInvitacionesPendientes } from "@/lib/data/equipos";
 
-export function AppShell({
+export async function AppShell({
   children,
   ancho = "normal",
 }: {
@@ -10,8 +12,12 @@ export function AppShell({
   /** El editor de capítulo necesita más aire que el resto de páginas. */
   ancho?: "normal" | "amplio";
 }) {
+  const usuario = await getUsuarioActual();
+  const invitaciones = usuario?.email ? await listInvitacionesPendientes(usuario.email) : [];
+
   return (
     <div className="min-h-screen bg-bg">
+      {invitaciones.length > 0 && <InvitacionBanner invitaciones={invitaciones} />}
       <header className="flex items-center gap-7 px-6 sm:px-10 py-[18px] border-b border-line">
         <Link href="/" className="font-serif font-semibold text-[19px] tracking-[0.01em] text-text">
           El&nbsp;Urbanista

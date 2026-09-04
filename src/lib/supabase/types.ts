@@ -9,6 +9,7 @@ export type SinInfoMotivo = "falta_dato" | "no_aplica";
 export type DiagnosticoEstado = "procesando" | "listo" | "error";
 export type VersionTipo = "generacion_automatica" | "edicion_manual";
 export type EquipoRol = "admin" | "miembro";
+export type InvitacionEstado = "pendiente" | "aceptada" | "rechazada";
 
 export type EquipoRow = {
   id: string;
@@ -22,6 +23,16 @@ export type EquipoMiembroRow = {
   user_id: string;
   rol: EquipoRol;
   created_at: string;
+}
+
+export type EquipoInvitacionRow = {
+  id: string;
+  equipo_id: string;
+  email: string;
+  invitado_por: string | null;
+  estado: InvitacionEstado;
+  created_at: string;
+  resuelta_at: string | null;
 }
 
 export type MunicipioRow = {
@@ -169,6 +180,15 @@ export type Database = {
         EquipoMiembroRow,
         Omit<EquipoMiembroRow, "id" | "created_at"> & { id?: string },
         Partial<Omit<EquipoMiembroRow, "id">>
+      >;
+      equipo_invitaciones: TableDef<
+        EquipoInvitacionRow,
+        Omit<EquipoInvitacionRow, "id" | "created_at" | "estado" | "resuelta_at"> & {
+          id?: string;
+          estado?: InvitacionEstado;
+          resuelta_at?: string | null;
+        },
+        Partial<Omit<EquipoInvitacionRow, "id">>
       >;
       municipios: TableDef<
         MunicipioRow,

@@ -1,6 +1,7 @@
 import "server-only";
 import { cookies, headers } from "next/headers";
 import { createServiceClient, createServerAuthClient } from "@/lib/supabase/server";
+import { enviarInvitacionEquipo } from "@/lib/email";
 import type { EquipoRol } from "@/lib/supabase/types";
 
 const COOKIE_EQUIPO_ACTIVO = "equipo_activo";
@@ -123,53 +124,138 @@ export async function listMiembrosDeEquipo(equipoId: string) {
 }
 
 /**
- * Invita por email a un equipo. Si la persona ya tiene cuenta (porque es
- * miembro de otro equipo, p.ej.), no se le reenvía invitación — se le
- * añade directamente al equipo nuevo.
+ * Invita por email a un equipo — ya no da acceso de inmediato: crea una
+ * invitación pendiente (o la reactiva si ya existía y se había rechazado)
+ * que la persona tiene que aceptar desde la propia app al entrar (ver
+ * listInvitacionesPendientes/aceptarInvitacion más abajo). Si la cuenta no
+ * existe todavía, el email lleva el enlace de creación de cuenta de
+ * Supabase Auth; si ya existe, solo lleva a /login — verá la invitación en
+ * cuanto entre.
  */
-export async function invitarAEquipo(equipoId: string, email: string) {
+export async function invitarAEquipo(equipoId: string, email: string, invitadoPor: string) {
   const supabase = createServiceClient();
+  const emailNormalizado = email.trim().toLowerCase();
 
-  // Sin esto, el enlace del correo de invitación usa la Site URL que
-  // tenga configurada el proyecto de Supabase en su panel — si esa
-  // configuración no está al día (apunta a localhost, a una preview de
-  // Vercel...), el correo llega pero el enlace no lleva a ningún sitio
-  // usable. Pasarlo explícito aquí lo hace depender del dominio real
-  // desde el que se invita, no de una configuración aparte que hay que
-  // recordar mantener sincronizada.
   const origin = (await headers()).get("origin") ?? (await headers()).get("host");
-  const redirectTo = origin
-    ? `${origin.startsWith("http") ? origin : `https://${origin}`}/auth/confirm`
-    : undefined;
+  const base = origin ? (origin.startsWith("http") ? origin : `https://${origin}`) : "";
 
-  let userId: string;
-  const { data: invitado, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-    redirectTo,
+  let enlace = `${base}/login`;
+  let esCuentaNueva = false;
+
+  const { data: generado, error: generarError } = await supabase.auth.admin.generateLink({
+    type: "invite",
+    email: emailNormalizado,
+    options: { redirectTo: `${base}/auth/confirm` },
   });
 
-  if (invitado?.user) {
-    userId = invitado.user.id;
-  } else {
-    // Ya registrado en otro equipo — buscarlo por email en vez de re-invitar.
-    const { data: lista, error: listError } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-    if (listError) throw listError;
-    const existente = lista.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
-    if (!existente) throw inviteError ?? new Error("No se pudo invitar.");
-    userId = existente.id;
+  if (generado?.properties?.action_link) {
+    enlace = generado.properties.action_link;
+    esCuentaNueva = true;
+  } else if (generarError && !generarError.message.toLowerCase().includes("already been registered")) {
+    // Un fallo que no sea "ya existe cuenta" sí es un problema real de verdad.
+    throw generarError;
   }
 
-  const { data: yaMiembro } = await supabase
-    .from("equipo_miembros")
-    .select("id")
-    .eq("equipo_id", equipoId)
-    .eq("user_id", userId)
+  const { data: equipo, error: equipoError } = await supabase
+    .from("equipos")
+    .select("nombre")
+    .eq("id", equipoId)
     .maybeSingle();
-  if (yaMiembro) return; // ya estaba en el equipo, nada que hacer
+  if (equipoError) throw equipoError;
+  if (!equipo) throw new Error("Equipo no encontrado.");
 
-  const { error: miembroError } = await supabase
-    .from("equipo_miembros")
-    .insert({ equipo_id: equipoId, user_id: userId, rol: "miembro" });
-  if (miembroError) throw miembroError;
+  const { error: invitacionError } = await supabase.from("equipo_invitaciones").upsert(
+    {
+      equipo_id: equipoId,
+      email: emailNormalizado,
+      invitado_por: invitadoPor,
+      estado: "pendiente",
+      resuelta_at: null,
+    },
+    { onConflict: "equipo_id,email" }
+  );
+  if (invitacionError) throw invitacionError;
+
+  await enviarInvitacionEquipo({
+    email: emailNormalizado,
+    equipoNombre: equipo.nombre,
+    enlace,
+    esCuentaNueva,
+  });
+}
+
+/**
+ * Las invitaciones pendientes de esta persona, con el nombre del equipo —
+ * para el aviso que se le muestra al entrar (ver InvitacionBanner).
+ */
+export async function listInvitacionesPendientes(email: string) {
+  const supabase = createServiceClient();
+  const { data: invitaciones, error } = await supabase
+    .from("equipo_invitaciones")
+    .select("id, equipo_id, created_at")
+    .eq("email", email.trim().toLowerCase())
+    .eq("estado", "pendiente")
+    .order("created_at");
+  if (error) throw error;
+  if (invitaciones.length === 0) return [];
+
+  const { data: equipos, error: equiposError } = await supabase
+    .from("equipos")
+    .select("id, nombre")
+    .in(
+      "id",
+      invitaciones.map((i) => i.equipo_id)
+    );
+  if (equiposError) throw equiposError;
+
+  return invitaciones.map((i) => ({
+    ...i,
+    equipoNombre: equipos.find((e) => e.id === i.equipo_id)?.nombre ?? "(equipo eliminado)",
+  }));
+}
+
+async function resolverInvitacion(
+  invitacionId: string,
+  usuario: { id: string; email: string },
+  estado: "aceptada" | "rechazada"
+) {
+  const supabase = createServiceClient();
+  const { data: invitacion, error } = await supabase
+    .from("equipo_invitaciones")
+    .select("*")
+    .eq("id", invitacionId)
+    .eq("estado", "pendiente")
+    .maybeSingle();
+  if (error) throw error;
+  if (!invitacion || invitacion.email !== usuario.email.trim().toLowerCase()) {
+    throw new Error("Invitación no encontrada.");
+  }
+
+  if (estado === "aceptada") {
+    const { error: miembroError } = await supabase
+      .from("equipo_miembros")
+      .upsert(
+        { equipo_id: invitacion.equipo_id, user_id: usuario.id, rol: "miembro" },
+        { onConflict: "equipo_id,user_id" }
+      );
+    if (miembroError) throw miembroError;
+  }
+
+  const { error: updateError } = await supabase
+    .from("equipo_invitaciones")
+    .update({ estado, resuelta_at: new Date().toISOString() })
+    .eq("id", invitacionId);
+  if (updateError) throw updateError;
+
+  return invitacion.equipo_id;
+}
+
+export async function aceptarInvitacion(invitacionId: string, usuario: { id: string; email: string }) {
+  return resolverInvitacion(invitacionId, usuario, "aceptada");
+}
+
+export async function rechazarInvitacion(invitacionId: string, usuario: { id: string; email: string }) {
+  return resolverInvitacion(invitacionId, usuario, "rechazada");
 }
 
 export async function eliminarMiembroDeEquipo(equipoId: string, miembroId: string) {
