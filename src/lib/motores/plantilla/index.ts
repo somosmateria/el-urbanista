@@ -15,6 +15,7 @@ import { generarMO3_1_4 } from "./mo3-1-4";
 import { generarMO3_3 } from "./mo3-3";
 import { generarMO3_4 } from "./mo3-4";
 import { generarMO3_6 } from "./mo3-6";
+import { generarMO6_1 } from "./mo6-1";
 
 /**
  * Registro de plantillas implementadas por código de capítulo. Un capítulo
@@ -46,6 +47,7 @@ export const PLANTILLAS: Record<
   "MO.3.3": generarMO3_3,
   "MO.3.4": generarMO3_4,
   "MO.3.6": generarMO3_6,
+  "MO.6.1": generarMO6_1,
 };
 
 /**

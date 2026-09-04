@@ -269,6 +269,7 @@ export async function generarCapitulosIniciales(municipioId: string, equipo: Equ
           sin_info_motivo: null,
           contenido_html: null,
           orden: entrada.orden,
+          asignado_a: null,
         };
       }
 
@@ -289,6 +290,7 @@ export async function generarCapitulosIniciales(municipioId: string, equipo: Equ
           sin_info_motivo: contenido ? null : ("falta_dato" as const),
           contenido_html: contenido,
           orden: entrada.orden,
+          asignado_a: null,
         };
       }
 
@@ -317,6 +319,7 @@ export async function generarCapitulosIniciales(municipioId: string, equipo: Equ
         sin_info_motivo: contenido ? null : ("falta_dato" as const),
         contenido_html: contenido,
         orden: entrada.orden,
+        asignado_a: null,
       };
     })
   );

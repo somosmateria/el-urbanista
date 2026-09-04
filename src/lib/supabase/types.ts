@@ -83,6 +83,7 @@ export type CapituloRow = {
   sin_info_motivo: SinInfoMotivo | null;
   contenido_html: string | null;
   orden: number;
+  asignado_a: string | null;
   created_at: string;
   updated_at: string;
 }

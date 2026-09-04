@@ -21,6 +21,7 @@ import { generarCapituloTabla } from "@/lib/motores/tabla";
 import { regenerarContenido } from "@/lib/motores/regenerar";
 import { verificarCapituloDeEquipo } from "@/lib/data/municipios";
 import { requireEquipoActivo } from "@/lib/data/equipos";
+import { asignarCapitulo } from "@/lib/data/tareas";
 import type { CapituloEstado } from "@/lib/supabase/types";
 
 // El semáforo y la propia página del capítulo son rutas distintas —
@@ -49,6 +50,17 @@ export async function marcarMotivoAction(
   if (error) throw error;
 
   revalidarCapitulo(municipioId, capitulo.codigo);
+}
+
+export async function asignarCapituloAction(
+  municipioId: string,
+  capituloId: string,
+  usuarioId: string | null
+) {
+  const equipo = await requireEquipoActivo();
+  const capitulo = await asignarCapitulo(capituloId, equipo, usuarioId);
+  revalidarCapitulo(municipioId, capitulo.codigo);
+  revalidatePath("/tareas");
 }
 
 export async function crearBloqueTablaAction(

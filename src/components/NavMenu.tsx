@@ -7,6 +7,7 @@ import { signOutAction } from "@/app/login/actions";
 const ENLACES = [
   { href: "/", label: "Inicio" },
   { href: "/avance/ordenacion", label: "Municipios" },
+  { href: "/tareas", label: "Mis tareas" },
   { href: "/ajustes", label: "Ajustes" },
 ];
 

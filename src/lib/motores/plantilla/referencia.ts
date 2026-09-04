@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { getAnthropicClient, MODELO_GENERACION } from "@/lib/anthropic";
+import { parsearRespuestaReferencia } from "@/lib/texto/avance-referencia";
 
 /**
  * MO.1 y MO.11 quedan fuera de la SUSTITUCIÓN DE CONTENIDO por Avance de
@@ -128,16 +129,6 @@ Reglas estrictas:
  */
 const MAX_TOKENS_RESPUESTA = 24_000;
 
-function parsearRespuesta(bruto: string): { titulo: string; texto: string } | null {
-  const separador = bruto.indexOf("\n---");
-  const cabecera = (separador === -1 ? bruto : bruto.slice(0, separador)).trim();
-  const cuerpo = separador === -1 ? "" : bruto.slice(separador + 4).replace(/^\n/, "").trim();
-
-  const titulo = cabecera.replace(/^TITULO:\s*/i, "").trim();
-  if (!titulo || titulo.includes("NO_ENCONTRADO")) return null;
-  return { titulo, texto: cuerpo };
-}
-
 async function extraerCapitulo(
   textoCompleto: string,
   objetivo: CodigoObjetivo,
@@ -184,7 +175,7 @@ async function extraerCapitulo(
       .join("\n")
       .trim();
 
-    return bruto ? parsearRespuesta(bruto) : null;
+    return bruto ? parsearRespuestaReferencia(bruto) : null;
   } catch (error) {
     // Un capítulo que falla (límite de contexto, timeout puntual...) no
     // debe tirar abajo el procesado de los demás — se omite como si no se

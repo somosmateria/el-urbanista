@@ -13,7 +13,8 @@ import { listTablasDeCapitulo } from "@/lib/data/tablas";
 import { listTextosDeCapitulo } from "@/lib/data/textos";
 import { getSubepigrafes } from "@/lib/data/mapeo";
 import { getTitulosReferenciaDeEquipo } from "@/lib/data/plantilla-referencia";
-import { requireEquipoActivo } from "@/lib/data/equipos";
+import { requireEquipoActivo, listMiembrosDeEquipo } from "@/lib/data/equipos";
+import { AsignarCapitulo } from "@/components/AsignarCapitulo";
 import {
   marcarMotivoAction,
   crearBloqueTablaAction,
@@ -56,6 +57,8 @@ export default async function CapituloPage({
     subepigrafesDeTabla.map((s) => listTextosDeCapitulo(capitulo.id, s.capitulo_codigo))
   );
   const titulosReferencia = await getTitulosReferenciaDeEquipo(equipo.id);
+  const miembros = await listMiembrosDeEquipo(equipo.id);
+  const asignado = miembros.find((m) => m.user_id === capitulo.asignado_a);
 
   return (
     <AppShell>
@@ -72,6 +75,20 @@ export default async function CapituloPage({
         <span className="text-[10.5px] tracking-[0.14em] uppercase text-text-faint">
           {MOTOR_LABEL[capitulo.motor]}
         </span>
+        {equipo.rol === "admin" ? (
+          <AsignarCapitulo
+            municipioId={municipioId}
+            capituloId={capitulo.id}
+            miembros={miembros.map((m) => ({ id: m.user_id, email: m.email }))}
+            asignadoInicial={capitulo.asignado_a}
+          />
+        ) : (
+          asignado && (
+            <span className="text-[10.5px] tracking-[0.14em] uppercase text-text-faint">
+              Asignado a {asignado.email}
+            </span>
+          )
+        )}
         <span className="flex-1" />
         <span className="flex gap-2.5 flex-wrap">
           {capitulo.motor !== "tabla" && capitulo.contenido_html && (

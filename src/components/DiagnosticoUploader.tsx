@@ -74,9 +74,7 @@ export function DiagnosticoUploader({
   // respuesta real, para no prometer un 100% que no ha pasado todavía.
   useEffect(() => {
     if (estado !== "procesando") return;
-    setProgresoLectura(0);
     let mensajeIdx = 0;
-    setMensajeLectura(MENSAJES_PROCESANDO[0]);
 
     const inicio = Date.now();
     const intervalo = setInterval(() => {
@@ -114,6 +112,8 @@ export function DiagnosticoUploader({
       await subirConProgreso(file, path, token, setProgreso);
 
       setEstado("procesando");
+      setProgresoLectura(0);
+      setMensajeLectura(MENSAJES_PROCESANDO[0]);
       const procesarRes = await fetch(`/api/diagnosticos/${diagnosticoId}/procesar`, {
         method: "POST",
       });
