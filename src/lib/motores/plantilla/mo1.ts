@@ -3,14 +3,26 @@ import { getSeccionPorCodigo } from "@/lib/data/diagnosticos";
 import { getAnthropicClient, MODELO_GENERACION } from "@/lib/anthropic";
 
 /**
- * MO.1 · 1.1 Conveniencia y oportunidad del PGOM.
+ * MO.1 · 1.1 Conveniencia y oportunidad del PGOM + 2. De las alternativas
+ * de ordenación contempladas.
  *
- * Plantilla validada comparando el texto real de dos Avances distintos
- * (Osuna y Lora del Río, ver test-data/): los párrafos son casi idénticos
- * palabra por palabra salvo el nombre del municipio, el plan vigente citado
- * y los años transcurridos. Solo esos tres datos son variables; el resto
- * (referencias a LS07, TRLS08, Ley 8/2013, TRLSRU 2015, LISTA, POTA, la
- * Estrategia Andaluza de Sostenibilidad Urbana) es literal en ambos.
+ * La sección 1.1 está validada comparando el texto real de dos Avances
+ * distintos (Osuna y Lora del Río, ver test-data/): los párrafos son casi
+ * idénticos palabra por palabra salvo el nombre del municipio, el plan
+ * vigente citado y los años transcurridos. Solo esos tres datos son
+ * variables; el resto (referencias a LS07, TRLS08, Ley 8/2013, TRLSRU 2015,
+ * LISTA, POTA, la Estrategia Andaluza de Sostenibilidad Urbana) es literal
+ * en ambos.
+ *
+ * La sección 2 (añadida después, comprobada contra el mismo Avance de Lora
+ * del Río) cubre el marco legal y la metodología de evaluación de
+ * alternativas que exige el artículo 77 de la LISTA y la Ley 7/2007 (GICA)
+ * — genérico y aplicable a cualquier municipio andaluz, no citas a datos
+ * concretos del municipio. A propósito NO incluye la descripción de las
+ * alternativas concretas (p.ej. "Alternativa 0: asunción del planeamiento
+ * vigente…") — esas sí son específicas de cada municipio y de su
+ * diagnóstico, y había que inventarlas para poder generarlas aquí; se
+ * dejan para que el equipo las añada (ver el aviso al final del bloque).
  *
  * Devuelve null si falta un dato imprescindible (fecha del plan vigente) —
  * no se inventa un número de años.
@@ -117,6 +129,89 @@ adecuado, proponiendo áreas estratégicas para fomentar la sostenibilidad
 urbana, la economía verde y la inclusión social.</p>
 </div>
 <div class="src-note">PLANTILLA — texto normativo común, sin datos del diagnóstico</div>
+
+<div class="doc-eyebrow">2 · DE LAS ALTERNATIVAS DE ORDENACIÓN CONTEMPLADAS</div>
+<div class="doc-text">
+<p>El documento de Avance del Plan General de Ordenación Municipal de
+${municipio.nombre} se presenta como una herramienta estratégica inicial,
+orientada a explorar, proponer y analizar distintas opciones de ordenación
+territorial y urbana. No se trata aún de un instrumento normativo, por lo
+que no incorpora determinaciones urbanísticas de carácter vinculante.</p>
+
+<p>De acuerdo con lo previsto en el artículo 77 de la Ley 7/2021, de impulso
+para la sostenibilidad del territorio de Andalucía (LISTA), el Avance debe
+ofrecer una exposición clara y justificada de los siguientes aspectos: los
+objetivos que persigue el plan, ya sea su elaboración o revisión; el ámbito
+geográfico sobre el que actúa; las principales condicionantes territoriales,
+ambientales y sectoriales (infraestructuras, riesgos naturales, elementos
+patrimoniales, espacios protegidos, etc.); los criterios generales que
+sustentan la propuesta de ordenación; y una serie de alternativas viables,
+analizadas desde una perspectiva técnica, ambiental y económica, evitando la
+presentación de una única opción. Este planteamiento plural tiene como
+finalidad asegurar que la propuesta final responda a criterios de
+sostenibilidad, eficiencia y equidad, permitiendo una comparación
+fundamentada entre distintas estrategias posibles.</p>
+
+<p>Paralelamente, y en cumplimiento de la Ley 7/2007, de Gestión Integrada
+de la Calidad Ambiental (GICA), el documento de Avance —equivalente
+ambientalmente al Borrador del Plan— debe someterse al procedimiento de
+Evaluación Ambiental Estratégica (EAE) desde las fases iniciales del
+proceso. Esta evaluación obliga a considerar el impacto de las distintas
+alternativas sobre la conservación o transformación del suelo de valor
+ecológico o agrario, la fragmentación del territorio, el uso de recursos
+naturales, la biodiversidad y el paisaje, y la coherencia con los objetivos
+de desarrollo sostenible. Así, el Avance actúa como un puente entre la
+planificación urbanística y la protección ambiental, incorporando una
+visión estratégica, integradora y participativa del urbanismo contemporáneo
+andaluz: no es un plan normativo, sino un espacio de reflexión técnica,
+institucional y social que sienta las bases del modelo territorial y urbano
+a desarrollar.</p>
+
+<p>Su nivel de definición es, evidentemente, preliminar: no se establecen
+aún derechos urbanísticos, ni se asignan usos detallados, edificabilidades o
+densidades. Esta indefinición permite incorporar aportaciones ciudadanas,
+interadministrativas y ambientales a lo largo del proceso, y presentar
+alternativas de forma abierta, como distintas expresiones dentro de un marco
+conceptual y normativo compartido.</p>
+
+<p>El Avance ofrece diversas hipótesis de desarrollo urbano-territorial,
+construidas sobre un diagnóstico riguroso de sus condicionantes físicos,
+ambientales, sociales y económicos, que buscan responder a desafíos como la
+regeneración de áreas consolidadas, la mejora de la conectividad, el uso
+eficiente del suelo o el control del crecimiento urbano. No obstante, deben
+interpretarse como escenarios orientativos, sin capacidad normativa ni
+efectos sobre derechos urbanísticos existentes: no sustituyen al
+planeamiento vigente, sino que ofrecen una base estratégica para su revisión
+o actualización.</p>
+
+<p>Cada alternativa se somete a una evaluación sistemática y objetiva,
+recogida en el Documento Inicial Estratégico (DIE), mediante una matriz de
+indicadores que valora, con puntuaciones (+1, 0, -1), su impacto sobre tres
+ejes fundamentales: la viabilidad técnica, en relación con su ejecución y
+compatibilidad con infraestructuras existentes; la compatibilidad
+ambiental, en términos de preservación de recursos, mitigación de impactos
+y adaptación al cambio climático; y la sostenibilidad socioeconómica,
+considerando la cohesión social, el equilibrio económico y la accesibilidad
+a equipamientos. Este análisis comparativo permite identificar la
+alternativa más adecuada a los objetivos del municipio y a los marcos
+superiores de planificación, como la Estrategia Andaluza de Sostenibilidad
+Urbana.</p>
+
+<p>En síntesis, el Avance del PGOM de ${municipio.nombre} constituye un
+instrumento esencial para definir el modelo urbanístico futuro del
+municipio. Aunque carece de efectos jurídicos vinculantes, representa un
+momento clave del proceso de planificación, en el que se anticipan
+impactos, se integran perspectivas múltiples y se orienta la toma de
+decisiones hacia soluciones más equilibradas, factibles y sostenibles. Las
+opciones planteadas podrán ser refinadas en las siguientes fases, a medida
+que se incorporen los contenidos técnicos definitivos, las consideraciones
+ambientales y la voluntad colectiva del territorio.</p>
+</div>
+<div class="src-note">PLANTILLA — marco legal y metodología de evaluación de alternativas, comunes a
+cualquier municipio. Falta añadir aquí la descripción de las alternativas concretas
+manejadas para ${municipio.nombre} (p.ej. "Alternativa 0: asunción del planeamiento
+vigente…") — eso sí depende del municipio y no se genera solo; añádelo editando
+el capítulo.</div>
 `.trim();
 }
 

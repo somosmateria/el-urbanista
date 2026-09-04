@@ -46,11 +46,15 @@ export const PLANTILLAS: Record<
  * MO.2 se genera a partir de un banco de objetivos de referencia, no de un
  * texto ya verificado para este municipio (ver el aviso en mo2.ts) —
  * aterriza en "revisar" en vez de "listo", igual que los capítulos del
- * motor RAG. Cualquier capítulo resuelto contra el Avance de referencia
- * del equipo (ver resolverPlantilla) también aterriza en "revisar" —
- * es contenido de OTRO municipio reutilizado, siempre hay que confirmarlo.
+ * motor RAG. MO.1 también: su sección "2 · De las alternativas..." cubre
+ * el marco legal y la metodología, pero deja a propósito sin rellenar la
+ * descripción de las alternativas concretas del municipio (ver el aviso
+ * en mo1.ts) — no está terminado hasta que alguien las añada a mano.
+ * Cualquier capítulo resuelto contra el Avance de referencia del equipo
+ * (ver resolverPlantilla) también aterriza en "revisar" — es contenido de
+ * OTRO municipio reutilizado, siempre hay que confirmarlo.
  */
-export const PLANTILLAS_QUE_NECESITAN_REVISION = new Set(["MO.2"]);
+export const PLANTILLAS_QUE_NECESITAN_REVISION = new Set(["MO.1", "MO.2"]);
 
 /**
  * Punto único por el que pasa cualquier capítulo de motor "plantilla" al
