@@ -14,7 +14,7 @@ import { getAnthropicClient, MODELO_GENERACION } from "@/lib/anthropic";
  * LISTA, POTA, la Estrategia Andaluza de Sostenibilidad Urbana) es literal
  * en ambos.
  *
- * La sección 2 (añadida después, comprobada contra el mismo Avance de Lora
+ * La sección 1.2 (añadida después, comprobada contra el mismo Avance de Lora
  * del Río) cubre el marco legal y la metodología de evaluación de
  * alternativas que exige el artículo 77 de la LISTA y la Ley 7/2007 (GICA)
  * — genérico y aplicable a cualquier municipio andaluz, no citas a datos
@@ -130,7 +130,7 @@ urbana, la economía verde y la inclusión social.</p>
 </div>
 <div class="src-note">PLANTILLA — texto normativo común, sin datos del diagnóstico</div>
 
-<div class="doc-eyebrow">2 · DE LAS ALTERNATIVAS DE ORDENACIÓN CONTEMPLADAS</div>
+<div class="doc-eyebrow">1.2 · DE LAS ALTERNATIVAS DE ORDENACIÓN CONSIDERADAS</div>
 <div class="doc-text">
 <p>El documento de Avance del Plan General de Ordenación Municipal de
 ${municipio.nombre} se presenta como una herramienta estratégica inicial,
