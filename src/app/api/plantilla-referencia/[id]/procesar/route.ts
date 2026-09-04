@@ -12,9 +12,10 @@ import { requireEquipoActivo } from "@/lib/data/equipos";
 
 export const runtime = "nodejs";
 // Nueve llamadas a Claude en paralelo (una por capítulo sustituible), cada
-// una con el texto completo del documento — puede tardar más que el
-// límite por defecto de una función serverless.
-export const maxDuration = 180;
+// una con el texto completo del documento (hasta ~1,5M caracteres en un
+// Avance real grande) — puede tardar más que el límite por defecto de una
+// función serverless. Mismo margen que el procesado de diagnósticos.
+export const maxDuration = 300;
 
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: referenciaId } = await params;
