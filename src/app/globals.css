@@ -30,15 +30,16 @@
   --color-violet-ink: #4a3b30;
   --color-violet-wash: color-mix(in srgb, #4a3b30 10%, transparent);
 
-  /* Estado "Listo" — antes cian */
-  --color-cyan: #241d19;
-  --color-cyan-ink: #241d19;
-  --color-cyan-wash: #e2dcce;
+  /* Estado "Listo" — verde salvia apagado, no un verde saturado, para no
+     romper la paleta tierra del resto de la app. */
+  --color-cyan: #4f6b45;
+  --color-cyan-ink: #435c3b;
+  --color-cyan-wash: color-mix(in srgb, #4f6b45 12%, transparent);
 
-  /* Estado "Revisar" — antes ámbar */
-  --color-amber: #8a7563;
-  --color-amber-ink: #4a3b30;
-  --color-amber-wash: transparent;
+  /* Estado "Revisar" — ámbar/dorado apagado. */
+  --color-amber: #a8763a;
+  --color-amber-ink: #8a5a1f;
+  --color-amber-wash: color-mix(in srgb, #a8763a 12%, transparent);
 
   /* Peligro / error — antes coral */
   --color-coral: #8c4331;

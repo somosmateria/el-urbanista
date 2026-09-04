@@ -18,7 +18,7 @@ export function EliminarMunicipioBoton({
       <button
         type="button"
         onClick={() => setAbierto(true)}
-        className="whitespace-nowrap inline-flex items-center border border-line-strong hover:border-coral hover:text-coral-ink text-text-soft text-[13.5px] font-medium px-4 py-2.5 rounded-lg cursor-pointer"
+        className="whitespace-nowrap inline-flex items-center border border-coral text-coral-ink hover:bg-coral-wash text-[13.5px] font-medium px-4 py-2.5 rounded-lg cursor-pointer"
       >
         Eliminar
       </button>

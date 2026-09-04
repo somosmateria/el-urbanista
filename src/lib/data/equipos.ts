@@ -1,5 +1,5 @@
 import "server-only";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createServiceClient, createServerAuthClient } from "@/lib/supabase/server";
 import type { EquipoRol } from "@/lib/supabase/types";
 
@@ -130,8 +130,22 @@ export async function listMiembrosDeEquipo(equipoId: string) {
 export async function invitarAEquipo(equipoId: string, email: string) {
   const supabase = createServiceClient();
 
+  // Sin esto, el enlace del correo de invitación usa la Site URL que
+  // tenga configurada el proyecto de Supabase en su panel — si esa
+  // configuración no está al día (apunta a localhost, a una preview de
+  // Vercel...), el correo llega pero el enlace no lleva a ningún sitio
+  // usable. Pasarlo explícito aquí lo hace depender del dominio real
+  // desde el que se invita, no de una configuración aparte que hay que
+  // recordar mantener sincronizada.
+  const origin = (await headers()).get("origin") ?? (await headers()).get("host");
+  const redirectTo = origin
+    ? `${origin.startsWith("http") ? origin : `https://${origin}`}/auth/confirm`
+    : undefined;
+
   let userId: string;
-  const { data: invitado, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email);
+  const { data: invitado, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
+    redirectTo,
+  });
 
   if (invitado?.user) {
     userId = invitado.user.id;
@@ -166,6 +180,56 @@ export async function eliminarMiembroDeEquipo(equipoId: string, miembroId: strin
     .eq("id", miembroId)
     .eq("equipo_id", equipoId);
   if (error) throw error;
+}
+
+/**
+ * Sube o baja el rol de un miembro. Nunca deja el equipo sin ningún
+ * admin — si el miembro que se está degradando es el último admin, se
+ * rechaza (ver cambiarRolMiembroAction, que además impide que alguien se
+ * quite el admin a sí mismo por error sin querer, aunque no fuera el
+ * último).
+ */
+export async function cambiarRolMiembro(equipoId: string, miembroId: string, rol: EquipoRol) {
+  const supabase = createServiceClient();
+  if (rol === "miembro") {
+    const { count, error: countError } = await supabase
+      .from("equipo_miembros")
+      .select("id", { count: "exact", head: true })
+      .eq("equipo_id", equipoId)
+      .eq("rol", "admin");
+    if (countError) throw countError;
+
+    const { data: actual, error: actualError } = await supabase
+      .from("equipo_miembros")
+      .select("rol")
+      .eq("id", miembroId)
+      .eq("equipo_id", equipoId)
+      .maybeSingle();
+    if (actualError) throw actualError;
+
+    if (actual?.rol === "admin" && (count ?? 0) <= 1) {
+      throw new Error("No puedes quitarle el admin al único admin del equipo.");
+    }
+  }
+
+  const { error } = await supabase
+    .from("equipo_miembros")
+    .update({ rol })
+    .eq("id", miembroId)
+    .eq("equipo_id", equipoId);
+  if (error) throw error;
+}
+
+/** Solo id + nombre — para el selector de municipios al conceder acceso. */
+export async function listMunicipiosDeEquipo(equipoId: string) {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("municipios")
+    .select("id, nombre")
+    .eq("equipo_id", equipoId)
+    .order("nombre");
+  if (error) throw error;
+  return data;
 }
 
 export async function renombrarEquipo(equipoId: string, nombre: string) {

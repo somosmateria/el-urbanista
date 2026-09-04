@@ -13,22 +13,37 @@ import { ConfirmModal } from "@/components/ConfirmModal";
 export function EliminarEquipoBoton({
   nombreEquipo,
   action,
+  variant = "boton",
 }: {
   nombreEquipo: string;
   action: () => Promise<void>;
+  variant?: "boton" | "icono";
 }) {
   const [abierto, setAbierto] = useState(false);
   const [pending, startTransition] = useTransition();
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setAbierto(true)}
-        className="btn btn-secondary whitespace-nowrap hover:border-coral hover:text-coral-ink"
-      >
-        Eliminar equipo
-      </button>
+      {variant === "icono" ? (
+        <button
+          type="button"
+          onClick={() => setAbierto(true)}
+          title={`Eliminar ${nombreEquipo}`}
+          className="w-7 h-7 rounded-md flex items-center justify-center text-text-faint hover:bg-coral-wash hover:text-coral-ink cursor-pointer"
+        >
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 7h16M9 7V4h6v3M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13" />
+          </svg>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setAbierto(true)}
+          className="btn btn-secondary whitespace-nowrap hover:border-coral hover:text-coral-ink"
+        >
+          Eliminar equipo
+        </button>
+      )}
       <ConfirmModal
         abierto={abierto}
         titulo={`¿Eliminar ${nombreEquipo}?`}

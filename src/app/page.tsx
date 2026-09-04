@@ -1,14 +1,18 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { DocCard } from "@/components/DocCard";
 import { TownRow } from "@/components/TownRow";
 import { listMunicipiosConProgreso } from "@/lib/data/municipios";
-import { requireEquipoActivo } from "@/lib/data/equipos";
+import { getEquipoActivo } from "@/lib/data/equipos";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const equipo = await requireEquipoActivo();
+  const equipo = await getEquipoActivo();
+  // Cuenta recién creada sin ningún equipo todavía — Ajustes es donde se
+  // pide crear el primero, en vez de reventar aquí.
+  if (!equipo) redirect("/ajustes");
   const municipios = await listMunicipiosConProgreso(equipo);
   const recientes = municipios.slice(0, 5);
 

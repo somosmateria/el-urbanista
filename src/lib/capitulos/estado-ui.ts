@@ -23,32 +23,34 @@ export const ESTADO_UI: Record<
     pillClass: string;
   }
 > = {
+  // Semáforo real (verde/ámbar/rojo) pero apagado, dentro de la paleta
+  // tierra — no un verde/rojo saturado que desentone del resto.
   listo: {
-    ink: "text-text",
-    meterColor: "bg-text",
+    ink: "text-cyan-ink",
+    meterColor: "bg-cyan",
     pct: 100,
     label: "Listo",
     desc: "cerrado, se puede entregar",
     icon: ICONO.check,
-    pillClass: "bg-cyan-wash border-text",
+    pillClass: "bg-cyan-wash border-cyan",
   },
   revisar: {
-    ink: "text-violet",
+    ink: "text-amber-ink",
     meterColor: "bg-amber",
     pct: 70,
     label: "Revisar",
     desc: "confirma los datos del diagnóstico",
     icon: ICONO.aviso,
-    pillClass: "bg-transparent border-amber",
+    pillClass: "bg-amber-wash border-amber",
   },
   tu_aportacion: {
-    ink: "text-text",
-    meterColor: "bg-text",
+    ink: "text-coral-ink",
+    meterColor: "bg-coral",
     pct: 0,
     label: "Tu aportación",
     desc: "espera una tabla tuya",
     icon: ICONO.mas,
-    pillClass: "bg-transparent border-text border-dashed",
+    pillClass: "bg-coral-wash border-coral border-dashed",
   },
   sin_info: {
     ink: "text-text-faint",

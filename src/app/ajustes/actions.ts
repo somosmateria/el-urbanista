@@ -7,12 +7,14 @@ import {
   crearEquipo,
   invitarAEquipo,
   eliminarMiembroDeEquipo,
+  cambiarRolMiembro,
   renombrarEquipo,
   eliminarEquipo,
   listEquiposDeUsuario,
   getUsuarioActual,
   requireEquipoActivo,
 } from "@/lib/data/equipos";
+import type { EquipoRol } from "@/lib/supabase/types";
 
 export async function cambiarEquipoActivoAction(equipoId: string) {
   await cambiarEquipoActivo(equipoId);
@@ -50,6 +52,14 @@ export async function eliminarMiembroAction(miembroId: string) {
   revalidatePath("/ajustes");
 }
 
+export async function cambiarRolMiembroAction(miembroId: string, rol: EquipoRol) {
+  const equipo = await requireEquipoActivo();
+  if (equipo.rol !== "admin") throw new Error("Solo un admin del equipo puede cambiar roles.");
+
+  await cambiarRolMiembro(equipo.id, miembroId, rol);
+  revalidatePath("/ajustes");
+}
+
 export async function renombrarEquipoAction(formData: FormData) {
   const equipo = await requireEquipoActivo();
   if (equipo.rol !== "admin") throw new Error("Solo un admin del equipo puede renombrarlo.");
@@ -61,20 +71,27 @@ export async function renombrarEquipoAction(formData: FormData) {
   revalidatePath("/ajustes");
 }
 
-export async function eliminarEquipoAction() {
-  const equipo = await requireEquipoActivo();
-  if (equipo.rol !== "admin") throw new Error("Solo un admin del equipo puede eliminarlo.");
-
+/**
+ * A diferencia del resto de acciones de esta página, esta no exige que
+ * `equipoId` sea el equipo activo — se puede eliminar cualquier equipo
+ * del que se sea admin directamente desde la lista, sin tener que
+ * cambiarse a él primero.
+ */
+export async function eliminarEquipoAction(equipoId: string) {
   const user = await getUsuarioActual();
   if (!user) throw new Error("No autenticado.");
+
   const equipos = await listEquiposDeUsuario(user.id);
+  const equipo = equipos.find((e) => e.id === equipoId);
+  if (!equipo) throw new Error("Ese equipo no existe o no perteneces a él.");
+  if (equipo.rol !== "admin") throw new Error("Solo un admin del equipo puede eliminarlo.");
   if (equipos.length <= 1) {
     throw new Error("No puedes eliminar tu único equipo — crea o únete a otro primero.");
   }
 
-  await eliminarEquipo(equipo.id);
-  // El equipo activo ya no existe: getEquipoActivo() cae automáticamente
-  // al primero que quede (ver su propio comentario), no hace falta tocar
+  await eliminarEquipo(equipoId);
+  // Si era el equipo activo, getEquipoActivo() cae automáticamente al
+  // primero que quede (ver su propio comentario) — no hace falta tocar
   // la cookie a mano.
   redirect("/ajustes");
 }
