@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { DocCard } from "@/components/DocCard";
 import { TownRow } from "@/components/TownRow";
+import { IntroOverlay } from "@/components/IntroOverlay";
 import { listMunicipiosConProgreso } from "@/lib/data/municipios";
 import { getEquipoActivo } from "@/lib/data/equipos";
 
@@ -18,6 +19,7 @@ export default async function Home() {
 
   return (
     <AppShell>
+      <IntroOverlay />
       <div className="max-w-[600px] mb-11">
         <div className="text-[10px] tracking-[0.22em] uppercase text-violet mb-4">
           Estudio · Redacción de planeamiento

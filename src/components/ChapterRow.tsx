@@ -12,10 +12,10 @@ export function ChapterRow({
   const puedeDescargar = capitulo.estado === "listo" || capitulo.estado === "revisar";
 
   return (
-    <div className="flex items-center gap-[18px] border-b border-line last:border-b-0 pl-1.5">
+    <div className="flex items-center gap-[18px] border-b border-line last:border-b-0 pl-1.5 hover:bg-surface-hi">
       <Link
         href={`/avance/ordenacion/${municipioId}/${encodeURIComponent(capitulo.codigo)}`}
-        className="flex-1 flex items-center gap-[18px] py-[15px] hover:bg-surface-hi min-w-0 -ml-1.5 pl-1.5"
+        className="flex-1 flex items-center gap-[18px] py-[15px] min-w-0 -ml-1.5 pl-1.5"
       >
         <span className="shrink-0 text-[11px] tracking-[0.12em] text-text-faint tabular-nums w-[52px]">
           {capitulo.codigo}

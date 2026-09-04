@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { SketchDraw } from "@/components/SketchDraw";
 
 const MENSAJES = [
   "Leyendo el diagnóstico…",
@@ -46,6 +47,7 @@ export function GenerarMemoriaBoton({
     const n = capitulos.length || 1;
     return (
       <div className="max-w-[620px]">
+        <SketchDraw className="w-full h-auto max-h-[180px] mb-8" />
         <div className="text-[10px] tracking-[0.22em] uppercase text-violet mb-6">
           Generando la memoria
         </div>

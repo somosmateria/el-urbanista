@@ -212,11 +212,19 @@ mark {
  */
 .doc-eyebrow {
   font-family: var(--font-sans);
-  font-size: 10px;
-  letter-spacing: 0.2em;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-text-faint);
-  margin-bottom: 14px;
+  color: var(--color-violet);
+  margin: 0 0 16px;
+  padding-top: 30px;
+  border-top: 1px solid var(--color-line);
+}
+
+.doc-eyebrow:first-child {
+  padding-top: 0;
+  border-top: none;
 }
 
 .doc-text {
@@ -244,6 +252,35 @@ mark {
   text-transform: uppercase;
   color: var(--color-text-faint);
   font-family: var(--font-sans);
+}
+
+/* Boceto animado — ver src/components/SketchDraw.tsx. */
+.sketch-ink path,
+.sketch-ink line,
+.sketch-ink circle,
+.sketch-ink rect {
+  stroke: var(--color-violet);
+  stroke-width: 1.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: sketch-draw 1s ease forwards;
+}
+@keyframes sketch-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sketch-ink path,
+  .sketch-ink line,
+  .sketch-ink circle,
+  .sketch-ink rect {
+    animation-duration: 0.01ms;
+    animation-delay: 0s !important;
+  }
 }
 
 /* Tabla de propuesta técnica (Motor 3) ya generada — ver src/lib/motores/tabla. */

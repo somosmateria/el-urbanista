@@ -1,7 +1,9 @@
 import "server-only";
+import { headers } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/server";
 import { verificarCapituloDeEquipo } from "@/lib/data/municipios";
 import { concederAcceso } from "@/lib/data/municipio-accesos";
+import { enviarAvisoAsignacion } from "@/lib/email";
 import type { EquipoActivo } from "@/lib/data/equipos";
 
 /**
@@ -33,9 +35,38 @@ export async function asignarCapitulo(
 
   if (usuarioId) {
     await concederAcceso(capitulo.municipio_id, usuarioId);
+    await avisarAsignacion(usuarioId, capitulo).catch((error) => {
+      // Un email que no llega (dominio sin verificar en Resend, fallo de
+      // red...) no debe impedir que la asignación en sí quede guardada.
+      console.error("[tareas] No se pudo enviar el aviso de asignación:", error);
+    });
   }
 
   return capitulo;
+}
+
+async function avisarAsignacion(
+  usuarioId: string,
+  capitulo: { municipio_id: string; codigo: string; titulo: string }
+) {
+  const supabase = createServiceClient();
+  const [{ data: usuario }, { data: municipio }] = await Promise.all([
+    supabase.auth.admin.getUserById(usuarioId),
+    supabase.from("municipios").select("nombre").eq("id", capitulo.municipio_id).maybeSingle(),
+  ]);
+  if (!usuario.user?.email || !municipio) return;
+
+  const origin = (await headers()).get("origin") ?? (await headers()).get("host");
+  const base = origin ? (origin.startsWith("http") ? origin : `https://${origin}`) : "";
+  const url = `${base}/avance/ordenacion/${capitulo.municipio_id}/${encodeURIComponent(capitulo.codigo)}`;
+
+  await enviarAvisoAsignacion({
+    email: usuario.user.email,
+    municipioNombre: municipio.nombre,
+    capituloCodigo: capitulo.codigo,
+    capituloTitulo: capitulo.titulo,
+    url,
+  });
 }
 
 /**
