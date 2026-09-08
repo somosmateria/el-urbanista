@@ -5,6 +5,7 @@ import { generarMO3_4 } from "./mo3-4";
 import { generarMO3_6 } from "./mo3-6";
 import { generarMO4 } from "./mo4";
 import { generarMO6_1 } from "./mo6-1";
+import { generarMO6_2 } from "./mo6-2";
 
 /**
  * Cubre solo los generadores 100% plantilla (sin llamada a Claude) — el
@@ -47,5 +48,13 @@ describe("generadores de plantilla estáticos", () => {
     const html = generarMO6_1(municipio);
     expect(html).toContain("6.1 · PROPUESTA PARA LA PROTECCIÓN DE PATRIMONIO ARQUEOLÓGICO Y ARQUITECTÓNICO");
     expect(html).toContain("BANCO DE REFERENCIA");
+  });
+
+  it("generarMO6_2 cubre los cinco subapartados (6.2.1 a 6.2.5)", () => {
+    const html = generarMO6_2(municipio);
+    expect(html).toContain("6.2 · PROPUESTA PARA LA PROTECCIÓN MEDIAMBIENTAL");
+    for (const sub of ["6.2.1.", "6.2.2.", "6.2.3.", "6.2.4.", "6.2.5."]) {
+      expect(html).toContain(sub);
+    }
   });
 });
