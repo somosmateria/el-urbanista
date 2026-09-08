@@ -39,3 +39,45 @@ export async function generarDocxCapitulo(titulo: string, contenidoHtml: string)
 export function nombreArchivoCapitulo(codigo: string): string {
   return `${codigo.replace(/\./g, "_")}.docx`;
 }
+
+/**
+ * Documento único con todos los capítulos con contenido, en su orden —
+ * salto de página entre uno y el siguiente (soportado por html-to-docx vía
+ * un div con la clase "page-break", ver su README). Aparte de "descargar
+ * todo" como un .docx por capítulo (ver la ruta /docx), esta es la opción
+ * de un solo Word con la memoria completa.
+ */
+export async function generarDocxMunicipio(
+  municipioNombre: string,
+  capitulos: { titulo: string; contenidoHtml: string }[]
+): Promise<Buffer> {
+  const cuerpo = capitulos
+    .map(
+      (c, i) => `
+${i > 0 ? '<div class="page-break" style="page-break-after: always;"></div>' : ""}
+<h1>${escapeHtml(c.titulo)}</h1>
+${limpiarParaExportar(c.contenidoHtml)}
+`
+    )
+    .join("\n");
+
+  const html = `<!DOCTYPE html><html><body><h1>${escapeHtml(
+    `Memoria de Ordenación — ${municipioNombre}`
+  )}</h1><div class="page-break" style="page-break-after: always;"></div>${cuerpo}</body></html>`;
+
+  const buffer = await HTMLtoDOCX(html, null, {
+    font: "Georgia",
+    fontSize: 24,
+    table: { row: { cantSplit: false } },
+  });
+  return Buffer.from(buffer);
+}
+
+export function slugificarNombre(nombre: string): string {
+  return nombre
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}

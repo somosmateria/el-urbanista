@@ -24,12 +24,14 @@ import { requireEquipoActivo } from "@/lib/data/equipos";
 import { asignarCapitulo } from "@/lib/data/tareas";
 import type { CapituloEstado } from "@/lib/supabase/types";
 
-// El semáforo y la propia página del capítulo son rutas distintas —
-// revalidar solo la primera dejaba la segunda con datos obsoletos hasta
-// un refresco manual (p.ej. un bloque de tabla recién creado que no
-// aparecía). Revalidar las dos siempre que se toca un capítulo.
+// El semáforo, el hub del municipio (muestra cuántos capítulos hay listos)
+// y la propia página del capítulo son rutas distintas — revalidar solo una
+// dejaba a las demás con datos obsoletos hasta un refresco manual (p.ej. un
+// bloque de tabla recién creado que no aparecía). Revalidar las tres
+// siempre que se toca un capítulo.
 function revalidarCapitulo(municipioId: string, codigo: string) {
   revalidatePath(`/avance/ordenacion/${municipioId}`);
+  revalidatePath(`/avance/ordenacion/${municipioId}/memoria`);
   revalidatePath(`/avance/ordenacion/${municipioId}/${codigo}`);
 }
 

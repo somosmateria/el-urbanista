@@ -63,7 +63,7 @@ export default async function CapituloPage({
 
   return (
     <AppShell>
-      <BackLink href={`/avance/ordenacion/${municipio.id}`} />
+      <BackLink href={`/avance/ordenacion/${municipio.id}/memoria`} />
       <div className="text-[10px] tracking-[0.22em] uppercase text-violet mb-4">
         {municipio.nombre} · {capitulo.codigo}
       </div>

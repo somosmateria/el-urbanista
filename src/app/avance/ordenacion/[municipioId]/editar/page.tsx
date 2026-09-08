@@ -1,12 +1,9 @@
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { BackLink } from "@/components/BackLink";
-import { DiagnosticoUploader } from "@/components/DiagnosticoUploader";
-import { ReprocesarDiagnosticoBoton } from "@/components/ReprocesarDiagnosticoBoton";
 import { EliminarMunicipioBoton } from "@/components/EliminarMunicipioBoton";
 import { AccesoMunicipioToggle } from "@/components/AccesoMunicipioToggle";
 import { getMunicipio } from "@/lib/data/municipios";
-import { getDiagnosticoDeMunicipio } from "@/lib/data/diagnosticos";
 import { requireEquipoActivo, listMiembrosDeEquipo } from "@/lib/data/equipos";
 import { listUserIdsConAcceso } from "@/lib/data/municipio-accesos";
 import { actualizarMunicipioAction, eliminarMunicipioAction } from "./actions";
@@ -23,7 +20,6 @@ export default async function EditarMunicipioPage({
   const municipio = await getMunicipio(municipioId, equipo);
   if (!municipio) notFound();
 
-  const diagnostico = await getDiagnosticoDeMunicipio(municipioId);
   const miembros = equipo.rol === "admin" ? await listMiembrosDeEquipo(equipo.id) : [];
   const conAcceso = equipo.rol === "admin" ? await listUserIdsConAcceso(municipioId) : new Set<string>();
 
@@ -34,11 +30,7 @@ export default async function EditarMunicipioPage({
         <h1 className="font-serif font-normal text-[36px] sm:text-[44px] leading-[1.05] tracking-[-0.02em] mb-3.5">
           Editar {municipio.nombre}
         </h1>
-        <p className="text-[15px] leading-[1.7] text-text-soft mb-10">
-          Cambia los datos del municipio o sustituye el diagnóstico. Sustituir el
-          diagnóstico no regenera los capítulos por sí solo — hazlo desde
-          &ldquo;Regenerar&rdquo; en cada capítulo que dependa de él.
-        </p>
+        <p className="text-[15px] leading-[1.7] text-text-soft mb-10">Cambia los datos del municipio.</p>
 
         <form action={actualizarMunicipioAction.bind(null, municipioId)}>
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 items-start border-t border-line py-6">
@@ -89,29 +81,16 @@ export default async function EditarMunicipioPage({
           </button>
         </form>
 
-        <div className="text-[10px] tracking-[0.2em] uppercase text-text-faint mt-14 mb-3">
-          Diagnóstico de origen
-        </div>
-        <div className="mb-10">
-          <DiagnosticoUploader municipioId={municipioId} nombreArchivoExistente={diagnostico?.nombre_archivo ?? null} />
-          {diagnostico?.estado === "error" && (
-            <p className="text-[12px] text-coral-ink mt-2">
-              El último intento falló: {diagnostico.error_mensaje}
-            </p>
-          )}
-          {diagnostico?.estado === "listo" && <ReprocesarDiagnosticoBoton diagnosticoId={diagnostico.id} />}
-        </div>
-
         {equipo.rol === "admin" && (
           <>
-            <div className="text-[10px] tracking-[0.2em] uppercase text-text-faint mb-2.5">
+            <div className="text-[10px] tracking-[0.2em] uppercase text-text-faint mt-14 mb-2.5">
               Acceso a este municipio
             </div>
             <p className="text-[12.5px] text-text-faint mb-4 leading-relaxed">
               Los admins del equipo siempre ven todos los municipios. Marca a qué miembros
               les das acceso a {municipio.nombre} en concreto.
             </p>
-            <div className="border-t border-line mb-14">
+            <div className="border-t border-line">
               {miembros
                 .filter((m) => m.rol === "miembro")
                 .map((m) => (
@@ -136,7 +115,7 @@ export default async function EditarMunicipioPage({
           </>
         )}
 
-        <div className="bg-coral-wash border border-coral rounded p-6 flex items-center justify-between gap-4 flex-wrap">
+        <div className="bg-coral-wash border border-coral rounded p-6 flex items-center justify-between gap-4 flex-wrap mt-14">
           <div>
             <div className="flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase text-coral-ink mb-1.5 font-semibold">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">

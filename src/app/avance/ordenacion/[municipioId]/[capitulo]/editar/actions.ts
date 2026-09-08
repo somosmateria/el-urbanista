@@ -17,6 +17,7 @@ export async function guardarEdicionAction(
 
   await guardarEdicionCapitulo(capituloId, html);
   revalidatePath(`/avance/ordenacion/${municipioId}`);
+  revalidatePath(`/avance/ordenacion/${municipioId}/memoria`);
   redirect(`/avance/ordenacion/${municipioId}/${capituloCodigo}`);
 }
 
@@ -31,5 +32,6 @@ export async function restaurarVersionAction(
 
   await restaurarVersion(capituloId, versionId);
   revalidatePath(`/avance/ordenacion/${municipioId}`);
+  revalidatePath(`/avance/ordenacion/${municipioId}/memoria`);
   revalidatePath(`/avance/ordenacion/${municipioId}/${capituloCodigo}/editar`);
 }

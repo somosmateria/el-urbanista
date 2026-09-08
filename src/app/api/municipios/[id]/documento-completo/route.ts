@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import JSZip from "jszip";
 import { createServiceClient } from "@/lib/supabase/server";
-import { generarDocxCapitulo, nombreArchivoCapitulo, slugificarNombre } from "@/lib/export/docx";
+import { generarDocxMunicipio, slugificarNombre } from "@/lib/export/docx";
 import { getMunicipio } from "@/lib/data/municipios";
 import { requireEquipoActivo } from "@/lib/data/equipos";
 import { getTitulosReferenciaDeEquipo } from "@/lib/data/plantilla-referencia";
@@ -9,6 +8,11 @@ import { getTitulosReferenciaDeEquipo } from "@/lib/data/plantilla-referencia";
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
+/**
+ * A diferencia de /docx (un .docx por capítulo dentro de un .zip), esta
+ * ruta junta todos los capítulos con contenido en un único Word, en su
+ * orden, con salto de página entre capítulos — ver generarDocxMunicipio.
+ */
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: municipioId } = await params;
   const equipo = await requireEquipoActivo();
@@ -32,22 +36,18 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   const titulos = await getTitulosReferenciaDeEquipo(equipo.id);
 
-  const zip = new JSZip();
-  for (const capitulo of conContenido) {
-    const buffer = await generarDocxCapitulo(
-      `${capitulo.codigo} — ${titulos.get(capitulo.codigo) ?? capitulo.titulo}`,
-      capitulo.contenido_html!
-    );
-    zip.file(nombreArchivoCapitulo(capitulo.codigo), buffer);
-  }
-  const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
+  const buffer = await generarDocxMunicipio(
+    municipio.nombre,
+    conContenido.map((c) => ({
+      titulo: `${c.codigo} · ${titulos.get(c.codigo) ?? c.titulo}`,
+      contenidoHtml: c.contenido_html!,
+    }))
+  );
 
-  const nombreArchivo = `memoria-ordenacion-${slugificarNombre(municipio.nombre)}.zip`;
-
-  return new NextResponse(new Uint8Array(zipBuffer), {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
-      "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="${nombreArchivo}"`,
+      "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "Content-Disposition": `attachment; filename="memoria-ordenacion-${slugificarNombre(municipio.nombre)}.docx"`,
     },
   });
 }

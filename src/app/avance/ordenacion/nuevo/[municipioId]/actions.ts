@@ -10,5 +10,5 @@ export async function generarMemoriaAction(municipioId: string) {
   if (!municipio) throw new Error("Municipio no encontrado.");
 
   await generarCapitulosIniciales(municipioId, equipo);
-  redirect(`/avance/ordenacion/${municipioId}`);
+  redirect(`/avance/ordenacion/${municipioId}/memoria`);
 }
