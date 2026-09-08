@@ -11,6 +11,7 @@ import { generarMO10 } from "./mo10";
 import { generarMO11 } from "./mo11";
 import { generarMO12 } from "./mo12";
 import { generarMO3_1 } from "./mo3-1";
+import { generarMO3_2 } from "./mo3-2";
 import { generarMO3_1_4 } from "./mo3-1-4";
 import { generarMO3_3 } from "./mo3-3";
 import { generarMO3_4 } from "./mo3-4";
@@ -44,6 +45,7 @@ export const PLANTILLAS: Record<
   // Subepígrafes de MO.3 (capítulo mixto rag+plantilla+tabla) — el motor
   // RAG los consulta aquí mismo por su código de subepígrafe.
   "MO.3.1": generarMO3_1,
+  "MO.3.2": generarMO3_2,
   "MO.3.1.4": generarMO3_1_4,
   "MO.3.3": generarMO3_3,
   "MO.3.4": generarMO3_4,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { MunicipioRow } from "@/lib/supabase/types";
 import { generarMO3_1 } from "./mo3-1";
+import { generarMO3_2 } from "./mo3-2";
 import { generarMO3_4 } from "./mo3-4";
 import { generarMO3_6 } from "./mo3-6";
 import { generarMO4 } from "./mo4";
@@ -21,6 +22,13 @@ describe("generadores de plantilla estáticos", () => {
     expect(html).toContain("3.1 · EL SUELO RÚSTICO. CATEGORÍAS Y ZONAS");
     expect(html).toContain("PGOM de Écija");
     expect(html).not.toContain("{{MUNICIPIO}}");
+    expect(html).not.toContain("undefined");
+  });
+
+  it("generarMO3_2 solo trae el marco legal, no la lista concreta de sistemas", () => {
+    const html = generarMO3_2(municipio);
+    expect(html).toContain("3.2 · SISTEMAS GENERALES EN SUELO RÚSTICO");
+    expect(html).toContain("artículo 14 de la LISTA");
     expect(html).not.toContain("undefined");
   });
 
