@@ -16,6 +16,11 @@ import { generarMO3_1_4 } from "./mo3-1-4";
 import { generarMO3_3 } from "./mo3-3";
 import { generarMO3_4 } from "./mo3-4";
 import { generarMO3_6 } from "./mo3-6";
+import { generarMO5_1 } from "./mo5-1";
+import { generarMO5_2 } from "./mo5-2";
+import { generarMO5_2_2 } from "./mo5-2-2";
+import { generarMO5_3 } from "./mo5-3";
+import { generarMO5_4 } from "./mo5-4";
 import { generarMO6_1 } from "./mo6-1";
 import { generarMO6_2 } from "./mo6-2";
 
@@ -50,6 +55,11 @@ export const PLANTILLAS: Record<
   "MO.3.3": generarMO3_3,
   "MO.3.4": generarMO3_4,
   "MO.3.6": generarMO3_6,
+  "MO.5.1": generarMO5_1,
+  "MO.5.2": generarMO5_2,
+  "MO.5.2.2": generarMO5_2_2,
+  "MO.5.3": generarMO5_3,
+  "MO.5.4": generarMO5_4,
   "MO.6.1": generarMO6_1,
   "MO.6.2": generarMO6_2,
 };

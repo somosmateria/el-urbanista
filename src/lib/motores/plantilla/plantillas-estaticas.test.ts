@@ -5,6 +5,11 @@ import { generarMO3_2 } from "./mo3-2";
 import { generarMO3_4 } from "./mo3-4";
 import { generarMO3_6 } from "./mo3-6";
 import { generarMO4 } from "./mo4";
+import { generarMO5_1 } from "./mo5-1";
+import { generarMO5_2 } from "./mo5-2";
+import { generarMO5_2_2 } from "./mo5-2-2";
+import { generarMO5_3 } from "./mo5-3";
+import { generarMO5_4 } from "./mo5-4";
 import { generarMO6_1 } from "./mo6-1";
 import { generarMO6_2 } from "./mo6-2";
 
@@ -56,6 +61,29 @@ describe("generadores de plantilla estáticos", () => {
     const html = generarMO6_1(municipio);
     expect(html).toContain("6.1 · PROPUESTA PARA LA PROTECCIÓN DE PATRIMONIO ARQUEOLÓGICO Y ARQUITECTÓNICO");
     expect(html).toContain("BANCO DE REFERENCIA");
+  });
+
+  it("generarMO5_1 interpola el municipio y no arrastra la cifra de estándar errónea", () => {
+    const html = generarMO5_1(municipio);
+    expect(html).toContain("5.1 · LA INFRAESTRUCTURA VERDE URBANA");
+    expect(html).toContain("renaturalizar Écija");
+    expect(html).not.toContain("256.800");
+    expect(html).not.toContain("undefined");
+  });
+
+  it("generarMO5_2 y MO5_2_2 interpolan el municipio", () => {
+    expect(generarMO5_2(municipio)).toContain("caso de Écija");
+    expect(generarMO5_2_2(municipio)).toContain("término municipal de Écija");
+  });
+
+  it("generarMO5_3 no depende del municipio y trae las 4 directrices", () => {
+    const html = generarMO5_3(municipio);
+    expect(html).toContain("5.3 · EL SISTEMA DE EQUIPAMIENTOS COMUNITARIOS");
+    expect(html.match(/<li>/g)?.length).toBe(4);
+  });
+
+  it("generarMO5_4 interpola el municipio en la frase de cierre", () => {
+    expect(generarMO5_4(municipio)).toContain("municipio de Écija");
   });
 
   it("generarMO6_2 cubre los cinco subapartados (6.2.1 a 6.2.5)", () => {
