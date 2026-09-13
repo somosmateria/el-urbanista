@@ -114,7 +114,9 @@ export default async function CapituloPage({
       {capitulo.motor !== "tabla" && capitulo.contenido_html && (
         <p className="text-text-soft text-[13.5px] mb-[26px] max-w-[560px] leading-relaxed">
           {capitulo.estado === "revisar"
-            ? "Redactado a partir del diagnóstico. Lo resaltado viene citado de allí — confírmalo antes de cerrar el capítulo."
+            ? capitulo.contenido_html.includes("<mark")
+              ? "Redactado a partir del diagnóstico. Lo resaltado viene citado de allí — confírmalo antes de cerrar el capítulo."
+              : "Necesita confirmación antes de cerrarse — revisa la nota al final del texto para ver qué falta o hay que verificar."
             : "Listo para entregar. Puedes editarlo igualmente si quieres matizar algo."}
         </p>
       )}
