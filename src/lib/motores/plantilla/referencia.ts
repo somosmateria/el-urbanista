@@ -3,14 +3,29 @@ import { getAnthropicClient, MODELO_GENERACION } from "@/lib/anthropic";
 import { parsearRespuestaReferencia } from "@/lib/texto/avance-referencia";
 
 /**
- * MO.1 y MO.11 quedan fuera de la SUSTITUCIÓN DE CONTENIDO por Avance de
- * referencia: no son banco de texto fijo, extraen datos reales del
- * diagnóstico de cada municipio (plan vigente, colindantes) — ver
- * 0009_plantilla_referencia.sql. Su TÍTULO sí se toma del documento igual
- * que el resto (ver TituloDeReferencia más abajo): calcar los nombres
- * tal cual los usa el equipo no tiene ese mismo riesgo.
+ * Códigos que quedan fuera de la SUSTITUCIÓN DE CONTENIDO por Avance de
+ * referencia, por dos motivos distintos. Su TÍTULO sí se toma del
+ * documento igual que el resto (ver TituloDeReferencia más abajo): calcar
+ * los nombres tal cual los usa el equipo no tiene ninguno de estos riesgos.
+ *
+ * - MO.1 y MO.11: no son banco de texto fijo, extraen datos reales del
+ *   diagnóstico de cada municipio (plan vigente, colindantes) — ver
+ *   0009_plantilla_referencia.sql.
+ * - MO.4, MO.8, MO.9, MO.10, MO.12: al revés que MO.1/MO.11, SÍ son banco
+ *   de texto fijo — pero uno ya confirmado palabra por palabra idéntico
+ *   entre los dos Avances reales disponibles (ver el aviso en cada
+ *   mo*.ts), sin ningún dato de municipio que insertar. Sustituirlos no
+ *   aporta nada (no hay nada que personalizar) y sí puede empeorar el
+ *   resultado: comprobado en producción con Los Palacios y Villafranca,
+ *   la extracción por título del PDF de referencia del equipo devolvió
+ *   solo un fragmento de MO.4 (usos globales de suelo urbano), sin las
+ *   secciones de usos en suelo rústico ni de actividades incompatibles
+ *   que sí trae la plantilla fija — el documento real empaqueta ese
+ *   contenido de forma distinta a como lo separa El Urbanista (ver
+ *   también la nota de mo9.ts/mo12.ts sobre este mismo desajuste de
+ *   empaquetado), así que buscar por título puede cortar a mitad.
  */
-export const CODIGOS_NO_SUSTITUIBLES = new Set(["MO.1", "MO.11"]);
+export const CODIGOS_NO_SUSTITUIBLES = new Set(["MO.1", "MO.11", "MO.4", "MO.8", "MO.9", "MO.10", "MO.12"]);
 
 type CodigoObjetivo = { codigo: string; titulo: string; motor: string; sustituible: boolean };
 
