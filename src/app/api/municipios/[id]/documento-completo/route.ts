@@ -41,6 +41,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     conContenido.map((c) => ({
       titulo: `${c.codigo} · ${titulos.get(c.codigo) ?? c.titulo}`,
       contenidoHtml: c.contenido_html!,
+      necesitaRevision: c.estado === "revisar",
     }))
   );
 

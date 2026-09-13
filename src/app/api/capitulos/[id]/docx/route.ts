@@ -18,7 +18,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const titulos = await getTitulosReferenciaDeEquipo(equipo.id);
   const titulo = titulos.get(capitulo.codigo) ?? capitulo.titulo;
 
-  const buffer = await generarDocxCapitulo(`${capitulo.codigo} — ${titulo}`, capitulo.contenido_html);
+  const buffer = await generarDocxCapitulo(
+    `${capitulo.codigo} — ${titulo}`,
+    capitulo.contenido_html,
+    capitulo.estado === "revisar"
+  );
 
   return new NextResponse(new Uint8Array(buffer), {
     headers: {

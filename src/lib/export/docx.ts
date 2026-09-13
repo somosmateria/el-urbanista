@@ -33,8 +33,47 @@ function limpiarParaExportar(html: string): string {
     .replace(/<\/mark>/g, "</span>");
 }
 
-export async function generarDocxCapitulo(titulo: string, contenidoHtml: string): Promise<Buffer> {
-  const cuerpo = limpiarParaExportar(contenidoHtml);
+/**
+ * Tags de bloque (los que html-to-docx convierte cada uno en su propio
+ * `<w:p>`) que puede llevar el HTML de un capítulo. Importa la lista porque
+ * `pintarEnRojo` no puede confiar en la herencia de un `<div>` envolvente:
+ * comprobado contra la librería, el color puesto en un contenedor de bloque
+ * NO baja a los `<w:r>` de los párrafos que contiene (sí baja dentro de un
+ * mismo párrafo, de ahí que el `<span>` de arriba funcione) — hay que
+ * ponerlo en cada elemento de bloque por separado.
+ */
+const TAGS_DE_BLOQUE = ["p", "li", "h2", "h3", "blockquote", "td", "th"];
+
+/**
+ * `necesitaRevision` es el estado "revisar" del capítulo (ver CapituloEstado
+ * y resolverPlantilla/generarCapitulosIniciales): además de los `<mark>`
+ * puntuales de arriba, un capítulo entero puede quedar pendiente de que un
+ * técnico lo confirme sin llevar ni un solo `<mark>` — por ejemplo, MO.1/MO.2
+ * (banco de texto fijo, siempre a revisar) o cualquier capítulo resuelto
+ * contra el Avance de referencia del equipo (contenido de OTRO municipio
+ * reutilizado, ver resolverPlantilla). En esos casos no hay nada puntual que
+ * resaltar — es el capítulo completo el que hay que confirmar — así que todo
+ * su cuerpo sale en rojo, no solo lo que ya viniera en un `<mark>` (ver
+ * TAGS_DE_BLOQUE arriba sobre por qué no basta con envolver en un `<div>`).
+ */
+function pintarEnRojo(html: string): string {
+  const patron = new RegExp(`<(${TAGS_DE_BLOQUE.join("|")})((?:\\s+[\\w-]+="[^"]*")*)\\s*>`, "g");
+  return html.replace(patron, (_coincidencia, tag: string, attrs: string) => {
+    const conEstilo = /\sstyle="([^"]*)"/.exec(attrs);
+    if (conEstilo) {
+      return `<${tag}${attrs.replace(conEstilo[0], ` style="${conEstilo[1]};color: red;"`)}>`;
+    }
+    return `<${tag}${attrs} style="color: red;">`;
+  });
+}
+
+export async function generarDocxCapitulo(
+  titulo: string,
+  contenidoHtml: string,
+  necesitaRevision = false
+): Promise<Buffer> {
+  const cuerpoLimpio = limpiarParaExportar(contenidoHtml);
+  const cuerpo = necesitaRevision ? pintarEnRojo(cuerpoLimpio) : cuerpoLimpio;
   const html = `<!DOCTYPE html><html><body><h1>${escapeHtml(titulo)}</h1>${cuerpo}</body></html>`;
   const buffer = await HTMLtoDOCX(html, null, {
     font: "Georgia",
@@ -67,16 +106,18 @@ const MARCADOR_INDICE = "__INDICE_MARCADOR__";
  */
 export async function generarDocxMunicipio(
   municipioNombre: string,
-  capitulos: { titulo: string; contenidoHtml: string }[]
+  capitulos: { titulo: string; contenidoHtml: string; necesitaRevision?: boolean }[]
 ): Promise<Buffer> {
   const cuerpo = capitulos
-    .map(
-      (c, i) => `
+    .map((c, i) => {
+      const cuerpoLimpio = limpiarParaExportar(c.contenidoHtml);
+      const cuerpoCapitulo = c.necesitaRevision ? pintarEnRojo(cuerpoLimpio) : cuerpoLimpio;
+      return `
 ${i > 0 ? '<div class="page-break" style="page-break-after: always;"></div>' : ""}
 <h1>${escapeHtml(c.titulo)}</h1>
-${limpiarParaExportar(c.contenidoHtml)}
-`
-    )
+${cuerpoCapitulo}
+`;
+    })
     .join("\n");
 
   const html = `<!DOCTYPE html><html><body><h1>${escapeHtml(

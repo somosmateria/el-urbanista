@@ -37,6 +37,24 @@ describe("generarDocxCapitulo", () => {
     expect(documentXml).not.toContain("<w:highlight");
     expect(documentXml?.match(/<w:color w:val="ff0000"\/>/g)?.length).toBe(2);
   }, 20_000);
+
+  it("un capítulo entero a revisar (sin <mark>) también sale en rojo", async () => {
+    const buffer = await generarDocxCapitulo(
+      "MO.1 · Prueba",
+      "<div class=\"doc-text\"><p>Párrafo uno.</p><p>Párrafo dos.</p></div>",
+      true
+    );
+    const zip = await JSZip.loadAsync(buffer);
+    const documentXml = await zip.file("word/document.xml")?.async("string");
+    expect(documentXml?.match(/<w:color w:val="ff0000"\/>/g)?.length).toBe(2);
+  }, 20_000);
+
+  it("sin necesitaRevision, el texto no sale en rojo", async () => {
+    const buffer = await generarDocxCapitulo("MO.4 · Prueba", "<div class=\"doc-text\"><p>Cuerpo.</p></div>");
+    const zip = await JSZip.loadAsync(buffer);
+    const documentXml = await zip.file("word/document.xml")?.async("string");
+    expect(documentXml).not.toContain('w:val="ff0000"');
+  }, 20_000);
 });
 
 describe("generarDocxMunicipio", () => {
@@ -55,5 +73,16 @@ describe("generarDocxMunicipio", () => {
     expect(documentXml).not.toContain("__INDICE_MARCADOR__");
     expect(documentXml?.match(/w:bookmarkStart/g)?.length).toBe(capitulos.length);
     expect(documentXml?.match(/w:hyperlink w:anchor="cap\d+"/g)?.length).toBe(capitulos.length);
+  }, 20_000);
+
+  it("solo los capítulos marcados necesitaRevision salen en rojo", async () => {
+    const capitulos = [
+      { titulo: "MO.1 · A revisar", contenidoHtml: "<div class=\"doc-text\"><p>Uno.</p></div>", necesitaRevision: true },
+      { titulo: "MO.4 · Listo", contenidoHtml: "<div class=\"doc-text\"><p>Dos.</p></div>", necesitaRevision: false },
+    ];
+    const buffer = await generarDocxMunicipio("Municipio de Prueba", capitulos);
+    const zip = await JSZip.loadAsync(buffer);
+    const documentXml = await zip.file("word/document.xml")?.async("string");
+    expect(documentXml?.match(/<w:color w:val="ff0000"\/>/g)?.length).toBe(1);
   }, 20_000);
 });

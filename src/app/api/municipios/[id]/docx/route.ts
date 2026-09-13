@@ -36,7 +36,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   for (const capitulo of conContenido) {
     const buffer = await generarDocxCapitulo(
       `${capitulo.codigo} — ${titulos.get(capitulo.codigo) ?? capitulo.titulo}`,
-      capitulo.contenido_html!
+      capitulo.contenido_html!,
+      capitulo.estado === "revisar"
     );
     zip.file(nombreArchivoCapitulo(capitulo.codigo), buffer);
   }
