@@ -26,6 +26,17 @@ describe("generarDocxCapitulo", () => {
     const stylesXml = await zip.file("word/styles.xml")?.async("string");
     expect(stylesXml).toContain('w:styleId="Normal"');
   }, 20_000);
+
+  it("los datos resaltados (<mark>, a confirmar por el técnico) salen en rojo", async () => {
+    const buffer = await generarDocxCapitulo(
+      "MO.11 · Prueba",
+      '<div class="doc-text"><p>Limita con <mark>Écija</mark> y <mark>Osuna</mark>.</p></div>'
+    );
+    const zip = await JSZip.loadAsync(buffer);
+    const documentXml = await zip.file("word/document.xml")?.async("string");
+    expect(documentXml).not.toContain("<w:highlight");
+    expect(documentXml?.match(/<w:color w:val="ff0000"\/>/g)?.length).toBe(2);
+  }, 20_000);
 });
 
 describe("generarDocxMunicipio", () => {

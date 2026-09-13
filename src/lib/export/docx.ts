@@ -17,11 +17,20 @@ function escapeHtml(valor: string): string {
  *   bloque (p.ej. "PARQUE PERIURBANO DEL COTO") — no se puede tirar sin
  *   más. Se convierte en un H2 en vez de quedarse como párrafo normal,
  *   así entra en la jerarquía del documento en los dos casos.
+ * - `<mark>` — dato citado del diagnóstico que el técnico debe confirmar
+ *   antes de cerrar el capítulo (ver el motor RAG y CapituloEditor, que
+ *   usa el mismo resaltado). En la app se ve como fondo amarillento; en el
+ *   .docx entregable ese fondo no destaca igual (y puede perderse al
+ *   imprimir en blanco y negro), así que aquí se convierte en texto en
+ *   rojo — la misma señal de "esto lo tiene que revisar un técnico" pero
+ *   visible también en el documento exportado.
  */
 function limpiarParaExportar(html: string): string {
   return html
     .replace(/<div class="src-note">[\s\S]*?<\/div>/g, "")
-    .replace(/<div class="doc-eyebrow">([\s\S]*?)<\/div>/g, "<h2>$1</h2>");
+    .replace(/<div class="doc-eyebrow">([\s\S]*?)<\/div>/g, "<h2>$1</h2>")
+    .replace(/<mark(?:\s[^>]*)?>/g, '<span style="color: red;">')
+    .replace(/<\/mark>/g, "</span>");
 }
 
 export async function generarDocxCapitulo(titulo: string, contenidoHtml: string): Promise<Buffer> {
