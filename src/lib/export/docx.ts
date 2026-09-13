@@ -24,8 +24,15 @@ function escapeHtml(valor: string): string {
  *   imprimir en blanco y negro), así que aquí se convierte en texto en
  *   rojo — la misma señal de "esto lo tiene que revisar un técnico" pero
  *   visible también en el documento exportado.
+ *
+ * Exportada porque `src/lib/motores/evaluacion` también la necesita: sin
+ * esta limpieza, una nota `.src-note` que compara el municipio con Osuna o
+ * Lora del Río a efectos de desarrollo (p.ej. "confirmado idéntico entre
+ * Osuna y Lora del Río") se leería como una contaminación real entre
+ * municipios — falso positivo encontrado verificando esta misma fase
+ * contra datos reales.
  */
-function limpiarParaExportar(html: string): string {
+export function limpiarParaExportar(html: string): string {
   return html
     .replace(/<div class="src-note">[\s\S]*?<\/div>/g, "")
     .replace(/<div class="doc-eyebrow">([\s\S]*?)<\/div>/g, "<h2>$1</h2>")

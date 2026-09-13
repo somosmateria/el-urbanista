@@ -1,5 +1,5 @@
 import type { MunicipioRow } from "@/lib/supabase/types";
-import { getSeccionPorCodigo } from "@/lib/data/diagnosticos";
+import { buscarSeccionConReintento } from "@/lib/data/diagnosticos";
 import { getAnthropicClient, MODELO_GENERACION } from "@/lib/anthropic";
 
 /**
@@ -24,10 +24,14 @@ export async function generarMO11(
 ): Promise<string | null> {
   if (!diagnosticoId) return null;
 
-  const seccionEncuadre = await getSeccionPorCodigo(diagnosticoId, "1.1");
-  if (!seccionEncuadre) return null;
+  const { secciones, motivo } = await buscarSeccionConReintento(diagnosticoId, ["1.1"], [
+    "encuadre territorial",
+    "municipios limítrofes",
+    "términos municipales colindantes",
+  ]);
+  if (motivo !== "encontrado") return null;
 
-  const colindantes = await extraerColindantes(seccionEncuadre.texto);
+  const colindantes = await extraerColindantes(secciones.map((s) => s.texto).join("\n\n"));
   if (!colindantes) return null;
 
   return `

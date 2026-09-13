@@ -1,5 +1,5 @@
 import { getSubepigrafes } from "@/lib/data/mapeo";
-import { getSeccionPorCodigo } from "@/lib/data/diagnosticos";
+import { buscarSeccionConReintento } from "@/lib/data/diagnosticos";
 import { listTablasDeCapitulo } from "@/lib/data/tablas";
 import { listTextosDeCapitulo } from "@/lib/data/textos";
 import { sinPrefijoMI } from "@/lib/diagnostico/parser";
@@ -54,6 +54,51 @@ Redacta el contenido de este subepígrafe a partir únicamente de ${secciones.le
 }
 
 /**
+ * Sinónimos/palabras clave para el reintento de `buscarSeccionConReintento`
+ * cuando el código exacto de `seccion_diagnostico_codigo` no aparece tal
+ * cual en el diagnóstico (ver el aviso en `parser.ts` sobre números de
+ * nivel superior que a veces quedan separados del título en la
+ * maquetación del PDF). Curado a mano por tema, no autogenerado — un panel
+ * de administración para esto es deliberadamente excesivo para lo que hace
+ * falta hoy (ver docs/02-arquitectura-motores.md, "el mapeo debe ser
+ * editable, no fijo en el código" habla del mapeo capítulo→sección, no de
+ * estos sinónimos de apoyo). Se completa con las palabras del propio
+ * título del subepígrafe, así que un código sin entrada aquí igualmente
+ * se beneficia del reintento.
+ */
+const SINONIMOS_POR_TEMA: Record<string, string[]> = {
+  patrimonio: [
+    "BIC",
+    "patrimonio",
+    "Catálogo General",
+    "CGPHA",
+    "IAPH",
+    "bienes protegidos",
+    "catálogo",
+    "protección integral",
+    "protección estructural",
+    "yacimientos",
+    "patrimonio arqueológico",
+  ],
+  montes: ["monte público", "utilidad pública", "Catálogo de Montes"],
+  "vías pecuarias": ["vía pecuaria", "cañada", "cordel", "vereda", "colada"],
+  renpa: ["RENPA", "espacio natural protegido", "ZEC", "ZEPA", "Red Natura"],
+};
+
+function sinonimosParaSubepigrafe(subepigrafe: MapeoCapituloRow): string[] {
+  const delTitulo = subepigrafe.titulo_canonico
+    .toLowerCase()
+    .split(/[^\p{L}]+/u)
+    .filter((palabra) => palabra.length >= 5);
+
+  const delTema = Object.entries(SINONIMOS_POR_TEMA)
+    .filter(([tema]) => subepigrafe.titulo_canonico.toLowerCase().includes(tema) || (subepigrafe.notas ?? "").toLowerCase().includes(tema))
+    .flatMap(([, sinonimos]) => sinonimos);
+
+  return [...new Set([...delTema, ...delTitulo])];
+}
+
+/**
  * `seccion_diagnostico_codigo` admite varios códigos separados por comas
  * cuando un subepígrafe de la Memoria agrupa temas que en el Diagnóstico
  * están repartidos en varias secciones (p.ej. MO.3.1.1 combina RENPA,
@@ -71,11 +116,16 @@ async function generarBloqueSubepigrafe(
     .map((c) => sinPrefijoMI(c.trim()))
     .filter(Boolean);
 
-  const secciones = (
-    await Promise.all(codigos.map((codigo) => getSeccionPorCodigo(diagnosticoId, codigo)))
-  ).filter((s): s is NonNullable<typeof s> => s !== null); // secciones no encontradas se omiten, no se fabrica contenido
+  // Primero el código exacto (rápido, sin ambigüedad); solo si eso falla se
+  // reintenta por palabras clave sobre todo el diagnóstico — ver
+  // buscarSeccionConReintento y docs/06-decisiones-pendientes.md #2.
+  const { secciones, motivo } = await buscarSeccionConReintento(
+    diagnosticoId,
+    codigos,
+    sinonimosParaSubepigrafe(subepigrafe)
+  );
 
-  if (secciones.length === 0) return null;
+  if (motivo !== "encontrado") return null; // no encontrado o insuficiente: no se fabrica contenido
 
   const anthropic = getAnthropicClient();
   const respuesta = await anthropic.messages.create({

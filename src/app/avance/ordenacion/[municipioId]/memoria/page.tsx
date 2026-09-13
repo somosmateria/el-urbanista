@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
 import { BackLink } from "@/components/BackLink";
 import { ChapterRow } from "@/components/ChapterRow";
@@ -46,6 +47,12 @@ export default async function MemoriaOrdenacionPage({
           </p>
         </div>
         <div className="flex gap-2.5 flex-none">
+          <Link
+            href={`/avance/ordenacion/${municipio.id}/revision`}
+            className="btn btn-secondary whitespace-nowrap"
+          >
+            Revisión técnica
+          </Link>
           {hayAlgoDescargable ? (
             <>
               <a

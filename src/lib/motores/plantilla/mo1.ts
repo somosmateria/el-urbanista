@@ -1,5 +1,5 @@
 import type { MunicipioRow } from "@/lib/supabase/types";
-import { getSeccionPorCodigo } from "@/lib/data/diagnosticos";
+import { buscarSeccionConReintento } from "@/lib/data/diagnosticos";
 import { getAnthropicClient, MODELO_GENERACION } from "@/lib/anthropic";
 
 /**
@@ -234,12 +234,14 @@ export async function extraerPlanVigente(
   diagnosticoId: string
 ): Promise<{ planVigente: string; fechaPlanVigente: string } | null> {
   const [modificaciones, catalogoPatrimonio] = await Promise.all([
-    getSeccionPorCodigo(diagnosticoId, "2.1"),
-    getSeccionPorCodigo(diagnosticoId, "4.4.2"),
+    buscarSeccionConReintento(diagnosticoId, ["2.1"], [
+      "modificaciones del planeamiento",
+      "planeamiento vigente",
+      "aprobación definitiva",
+    ]),
+    buscarSeccionConReintento(diagnosticoId, ["4.4.2"], ["catálogo de patrimonio", "planeamiento vigente"]),
   ]);
-  const fragmentos = [modificaciones, catalogoPatrimonio].filter(
-    (s): s is NonNullable<typeof s> => s !== null
-  );
+  const fragmentos = [...modificaciones.secciones, ...catalogoPatrimonio.secciones];
   if (fragmentos.length === 0) return null;
 
   const anthropic = getAnthropicClient();

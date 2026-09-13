@@ -8,9 +8,11 @@ import { TextoBlockEditor } from "@/components/TextoBlockEditor";
 import { RegenerarPanel } from "@/components/RegenerarPanel";
 import { EstadoPill } from "@/components/EstadoPill";
 import { SubmitButton } from "@/components/SubmitButton";
+import { AvisoCard } from "@/components/AvisoCard";
 import { getMunicipio, getCapituloPorCodigo } from "@/lib/data/municipios";
 import { listTablasDeCapitulo } from "@/lib/data/tablas";
 import { listTextosDeCapitulo } from "@/lib/data/textos";
+import { listAvisosDeCapitulo } from "@/lib/data/evaluacion";
 import { getSubepigrafes } from "@/lib/data/mapeo";
 import { getTitulosReferenciaDeEquipo } from "@/lib/data/plantilla-referencia";
 import { requireEquipoActivo, listMiembrosDeEquipo } from "@/lib/data/equipos";
@@ -41,6 +43,7 @@ export default async function CapituloPage({
   if (!municipio) notFound();
   if (!capitulo) notFound();
   const asignado = miembros.find((m) => m.user_id === capitulo.asignado_a);
+  const avisos = (await listAvisosDeCapitulo(capitulo.id)).filter((a) => !a.resuelto);
 
   const [tablas, textos] = capitulo.motor === "tabla"
     ? await Promise.all([listTablasDeCapitulo(capitulo.id), listTextosDeCapitulo(capitulo.id)])
@@ -179,6 +182,16 @@ export default async function CapituloPage({
             className="pageblock border border-line p-[52px] px-8 sm:px-14"
             dangerouslySetInnerHTML={{ __html: capitulo.contenido_html }}
           />
+          {avisos.length > 0 && (
+            <div className="mt-6">
+              <div className="font-mono text-[11px] text-text-faint mb-2">
+                AVISOS DE REVISIÓN TÉCNICA ({avisos.length})
+              </div>
+              {avisos.map((aviso) => (
+                <AvisoCard key={aviso.id} municipioId={municipioId} capituloId={capitulo.id} aviso={aviso} />
+              ))}
+            </div>
+          )}
           <RegenerarPanel municipioId={municipioId} capituloId={capitulo.id} />
         </>
       )}

@@ -60,12 +60,7 @@ urbana.</li>
 básicos de la urbanización y/o tener consolidación de la edificación autorizada y permitir
 homogeneizar la delimitación de suelo urbano o enclaves.</li>
 </ol>
-<p><em>Pendiente de revisar por el técnico: estos tres criterios de delimitación son un punto
-de partida — en el Avance real de Lora del Río, por ejemplo, el punto 2 cita expresamente
-el planeamiento general vigente de ese municipio y matiza qué sectores y sistemas
-generales quedan incluidos. Ajusta la redacción a la situación real del planeamiento
-vigente de este municipio antes de cerrar el capítulo.</em></p>
 </div>
-<div class="src-note">PLANTILLA (marco legal común) + contenido a revisar — la lista de delimitación concreta del suelo urbano varía según el planeamiento vigente de cada municipio, confírmala contra el diagnóstico antes de cerrar el capítulo.</div>
+<div class="src-note">PLANTILLA (marco legal común) + contenido a revisar — estos tres criterios de delimitación son un punto de partida; la lista concreta de delimitación del suelo urbano varía según el planeamiento vigente de cada municipio, confírmala y ajústala contra el diagnóstico antes de cerrar el capítulo.</div>
 `.trim();
 }

@@ -8,6 +8,7 @@ import { resolverPlantilla } from "@/lib/motores/plantilla";
 import { extraerPlanVigente } from "@/lib/motores/plantilla/mo1";
 import { generarCapituloRAG } from "@/lib/motores/rag";
 import { getDiagnosticoDeMunicipio } from "@/lib/data/diagnosticos";
+import { evaluarYGuardar } from "@/lib/motores/evaluacion";
 
 export async function listMunicipiosConProgreso(equipo: EquipoActivo) {
   const supabase = createServiceClient();
@@ -229,6 +230,25 @@ export async function asegurarPlanVigente(
   return actualizado;
 }
 
+/**
+ * Solo nombre y plan vigente de los demás municipios del equipo — lo
+ * mínimo que necesita `detectarContaminacion` (ver
+ * src/lib/motores/evaluacion/contaminacion.ts) para detectar que un
+ * capítulo generado a partir del Avance de referencia del equipo se ha
+ * traído sin querer un dato de OTRO municipio (el caso real que motivó
+ * esto: "pgou 2005" de Lora del Río coló en Los Palacios).
+ */
+export async function listOtrosMunicipiosDelEquipo(equipoId: string, municipioIdActual: string) {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("municipios")
+    .select("nombre, plan_vigente")
+    .eq("equipo_id", equipoId)
+    .neq("id", municipioIdActual);
+  if (error) throw error;
+  return data;
+}
+
 export async function generarCapitulosIniciales(municipioId: string, equipo: EquipoActivo) {
   const supabase = createServiceClient();
 
@@ -327,7 +347,7 @@ export async function generarCapitulosIniciales(municipioId: string, equipo: Equ
   const { data: capitulosCreados, error: capitulosError } = await supabase
     .from("capitulos")
     .insert(capitulosAInsertar)
-    .select("id, contenido_html");
+    .select("id, codigo, motor, estado, contenido_html");
   if (capitulosError) throw capitulosError;
 
   const versionesIniciales = capitulosCreados
@@ -344,4 +364,19 @@ export async function generarCapitulosIniciales(municipioId: string, equipo: Equ
       .insert(versionesIniciales);
     if (versionesError) throw versionesError;
   }
+
+  // Revisión técnica (puntuación + avisos) de cada capítulo recién creado
+  // que sí tiene contenido — ver src/lib/motores/evaluacion. No bloquea la
+  // creación del municipio si una evaluación puntual falla (p.ej. un fallo
+  // de red hacia Claude): se registra y se sigue con el resto.
+  const otrosMunicipios = await listOtrosMunicipiosDelEquipo(equipo.id, municipioId);
+  await Promise.all(
+    capitulosCreados
+      .filter((c) => c.contenido_html)
+      .map((c) =>
+        evaluarYGuardar(c, municipio, otrosMunicipios).catch((err: unknown) =>
+          console.error(`Evaluación técnica de ${c.codigo} falló:`, err)
+        )
+      )
+  );
 }

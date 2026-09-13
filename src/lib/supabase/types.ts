@@ -5,11 +5,19 @@
 
 export type MotorTipo = "plantilla" | "rag" | "tabla";
 export type CapituloEstado = "listo" | "revisar" | "tu_aportacion" | "sin_info";
-export type SinInfoMotivo = "falta_dato" | "no_aplica";
+export type SinInfoMotivo = "falta_dato" | "no_aplica" | "no_localizado";
 export type DiagnosticoEstado = "procesando" | "listo" | "error";
 export type VersionTipo = "generacion_automatica" | "edicion_manual";
 export type EquipoRol = "admin" | "miembro";
 export type InvitacionEstado = "pendiente" | "aceptada" | "rechazada";
+export type AvisoTipo =
+  | "revision_tecnica"
+  | "informacion_no_localizada"
+  | "decision_equipo"
+  | "posible_contaminacion"
+  | "contenido_generico";
+export type AvisoSeveridad = "alta" | "media" | "baja";
+export type FactorEvaluacion = "cobertura" | "fundamentacion" | "especificidad" | "solidez" | "completitud";
 
 export type EquipoRow = {
   id: string;
@@ -81,6 +89,10 @@ export type MapeoCapituloRow = {
   orden: number;
   opcional: boolean;
   activo: boolean;
+  // Contexto humano sobre la fuente/motor de este código — ver
+  // 0002_seed_mapeo_capitulos.sql. Nunca se le pide al modelo, es solo
+  // documentación interna del mapeo.
+  notas: string | null;
   created_at: string;
 }
 
@@ -159,6 +171,33 @@ export type CapituloTextoRow = {
   orden: number;
   created_at: string;
   updated_at: string;
+}
+
+export type DesgloseEvaluacion = Record<FactorEvaluacion, { puntos: number; motivo: string }>;
+
+export type CapituloEvaluacionRow = {
+  id: string;
+  capitulo_id: string;
+  puntuacion_total: number;
+  desglose: DesgloseEvaluacion;
+  problema_principal: string | null;
+  pendiente_principal: string | null;
+  generado_en: string;
+  modelo: string | null;
+}
+
+export type CapituloAvisoRow = {
+  id: string;
+  capitulo_id: string;
+  // null = aviso del capítulo entero, no de un subepígrafe concreto.
+  subepigrafe_codigo: string | null;
+  tipo: AvisoTipo;
+  severidad: AvisoSeveridad;
+  mensaje: string;
+  fuente: string | null;
+  resuelto: boolean;
+  resuelto_en: string | null;
+  created_at: string;
 }
 
 type TableDef<Row, Insert, Update> = {
@@ -257,6 +296,21 @@ export type Database = {
         EquipoPlantillaSeccionRow,
         Omit<EquipoPlantillaSeccionRow, "id" | "created_at"> & { id?: string },
         Partial<Omit<EquipoPlantillaSeccionRow, "id">>
+      >;
+      capitulo_evaluaciones: TableDef<
+        CapituloEvaluacionRow,
+        Omit<CapituloEvaluacionRow, "id" | "generado_en"> & { id?: string; generado_en?: string },
+        Partial<Omit<CapituloEvaluacionRow, "id">>
+      >;
+      capitulo_avisos: TableDef<
+        CapituloAvisoRow,
+        Omit<CapituloAvisoRow, "id" | "created_at" | "resuelto" | "resuelto_en"> & {
+          id?: string;
+          created_at?: string;
+          resuelto?: boolean;
+          resuelto_en?: string | null;
+        },
+        Partial<Omit<CapituloAvisoRow, "id">>
       >;
     };
     Views: Record<string, never>;

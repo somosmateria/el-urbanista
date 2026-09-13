@@ -19,7 +19,9 @@ import {
 } from "@/lib/data/textos";
 import { generarCapituloTabla } from "@/lib/motores/tabla";
 import { regenerarContenido } from "@/lib/motores/regenerar";
-import { verificarCapituloDeEquipo } from "@/lib/data/municipios";
+import { verificarCapituloDeEquipo, getMunicipio, listOtrosMunicipiosDelEquipo } from "@/lib/data/municipios";
+import { evaluarYGuardar } from "@/lib/motores/evaluacion";
+import { resolverAviso } from "@/lib/data/evaluacion";
 import { requireEquipoActivo } from "@/lib/data/equipos";
 import { asignarCapitulo } from "@/lib/data/tareas";
 import type { CapituloEstado } from "@/lib/supabase/types";
@@ -51,6 +53,27 @@ export async function marcarMotivoAction(
     .eq("id", capituloId);
   if (error) throw error;
 
+  revalidarCapitulo(municipioId, capitulo.codigo);
+}
+
+/**
+ * `avisoId` no lleva ningún control de pertenencia propio (la tabla
+ * `capitulo_avisos` no tiene RLS por equipo, ver 0018_evaluacion_tecnica.sql)
+ * — por eso se verifica aquí que el capítulo al que pertenece sí es del
+ * equipo activo antes de tocarlo, igual que el resto de acciones de esta
+ * página.
+ */
+export async function resolverAvisoAction(
+  municipioId: string,
+  capituloId: string,
+  avisoId: string,
+  resuelto: boolean
+) {
+  const equipo = await requireEquipoActivo();
+  const capitulo = await verificarCapituloDeEquipo(capituloId, equipo);
+  if (!capitulo) throw new Error("Capítulo no encontrado.");
+
+  await resolverAviso(avisoId, resuelto);
   revalidarCapitulo(municipioId, capitulo.codigo);
 }
 
@@ -206,6 +229,16 @@ export async function aplicarRegeneracionAction(
     tipo: "generacion_automatica",
   });
   if (versionError) throw versionError;
+
+  const municipio = await getMunicipio(municipioId, equipo);
+  if (municipio) {
+    const otrosMunicipios = await listOtrosMunicipiosDelEquipo(equipo.id, municipioId);
+    await evaluarYGuardar(
+      { id: capituloId, codigo: capitulo.codigo, motor: capitulo.motor, estado, contenido_html: contenidoNuevo },
+      municipio,
+      otrosMunicipios
+    ).catch((err: unknown) => console.error(`Evaluación técnica de ${capitulo.codigo} falló:`, err));
+  }
 
   revalidarCapitulo(municipioId, capitulo.codigo);
 }
