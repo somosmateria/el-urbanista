@@ -1,5 +1,5 @@
 import type { MunicipioRow } from "@/lib/supabase/types";
-import { getSeccionReferenciaDeEquipo, normalizarTituloReferencia } from "@/lib/data/plantilla-referencia";
+import { getSeccionReferenciaDeEquipo } from "@/lib/data/plantilla-referencia";
 import { CODIGOS_NO_SUSTITUIBLES } from "./referencia";
 import { generarMO1 } from "./mo1";
 import { generarMO2 } from "./mo2";
@@ -96,9 +96,7 @@ export async function resolverPlantilla(
     const seccion = await getSeccionReferenciaDeEquipo(equipoId, codigo);
     if (seccion) {
       const cuerpo = seccion.texto_html.replaceAll("{{MUNICIPIO}}", municipio.nombre);
-      const tituloEyebrow = seccion.titulo ? normalizarTituloReferencia(seccion.titulo) : "";
       const contenido = `
-<div class="doc-eyebrow">${codigo} · ${tituloEyebrow.toUpperCase()}</div>
 <div class="doc-text">${cuerpo}</div>
 <div class="src-note">Basado en el Avance de referencia del equipo — confirma que encaja con el diagnóstico de este municipio antes de cerrar el capítulo.</div>
 `.trim();
