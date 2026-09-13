@@ -255,7 +255,7 @@ APROBACIÓN DEFINITIVA original — no la de modificaciones puntuales
 posteriores.
 
 Responde EXACTAMENTE en este formato de dos líneas, sin nada más:
-PLAN: <cómo debería citarse en una frase, con artículo, p.ej. "el PGOU de 2005" o "las Normas Subsidiarias de 1998">
+PLAN: <cómo debería citarse en una frase, con artículo, p.ej. "el PGOU de 2005" o "las Normas Subsidiarias de 1998" — cualquier sigla (PGOU, PGOM, NNSS, etc.) siempre en mayúsculas, sea cual sea cómo aparezca en el fragmento>
 FECHA: <YYYY-MM-DD>
 
 Si no encuentras el dato con confianza en el fragmento, responde exactamente: NINGUNO`,

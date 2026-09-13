@@ -17,7 +17,6 @@ import type { MunicipioRow } from "@/lib/supabase/types";
 export function generarMO4(_municipio: MunicipioRow): string {
   void _municipio;
   return `
-<div class="doc-eyebrow">MO.4 · REGULACIÓN DE LOS USOS</div>
 <div class="doc-text">
 <p><strong>4.1. Usos y actividades en suelo rústico.</strong></p>
 

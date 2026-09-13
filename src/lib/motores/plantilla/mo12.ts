@@ -14,7 +14,6 @@ import type { MunicipioRow } from "@/lib/supabase/types";
 export function generarMO12(_municipio: MunicipioRow): string {
   void _municipio;
   return `
-<div class="doc-eyebrow">MO.12 · DISEÑO PRELIMINAR DEL INFORME DE SEGUIMIENTO DE LA EJECUCIÓN URBANÍSTICA</div>
 <div class="doc-text">
 <p>La Disposición Adicional Segunda de la Ley para el Impulso de la Sostenibilidad del
 Territorio de Andalucía (LISTA) establece que el informe de seguimiento de la

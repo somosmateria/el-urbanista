@@ -60,10 +60,7 @@ encuentran delimitadas. En ese sentido, en este Avance se discriminan aquellos
 urbano, se encuentran en distintas fases de ejecución de los que no han tenido ningún
 desarrollo.</p>
 
-<p><em>Pendiente de completar por el técnico: la relación concreta de sectores/ámbitos de
-este municipio (nombre, situación de ejecución, uso global), tal como aparece en el
-Plano de Ordenación — no procede del diagnóstico.</em></p>
 </div>
-<div class="src-note">PLANTILLA — texto normativo común, sin datos del diagnóstico. Relación de sectores concretos pendiente de completar.</div>
+<div class="src-note">PLANTILLA — texto normativo común, sin datos del diagnóstico. Pendiente de completar por el técnico: la relación concreta de sectores/ámbitos de este municipio (nombre, situación de ejecución, uso global), tal como aparece en el Plano de Ordenación — no procede del diagnóstico.</div>
 `.trim();
 }

@@ -22,7 +22,6 @@ import type { MunicipioRow } from "@/lib/supabase/types";
 export function generarMO8(municipio: MunicipioRow): string {
   const nombre = municipio.nombre;
   return `
-<div class="doc-eyebrow">MO.8 · DE LA PROGRAMACIÓN Y LOS ESTUDIOS ECONÓMICOS DEL PLAN</div>
 <div class="doc-text">
 <p><strong>8.1. Características del Programa de Actuación del Plan General de Ordenación
 Municipal en el marco de la LISTA.</strong></p>

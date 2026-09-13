@@ -24,7 +24,6 @@ import type { MunicipioRow } from "@/lib/supabase/types";
 export function generarMO2(municipio: MunicipioRow): string {
   const nombre = municipio.nombre;
   return `
-<div class="doc-eyebrow">MO.2 · CRITERIOS Y OBJETIVOS DEL MODELO</div>
 <div class="doc-text">
 <p>La nueva ordenación urbanística general que propone este documento de Avance de
 Plan General de Ordenación Municipal de ${nombre} está orientada por un conjunto de

@@ -14,7 +14,6 @@ import type { MunicipioRow } from "@/lib/supabase/types";
 export function generarMO10(municipio: MunicipioRow): string {
   const nombre = municipio.nombre;
   return `
-<div class="doc-eyebrow">MO.10 · PLANIFICACIÓN ESTRATÉGICA DE LA EVOLUCIÓN DEL MODELO GENERAL DE ORDENACIÓN</div>
 <div class="doc-text">
 <p><strong>10.1. Criterios y estrategias generales de ordenación.</strong></p>
 

@@ -20,7 +20,6 @@ import type { MunicipioRow } from "@/lib/supabase/types";
 export function generarMO7(municipio: MunicipioRow): string {
   const nombre = municipio.nombre;
   return `
-<div class="doc-eyebrow">MO.7 · DIRECTRICES PARA UN URBANISMO INCLUSIVO</div>
 <div class="doc-text">
 <p>El urbanismo inclusivo es una forma de pensar y planificar la ciudad que pone en el
 centro a las personas. Su objetivo es que todas y todos podamos vivir, movernos y

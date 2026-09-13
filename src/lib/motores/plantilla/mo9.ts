@@ -13,7 +13,6 @@ import type { MunicipioRow } from "@/lib/supabase/types";
 export function generarMO9(_municipio: MunicipioRow): string {
   void _municipio;
   return `
-<div class="doc-eyebrow">MO.9 · EL CONTENIDO DE LAS NORMAS URBANÍSTICAS</div>
 <div class="doc-text">
 <p>Las Normas Urbanísticas del PGOM se proponen estructurar de la siguiente forma.</p>
 
@@ -54,7 +53,7 @@ calidad de vida ni el equilibrio territorial. Además, se establecerán criterio
 específicos para garantizar que las actividades sean compatibles con su entorno y
 respeten la normativa aplicable.</p>
 
-<p>El Título IV estará a regular los usos y actuaciones permitidas en el suelo rústico,
+<p>El Título IV regulará los usos y actuaciones permitidas en el suelo rústico,
 estableciendo normas específicas según su categoría y orientación a la preservación
 del entorno natural, el aprovechamiento sostenible de los recursos y la compatibilidad
 con el desarrollo urbano controlado. Se debe asegurar que el uso del suelo rústico se
