@@ -12,11 +12,10 @@ import { evaluarYGuardar } from "@/lib/motores/evaluacion";
 import { requireEquipoActivo } from "@/lib/data/equipos";
 import type { CapituloEstado } from "@/lib/supabase/types";
 
-// Hasta una docena de capítulos, cada uno con su(s) llamada(s) a Claude
-// (RAG/evaluación) en secuencia (ver el bucle de abajo) — mismo margen que
-// /api/plantilla-referencia/[id]/procesar, que encadena un número
-// comparable de llamadas.
-export const maxDuration = 300;
+// El maxDuration para esta Server Action va en memoria/page.tsx, no aquí:
+// un archivo "use server" solo puede exportar funciones async — cualquier
+// otro export (una constante, un tipo en tiempo de ejecución) rompe el
+// build de Next.js.
 
 export type ResultadoRegeneracionMemoria = {
   actualizados: string[];

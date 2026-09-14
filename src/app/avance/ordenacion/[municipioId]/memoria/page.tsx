@@ -9,6 +9,13 @@ import { ESTADO_UI } from "@/lib/capitulos/estado-ui";
 import { getMunicipio, listCapitulosDeMunicipio } from "@/lib/data/municipios";
 import { requireEquipoActivo } from "@/lib/data/equipos";
 
+// regenerarMemoriaAction (ver ./actions.ts) puede encadenar hasta una
+// docena de llamadas a Claude en secuencia — mismo margen que
+// /api/plantilla-referencia/[id]/procesar. Una Server Action invocada
+// desde esta página hereda este maxDuration (el archivo "use server" de
+// la acción no puede declararlo él mismo: solo puede exportar funciones).
+export const maxDuration = 300;
+
 export default async function MemoriaOrdenacionPage({
   params,
 }: {
