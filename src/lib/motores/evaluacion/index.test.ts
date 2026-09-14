@@ -29,6 +29,12 @@ describe("evaluarPlantillaInvariante", () => {
     expect(revisar.pendientePrincipal).not.toBeNull();
   });
 
+  it("siempre explica en problemaPrincipal por qué el ámbar no es un fallo (nunca llega a verde por diseño)", () => {
+    const resultado = evaluarPlantillaInvariante("<p>…</p>", "listo", "Osuna");
+    expect(resultado.puntuacionTotal).toBeLessThan(80);
+    expect(resultado.problemaPrincipal).not.toBeNull();
+  });
+
   it("la puntuación total es la suma de los cinco factores, cada uno entre 0 y 20", () => {
     const resultado = evaluarPlantillaInvariante("<p>…</p>", "listo", "Osuna");
     const suma = Object.values(resultado.desglose).reduce((acc, f) => acc + f.puntos, 0);

@@ -74,8 +74,12 @@ export function RegenerarMemoriaButton({ municipioId }: { municipioId: string })
       type="button"
       onClick={() => setConfirmando(true)}
       disabled={pending}
-      className="btn btn-primary whitespace-nowrap"
+      className="btn btn-marron whitespace-nowrap"
     >
+      <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} className="w-3.5 h-3.5 stroke-current">
+        <path d="M4 4v6h6M20 20v-6h-6" />
+        <path d="M4 10a8 8 0 0 1 14.5-4.5M20 14a8 8 0 0 1-14.5 4.5" />
+      </svg>
       {pending ? "Regenerando… (puede tardar)" : "Regenerar toda la memoria"}
     </button>
   );

@@ -66,7 +66,7 @@ export default async function MemoriaOrdenacionPage({
               <a
                 href={`/api/municipios/${municipio.id}/docx`}
                 title="Un .docx por capítulo, dentro de un .zip"
-                className="btn btn-secondary whitespace-nowrap"
+                className="btn btn-primary whitespace-nowrap"
               >
                 Por capítulos (.zip)
               </a>

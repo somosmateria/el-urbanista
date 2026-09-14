@@ -9,6 +9,7 @@ import { RegenerarPanel } from "@/components/RegenerarPanel";
 import { EstadoPill } from "@/components/EstadoPill";
 import { SubmitButton } from "@/components/SubmitButton";
 import { AvisoCard } from "@/components/AvisoCard";
+import { MOTOR_LABEL } from "@/lib/capitulos/motor-ui";
 import { getMunicipio, getCapituloPorCodigo } from "@/lib/data/municipios";
 import { listTablasDeCapitulo } from "@/lib/data/tablas";
 import { listTextosDeCapitulo } from "@/lib/data/textos";
@@ -54,11 +55,6 @@ export default async function CapituloPage({
     ? await Promise.all([listTablasDeCapitulo(capitulo.id), listTextosDeCapitulo(capitulo.id)])
     : [[], []];
   const hayFilas = tablas.some((t) => t.filas.length > 0) || textos.some((t) => t.contenido_html.trim() !== "");
-  const MOTOR_LABEL: Record<string, string> = {
-    plantilla: "Plantilla",
-    rag: "RAG dirigido",
-    tabla: "Motor asistido por tabla",
-  };
 
   // Un capítulo mixto (p.ej. MO.3) puede tener subepígrafes de motor
   // "tabla" propios, aparte del motor del capítulo en sí (rag/plantilla).

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { EstadoPill } from "@/components/EstadoPill";
+import { MOTOR_LABEL } from "@/lib/capitulos/motor-ui";
 import type { CapituloRow } from "@/lib/supabase/types";
 
 export function ChapterRow({
@@ -22,6 +23,9 @@ export function ChapterRow({
         </span>
         <span className="flex-1 min-w-0 font-serif font-semibold text-[18px] leading-[1.25] truncate">
           {capitulo.titulo}
+        </span>
+        <span className="hidden sm:inline shrink-0 text-[10px] tracking-[0.12em] uppercase text-text-faint whitespace-nowrap">
+          {MOTOR_LABEL[capitulo.motor]}
         </span>
         <EstadoPill estado={capitulo.estado} className="shrink-0" />
       </Link>

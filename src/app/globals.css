@@ -227,6 +227,19 @@ mark {
 .btn-azul:hover:not(:disabled) {
   background: color-mix(in srgb, var(--color-azul) 18%, transparent);
 }
+/* Mismo tratamiento que .btn-azul (relleno, no solo contorno) pero en el
+   marrón/violeta de acento de la app — para acciones que también piden
+   atención pero no son un aviso (p.ej. "Regenerar toda la memoria"):
+   junto con .btn-azul forman el nivel "esto necesita que hagas algo",
+   distinto del contorno simple de .btn-primary/.btn-secondary. */
+.btn-marron {
+  color: var(--color-violet-ink);
+  border-color: var(--color-violet);
+  background: var(--color-violet-wash);
+}
+.btn-marron:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-violet) 20%, transparent);
+}
 
 /*
  * Los motores de generación devuelven HTML con estas clases directamente

@@ -127,7 +127,12 @@ export function evaluarPlantillaInvariante(
   return {
     puntuacionTotal,
     desglose,
-    problemaPrincipal: null,
+    // Con fundamentación a 0 puntos por diseño (ver arriba), este capítulo
+    // nunca llega a los 80 puntos de "verde" — sin este mensaje, el ámbar
+    // se lee como "algo va mal" aunque aquí no hay nada que arreglar: es
+    // el mismo texto normativo, idéntico en cualquier municipio.
+    problemaPrincipal:
+      "No es un problema real: es una plantilla normativa fija e idéntica en todos los municipios, sin dato propio que citar — el ámbar es de diseño, no un fallo de este capítulo.",
     pendientePrincipal: estado === "revisar" ? "Confirmar que este texto normativo común encaja con el municipio antes de cerrar el capítulo." : null,
     modelo: null,
   };
