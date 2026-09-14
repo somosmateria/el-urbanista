@@ -24,6 +24,12 @@ function escapeHtml(valor: string): string {
  *   imprimir en blanco y negro), así que aquí se convierte en texto en
  *   rojo — la misma señal de "esto lo tiene que revisar un técnico" pero
  *   visible también en el documento exportado.
+ * - `.doc-eyebrow-pendiente`/`.nota-pendiente` — título y aviso de un
+ *   subepígrafe que no se pudo generar (ver bloquePendiente en
+ *   motores/rag/index.ts). Se conservan (no son una nota de desarrollo
+ *   como `.src-note`, son parte del hueco real del documento) pero en
+ *   AZUL, no rojo: el rojo de `<mark>`/`pintarEnRojo` significa "esto está
+ *   escrito, confírmalo"; el azul significa "aquí no hay nada todavía".
  *
  * Exportada porque `src/lib/motores/evaluacion` también la necesita: sin
  * esta limpieza, una nota `.src-note` que compara el municipio con Osuna o
@@ -32,10 +38,20 @@ function escapeHtml(valor: string): string {
  * municipios — falso positivo encontrado verificando esta misma fase
  * contra datos reales.
  */
+const COLOR_PENDIENTE = "#3d5a75";
+
 export function limpiarParaExportar(html: string): string {
   return html
     .replace(/<div class="src-note">[\s\S]*?<\/div>/g, "")
     .replace(/<div class="doc-eyebrow">([\s\S]*?)<\/div>/g, "<h2>$1</h2>")
+    .replace(
+      /<div class="doc-eyebrow-pendiente"(?:\s[^>]*)?>([\s\S]*?)<\/div>/g,
+      `<h2 style="color: ${COLOR_PENDIENTE};">$1</h2>`
+    )
+    .replace(
+      /<div class="nota-pendiente">([\s\S]*?)<\/div>/g,
+      `<p style="color: ${COLOR_PENDIENTE};"><strong>$1</strong></p>`
+    )
     .replace(/<mark(?:\s[^>]*)?>/g, '<span style="color: red;">')
     .replace(/<\/mark>/g, "</span>");
 }
@@ -62,11 +78,21 @@ const TAGS_DE_BLOQUE = ["p", "li", "h2", "h3", "blockquote", "td", "th"];
  * resaltar — es el capítulo completo el que hay que confirmar — así que todo
  * su cuerpo sale en rojo, no solo lo que ya viniera en un `<mark>` (ver
  * TAGS_DE_BLOQUE arriba sobre por qué no basta con envolver en un `<div>`).
+ *
+ * Si el bloque ya lleva un color explícito (el azul de
+ * `.doc-eyebrow-pendiente`/`.nota-pendiente`, ver arriba) no se pisa: un
+ * capítulo compuesto (MO.3/5/6) suele quedar entero en "revisar" aunque
+ * solo uno de sus subepígrafes necesite confirmación puntual, y el azul de
+ * "esto no existe todavía" es una señal distinta que no debe perderse
+ * dentro del rojo de "confirma esto".
  */
 function pintarEnRojo(html: string): string {
   const patron = new RegExp(`<(${TAGS_DE_BLOQUE.join("|")})((?:\\s+[\\w-]+="[^"]*")*)\\s*>`, "g");
-  return html.replace(patron, (_coincidencia, tag: string, attrs: string) => {
+  return html.replace(patron, (coincidencia, tag: string, attrs: string) => {
     const conEstilo = /\sstyle="([^"]*)"/.exec(attrs);
+    if (conEstilo && /color\s*:/.test(conEstilo[1])) {
+      return coincidencia;
+    }
     if (conEstilo) {
       return `<${tag}${attrs.replace(conEstilo[0], ` style="${conEstilo[1]};color: red;"`)}>`;
     }

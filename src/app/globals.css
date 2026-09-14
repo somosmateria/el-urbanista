@@ -45,6 +45,14 @@
   --color-coral: #8c4331;
   --color-coral-ink: #8c4331;
   --color-coral-wash: color-mix(in srgb, #8c4331 8%, transparent);
+
+  /* Hueco de contenido: un subepígrafe entero pendiente de que el técnico
+     lo redacte/rellene, no un dato puntual que confirmar (eso es el ámbar
+     de "revisar" o el rojo de <mark> en el .docx) — azul apagado, a tono
+     con el resto de la paleta tierra. */
+  --color-azul: #3d5a75;
+  --color-azul-ink: #33495f;
+  --color-azul-wash: color-mix(in srgb, #3d5a75 10%, transparent);
 }
 
 @theme inline {
@@ -75,6 +83,10 @@
   --color-coral: var(--color-coral);
   --color-coral-ink: var(--color-coral-ink);
   --color-coral-wash: var(--color-coral-wash);
+
+  --color-azul: var(--color-azul);
+  --color-azul-ink: var(--color-azul-ink);
+  --color-azul-wash: var(--color-azul-wash);
 
   /* Un solo punto de control: font-serif → titulares clásicos,
      font-sans/font-mono → cuerpo. El rediseño no usa monoespaciada en

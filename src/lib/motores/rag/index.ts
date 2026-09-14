@@ -161,6 +161,25 @@ async function generarBloqueSubepigrafe(
 }
 
 /**
+ * Bloque de aviso para un subepígrafe que no se pudo generar — antes se
+ * omitía sin más (título incluido), y ese hueco pasaba desapercibido hasta
+ * comparar el .docx a mano (ver detectarSubepigrafesFaltantes en
+ * motores/evaluacion). Ahora el título se conserva (id de ancla para poder
+ * enlazarlo desde la cabecera del capítulo, ver la página del capítulo) y
+ * se marca con una clase propia — `limpiarParaExportar`/`pintarEnRojo` en
+ * src/lib/export/docx.ts la pintan en azul, distinta del rojo de "esto hay
+ * que confirmarlo" (`<mark>`/capítulo en revisar): aquí no hay nada que
+ * confirmar, es contenido que falta por completo.
+ */
+function bloquePendiente(subepigrafe: MapeoCapituloRow): string {
+  const numero = subepigrafe.capitulo_codigo.replace(/^MO\./, "");
+  return `
+<div class="doc-eyebrow-pendiente" id="pendiente-${subepigrafe.capitulo_codigo}">${numero} · ${subepigrafe.titulo_canonico.toUpperCase()}</div>
+<div class="nota-pendiente">PENDIENTE DE COMPLETAR POR EL TÉCNICO</div>
+`.trim();
+}
+
+/**
  * Motor 2 — RAG dirigido. Genera el contenido de un capítulo compuesto por
  * subepígrafes (hoy: MO.3 y MO.6), en el orden configurado en
  * mapeo_capitulos. Cada subepígrafe se resuelve según su propio motor:
@@ -173,13 +192,16 @@ async function generarBloqueSubepigrafe(
  * disponible cuando ya existe un `capituloId` real (en la generación
  * inicial el capítulo todavía no tiene fila propia, así que sus
  * subepígrafes de tabla se omiten sin más: no hay tablas que mostrar
- * todavía). Los subepígrafes sin generador, o "rag" cuya sección no se
- * encuentra en el diagnóstico, o "tabla" sin ninguna fila rellenada, se
- * omiten — no bloquean el resto ni se rellenan con texto inventado (ver
- * docs/02-arquitectura-motores.md).
+ * todavía). Un subepígrafe sin generador, "rag" cuya sección no se
+ * encuentra en el diagnóstico, o "tabla" sin ninguna fila rellenada, no
+ * bloquea el resto ni se rellena con texto inventado — pero SÍ deja su
+ * título con un aviso de pendiente en vez de desaparecer del todo (ver
+ * bloquePendiente arriba y docs/02-arquitectura-motores.md).
  *
- * Devuelve null si ningún subepígrafe pudo generarse (el capítulo se queda
- * en "sin_info").
+ * Devuelve null solo si NINGÚN subepígrafe pudo generarse (el capítulo se
+ * queda en "sin_info", igual que antes) — con al menos uno generado, el
+ * capítulo sí se crea, y los que faltan se marcan como pendientes dentro de
+ * él en vez de quedar en "sin_info" sin más pista de qué falta.
  */
 export async function generarCapituloRAG(
   capituloCodigo: string,
@@ -209,8 +231,7 @@ export async function generarCapituloRAG(
     })
   );
 
-  const bloquesGenerados = bloques.filter((b): b is string => b !== null);
-  if (bloquesGenerados.length === 0) return null;
+  if (bloques.every((b) => b === null)) return null;
 
-  return bloquesGenerados.join("\n\n");
+  return bloques.map((b, i) => b ?? bloquePendiente(subepigrafes[i])).join("\n\n");
 }

@@ -55,6 +55,34 @@ describe("generarDocxCapitulo", () => {
     const documentXml = await zip.file("word/document.xml")?.async("string");
     expect(documentXml).not.toContain('w:val="ff0000"');
   }, 20_000);
+
+  it("un subepígrafe pendiente (título + aviso) sale en azul, no en rojo", async () => {
+    const buffer = await generarDocxCapitulo(
+      "MO.3 · Prueba",
+      '<div class="doc-text"><p>Contenido normal.</p></div>' +
+        '<div class="doc-eyebrow-pendiente" id="pendiente-MO.3.2">3.2 · TÍTULO PENDIENTE</div>' +
+        '<div class="nota-pendiente">PENDIENTE DE COMPLETAR POR EL TÉCNICO</div>'
+    );
+    const zip = await JSZip.loadAsync(buffer);
+    const documentXml = await zip.file("word/document.xml")?.async("string");
+    expect(documentXml?.match(/<w:color w:val="3d5a75"\/>/g)?.length).toBe(2);
+    expect(documentXml).not.toContain('w:val="ff0000"');
+  }, 20_000);
+
+  it("un subepígrafe pendiente sigue en azul aunque el capítulo entero esté a revisar", async () => {
+    const buffer = await generarDocxCapitulo(
+      "MO.3 · Prueba",
+      '<div class="doc-text"><p>Contenido normal.</p></div>' +
+        '<div class="doc-eyebrow-pendiente">3.2 · TÍTULO PENDIENTE</div>' +
+        '<div class="nota-pendiente">PENDIENTE DE COMPLETAR POR EL TÉCNICO</div>',
+      true
+    );
+    const zip = await JSZip.loadAsync(buffer);
+    const documentXml = await zip.file("word/document.xml")?.async("string");
+    expect(documentXml?.match(/<w:color w:val="3d5a75"\/>/g)?.length).toBe(2);
+    // El párrafo normal sí debe seguir en rojo por ser "revisar" el capítulo.
+    expect(documentXml?.match(/<w:color w:val="ff0000"\/>/g)?.length).toBe(1);
+  }, 20_000);
 });
 
 describe("generarDocxMunicipio", () => {

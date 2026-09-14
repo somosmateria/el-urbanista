@@ -19,7 +19,6 @@ import { requireEquipoActivo, listMiembrosDeEquipo } from "@/lib/data/equipos";
 import { AsignarCapitulo } from "@/components/AsignarCapitulo";
 import {
   marcarMotivoAction,
-  crearBloqueTablaAction,
   crearBloqueTextoAction,
   generarTextoTablaAction,
 } from "./actions";
@@ -44,6 +43,12 @@ export default async function CapituloPage({
   if (!capitulo) notFound();
   const asignado = miembros.find((m) => m.user_id === capitulo.asignado_a);
   const avisos = (await listAvisosDeCapitulo(capitulo.id)).filter((a) => !a.resuelto);
+  // Subepígrafes que el motor RAG no pudo generar (ver bloquePendiente en
+  // motores/rag/index.ts) — quedan marcados así en vez de sin_info_motivo
+  // porque el capítulo en sí sí tiene contenido, solo les falta ese trozo.
+  const avisosSubepigrafeFaltante = avisos.filter(
+    (a) => a.tipo === "informacion_no_localizada" && a.subepigrafe_codigo
+  );
 
   const [tablas, textos] = capitulo.motor === "tabla"
     ? await Promise.all([listTablasDeCapitulo(capitulo.id), listTextosDeCapitulo(capitulo.id)])
@@ -63,6 +68,24 @@ export default async function CapituloPage({
     Promise.all(subepigrafesDeTabla.map((s) => listTablasDeCapitulo(capitulo.id, s.capitulo_codigo))),
     Promise.all(subepigrafesDeTabla.map((s) => listTextosDeCapitulo(capitulo.id, s.capitulo_codigo))),
   ]);
+  // Subepígrafes de propuesta técnica que siguen sin ninguna tabla/párrafo
+  // relleno — junto con avisosSubepigrafeFaltante, arriba, son "lo
+  // pendiente" al que lleva el botón de la cabecera (ver más abajo).
+  const subepigrafesTablaPendientes = subepigrafesDeTabla.filter(
+    (s, i) =>
+      tablasPorSubepigrafe[i].every((t) => t.filas.length === 0) &&
+      textosPorSubepigrafe[i].every((t) => t.contenido_html.trim() === "")
+  );
+  const totalPendientes = avisosSubepigrafeFaltante.length + subepigrafesTablaPendientes.length;
+  // Prioriza el ancla puesta en el propio contenido (ver bloquePendiente en
+  // motores/rag/index.ts); si lo pendiente es solo una propuesta técnica sin
+  // rellenar, no hay ancla propia — se apunta a la sección de propuestas de
+  // más abajo en su lugar (ver id="propuesta-tecnico").
+  const anclaPendiente = avisosSubepigrafeFaltante[0]
+    ? `pendiente-${avisosSubepigrafeFaltante[0].subepigrafe_codigo}`
+    : subepigrafesTablaPendientes.length > 0
+      ? "propuesta-tecnico"
+      : null;
 
   return (
     <AppShell>
@@ -95,6 +118,11 @@ export default async function CapituloPage({
         )}
         <span className="flex-1" />
         <span className="flex gap-2.5 flex-wrap">
+          {anclaPendiente && (
+            <a href={`#${anclaPendiente}`} className="btn btn-secondary">
+              Ir a lo pendiente{totalPendientes > 1 ? ` (${totalPendientes})` : ""}
+            </a>
+          )}
           {capitulo.motor !== "tabla" && capitulo.contenido_html && (
             <a href={`/api/capitulos/${capitulo.id}/docx`} className="btn btn-secondary">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round">
@@ -113,6 +141,17 @@ export default async function CapituloPage({
           )}
         </span>
       </div>
+
+      {avisos.length > 0 && (
+        <div className="mb-8">
+          <div className="font-mono text-[11px] text-text-faint mb-2">
+            AVISOS DE REVISIÓN TÉCNICA ({avisos.length})
+          </div>
+          {avisos.map((aviso) => (
+            <AvisoCard key={aviso.id} municipioId={municipioId} capituloId={capitulo.id} aviso={aviso} />
+          ))}
+        </div>
+      )}
 
       {capitulo.motor !== "tabla" && capitulo.contenido_html && (
         <p className="text-text-soft text-[13.5px] mb-[26px] max-w-[560px] leading-relaxed">
@@ -146,15 +185,6 @@ export default async function CapituloPage({
           ))}
 
           <div className="flex flex-wrap items-center gap-3 mb-6">
-            <form action={crearBloqueTablaAction.bind(null, municipioId, capitulo.id, null)} className="flex items-center gap-3">
-              <input
-                name="nombreBloque"
-                type="text"
-                placeholder="Ej. Áreas recreativas propuestas"
-                className="box-border bg-transparent border border-line rounded px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
-              />
-              <SubmitButton className="btn btn-secondary whitespace-nowrap">+ Nueva tabla</SubmitButton>
-            </form>
             <form action={crearBloqueTextoAction.bind(null, municipioId, capitulo.id, null)} className="flex items-center gap-3">
               <input
                 name="tituloBloque"
@@ -162,7 +192,7 @@ export default async function CapituloPage({
                 placeholder="Ej. Justificación de la propuesta"
                 className="box-border bg-transparent border border-line rounded px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
               />
-              <SubmitButton className="btn btn-secondary whitespace-nowrap">+ Nuevo texto</SubmitButton>
+              <SubmitButton className="btn btn-secondary whitespace-nowrap">+ Añadir párrafo</SubmitButton>
             </form>
           </div>
 
@@ -182,16 +212,6 @@ export default async function CapituloPage({
             className="pageblock border border-line p-[52px] px-8 sm:px-14"
             dangerouslySetInnerHTML={{ __html: capitulo.contenido_html }}
           />
-          {avisos.length > 0 && (
-            <div className="mt-6">
-              <div className="font-mono text-[11px] text-text-faint mb-2">
-                AVISOS DE REVISIÓN TÉCNICA ({avisos.length})
-              </div>
-              {avisos.map((aviso) => (
-                <AvisoCard key={aviso.id} municipioId={municipioId} capituloId={capitulo.id} aviso={aviso} />
-              ))}
-            </div>
-          )}
           <RegenerarPanel municipioId={municipioId} capituloId={capitulo.id} />
         </>
       )}
@@ -244,13 +264,14 @@ export default async function CapituloPage({
       )}
 
       {subepigrafesDeTabla.length > 0 && (
-        <div className="mt-10">
+        <div className="mt-10" id="propuesta-tecnico">
           <div className="font-mono text-[11px] text-text-faint mb-1">
             PROPUESTA DEL TÉCNICO (NO VIENE DEL DIAGNÓSTICO)
           </div>
           <p className="text-text-soft text-[14.5px] mb-6 max-w-[540px] leading-relaxed">
             Estos subepígrafes de {capitulo.codigo} son propuesta técnica, no
-            reformateo del diagnóstico. Rellena las tablas y luego usa
+            reformateo del diagnóstico. Suele bastar con un párrafo — añade una
+            tabla solo si el dato es de verdad tabular. Luego usa
             &ldquo;Regenerar&rdquo; arriba para incorporarlas al capítulo.
           </p>
 
@@ -269,18 +290,6 @@ export default async function CapituloPage({
 
               <div className="flex flex-wrap items-center gap-3">
                 <form
-                  action={crearBloqueTablaAction.bind(null, municipioId, capitulo.id, s.capitulo_codigo)}
-                  className="flex items-center gap-3"
-                >
-                  <input
-                    name="nombreBloque"
-                    type="text"
-                    placeholder="Ej. Sistemas generales de espacios libres"
-                    className="box-border bg-transparent border border-line rounded px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
-                  />
-                  <SubmitButton className="btn btn-secondary whitespace-nowrap">+ Nueva tabla</SubmitButton>
-                </form>
-                <form
                   action={crearBloqueTextoAction.bind(null, municipioId, capitulo.id, s.capitulo_codigo)}
                   className="flex items-center gap-3"
                 >
@@ -290,7 +299,7 @@ export default async function CapituloPage({
                     placeholder="Ej. Justificación de la propuesta"
                     className="box-border bg-transparent border border-line rounded px-3 py-2 text-[13.5px] text-text outline-none focus:border-violet"
                   />
-                  <SubmitButton className="btn btn-secondary whitespace-nowrap">+ Nuevo texto</SubmitButton>
+                  <SubmitButton className="btn btn-secondary whitespace-nowrap">+ Añadir párrafo</SubmitButton>
                 </form>
               </div>
             </div>
