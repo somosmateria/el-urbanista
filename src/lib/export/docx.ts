@@ -2,6 +2,7 @@ import "server-only";
 import JSZip from "jszip";
 // @ts-expect-error -- sin tipos publicados
 import HTMLtoDOCX from "html-to-docx";
+import type { DesgloseEvaluacion, FactorEvaluacion } from "@/lib/supabase/types";
 
 function escapeHtml(valor: string): string {
   return valor.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -166,6 +167,115 @@ ${cuerpoCapitulo}
     Buffer.from(buffer),
     capitulos.map((c) => c.titulo)
   );
+}
+
+const FACTOR_LABEL: Record<FactorEvaluacion, string> = {
+  cobertura: "Cobertura",
+  fundamentacion: "Fundamentación",
+  especificidad: "Especificidad",
+  solidez: "Solidez",
+  completitud: "Completitud",
+};
+
+export type FilaRevisionParaDocx = {
+  codigo: string;
+  titulo: string;
+  evaluacion: {
+    puntuacionTotal: number;
+    desglose: DesgloseEvaluacion;
+    problemaPrincipal: string | null;
+    pendientePrincipal: string | null;
+  } | null;
+  avisos: { severidad: string; mensaje: string; fuente: string | null; resuelto: boolean }[];
+};
+
+export type TablaParaDocx = {
+  capituloCodigo: string;
+  capituloTitulo: string;
+  nombreBloque: string;
+  columnas: string[];
+  filas: Record<string, string>[];
+};
+
+/**
+ * Documento de trabajo interno del equipo (no es la Memoria entregable):
+ * el resultado de la Revisión técnica — mismo contenido que el panel
+ * /revision, pero para imprimir o compartir sin entrar a la app — y las
+ * tablas que el técnico ha ido rellenando, reunidas en un solo sitio en
+ * vez de tener que abrir capítulo a capítulo.
+ */
+export async function generarDocxRevisionTecnica(
+  municipioNombre: string,
+  filas: FilaRevisionParaDocx[],
+  tablas: TablaParaDocx[]
+): Promise<Buffer> {
+  const seccionesRevision = filas
+    .map((fila) => {
+      if (!fila.evaluacion) {
+        return `<h2>${escapeHtml(`${fila.codigo} · ${fila.titulo}`)}</h2><p><em>Sin evaluar todavía.</em></p>`;
+      }
+      const { puntuacionTotal, desglose, problemaPrincipal, pendientePrincipal } = fila.evaluacion;
+      const filasDesglose = (Object.entries(desglose) as [FactorEvaluacion, { puntos: number; motivo: string }][])
+        .map(
+          ([factor, { puntos, motivo }]) =>
+            `<tr><td>${escapeHtml(FACTOR_LABEL[factor])}</td><td>${puntos}/20</td><td>${escapeHtml(motivo)}</td></tr>`
+        )
+        .join("");
+      const avisosSinResolver = fila.avisos.filter((a) => !a.resuelto);
+      const listaAvisos =
+        avisosSinResolver.length > 0
+          ? `<ul>${avisosSinResolver
+              .map(
+                (a) =>
+                  `<li><strong>${escapeHtml(a.severidad.toUpperCase())}</strong> — ${escapeHtml(a.mensaje)}${
+                    a.fuente ? ` (${escapeHtml(a.fuente)})` : ""
+                  }</li>`
+              )
+              .join("")}</ul>`
+          : "<p><em>Sin avisos pendientes.</em></p>";
+
+      return `
+<h2>${escapeHtml(`${fila.codigo} · ${fila.titulo}`)}</h2>
+<p><strong>Puntuación: ${puntuacionTotal}%</strong></p>
+<table><tbody>${filasDesglose}</tbody></table>
+${problemaPrincipal ? `<p><strong>Problema principal:</strong> ${escapeHtml(problemaPrincipal)}</p>` : ""}
+${pendientePrincipal ? `<p><strong>Pendiente principal:</strong> ${escapeHtml(pendientePrincipal)}</p>` : ""}
+<p><strong>Avisos:</strong></p>
+${listaAvisos}
+`;
+    })
+    .join("\n");
+
+  const seccionesTablas =
+    tablas.length > 0
+      ? tablas
+          .map((tabla) => {
+            const cabecera = `<tr>${tabla.columnas.map((c) => `<th>${escapeHtml(c)}</th>`).join("")}</tr>`;
+            const cuerpo = tabla.filas
+              .map((f) => `<tr>${tabla.columnas.map((c) => `<td>${escapeHtml(f[c] ?? "")}</td>`).join("")}</tr>`)
+              .join("");
+            return `
+<h3>${escapeHtml(`${tabla.capituloCodigo} · ${tabla.capituloTitulo} — ${tabla.nombreBloque}`)}</h3>
+<table><tbody>${cabecera}${cuerpo}</tbody></table>
+`;
+          })
+          .join("\n")
+      : "<p><em>El equipo todavía no ha rellenado ninguna tabla.</em></p>";
+
+  const html = `<!DOCTYPE html><html><body>
+<h1>${escapeHtml(`Revisión técnica — ${municipioNombre}`)}</h1>
+${seccionesRevision}
+<div class="page-break" style="page-break-after: always;"></div>
+<h1>Tablas rellenadas por el equipo</h1>
+${seccionesTablas}
+</body></html>`;
+
+  const buffer = await HTMLtoDOCX(html, null, {
+    font: "Georgia",
+    fontSize: 24,
+    table: { row: { cantSplit: false } },
+  });
+  return arreglarEstilos(Buffer.from(buffer));
 }
 
 /**

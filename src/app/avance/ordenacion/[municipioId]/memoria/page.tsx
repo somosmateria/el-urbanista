@@ -54,7 +54,8 @@ export default async function MemoriaOrdenacionPage({
               : `${abiertos} ${abiertos === 1 ? "sigue" : "siguen"} abierto${abiertos === 1 ? "" : "s"}`}
           </p>
         </div>
-        <div className="flex gap-2.5 flex-none">
+        <div className="flex flex-wrap items-center gap-2.5 justify-end flex-1 min-w-0">
+          <RegenerarMemoriaButton municipioId={municipio.id} />
           <Link
             href={`/avance/ordenacion/${municipio.id}/revision`}
             className="btn btn-secondary whitespace-nowrap"
@@ -69,6 +70,13 @@ export default async function MemoriaOrdenacionPage({
                 className="btn btn-secondary whitespace-nowrap"
               >
                 Por capítulos (.zip)
+              </a>
+              <a
+                href={`/api/municipios/${municipio.id}/revision-tecnica`}
+                title="Puntuación, avisos y tablas rellenadas por el equipo — documento de trabajo interno"
+                className="btn btn-secondary whitespace-nowrap"
+              >
+                Revisión técnica (.docx)
               </a>
               <a
                 href={`/api/municipios/${municipio.id}/documento-completo`}
@@ -94,10 +102,6 @@ export default async function MemoriaOrdenacionPage({
             </button>
           )}
         </div>
-      </div>
-
-      <div className="mb-[30px]">
-        <RegenerarMemoriaButton municipioId={municipio.id} />
       </div>
 
       <div className="flex items-center gap-4 py-4 border-t border-b border-line mb-[38px]">

@@ -15,6 +15,25 @@ export async function listTablasDeCapitulo(capituloId: string, subepigrafeCodigo
   return data;
 }
 
+/**
+ * Todas las tablas rellenadas por el técnico en el municipio, de golpe —
+ * para el documento de revisión técnica (ver src/lib/export/docx.ts,
+ * generarDocxRevisionTecnica), que las reúne aparte en vez de tener que
+ * abrir cada capítulo. Se omiten las tablas todavía sin ninguna fila —
+ * nada que mostrar ahí.
+ */
+export async function listTablasDeMunicipio(capituloIds: string[]) {
+  if (capituloIds.length === 0) return [];
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("capitulo_tablas")
+    .select("*")
+    .in("capitulo_id", capituloIds)
+    .order("orden");
+  if (error) throw error;
+  return data.filter((t) => t.filas.length > 0);
+}
+
 export async function crearBloqueTabla(
   capituloId: string,
   nombreBloque: string,

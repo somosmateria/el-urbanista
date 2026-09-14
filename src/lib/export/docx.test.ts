@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import JSZip from "jszip";
-import { generarDocxCapitulo, generarDocxMunicipio, slugificarNombre } from "./docx";
+import { generarDocxCapitulo, generarDocxMunicipio, generarDocxRevisionTecnica, slugificarNombre } from "./docx";
 
 describe("slugificarNombre", () => {
   it("quita acentos, pasa a minúsculas y usa guiones", () => {
@@ -82,6 +82,55 @@ describe("generarDocxCapitulo", () => {
     expect(documentXml?.match(/<w:color w:val="3d5a75"\/>/g)?.length).toBe(2);
     // El párrafo normal sí debe seguir en rojo por ser "revisar" el capítulo.
     expect(documentXml?.match(/<w:color w:val="ff0000"\/>/g)?.length).toBe(1);
+  }, 20_000);
+});
+
+describe("generarDocxRevisionTecnica", () => {
+  it("incluye la puntuación, los avisos sin resolver y las tablas rellenadas", async () => {
+    const buffer = await generarDocxRevisionTecnica(
+      "Municipio de Prueba",
+      [
+        {
+          codigo: "MO.1",
+          titulo: "Uno",
+          evaluacion: {
+            puntuacionTotal: 64,
+            desglose: {
+              cobertura: { puntos: 20, motivo: "Completo." },
+              fundamentacion: { puntos: 10, motivo: "Cita el diagnóstico en parte." },
+              especificidad: { puntos: 14, motivo: "Bastante específico." },
+              solidez: { puntos: 20, motivo: "Coherente." },
+              completitud: { puntos: 0, motivo: "Falta confirmar." },
+            },
+            problemaPrincipal: "No cita las alternativas concretas.",
+            pendientePrincipal: "Añadir las alternativas estudiadas.",
+          },
+          avisos: [
+            { severidad: "alta", mensaje: "Falta confirmar el plan vigente.", fuente: null, resuelto: false },
+            { severidad: "baja", mensaje: "Aviso ya resuelto.", fuente: null, resuelto: true },
+          ],
+        },
+        { codigo: "MO.4", titulo: "Cuatro", evaluacion: null, avisos: [] },
+      ],
+      [
+        {
+          capituloCodigo: "MO.5",
+          capituloTitulo: "Cinco",
+          nombreBloque: "Áreas recreativas propuestas",
+          columnas: ["Nombre", "Superficie"],
+          filas: [{ Nombre: "Parque del Coto", Superficie: "3,2 ha" }],
+        },
+      ]
+    );
+    const zip = await JSZip.loadAsync(buffer);
+    const documentXml = await zip.file("word/document.xml")?.async("string");
+
+    expect(documentXml).toContain("64");
+    expect(documentXml).toContain("Falta confirmar el plan vigente");
+    expect(documentXml).not.toContain("Aviso ya resuelto");
+    expect(documentXml).toContain("Sin evaluar todav");
+    expect(documentXml).toContain("Parque del Coto");
+    expect(documentXml).toContain("reas recreativas propuestas");
   }, 20_000);
 });
 
