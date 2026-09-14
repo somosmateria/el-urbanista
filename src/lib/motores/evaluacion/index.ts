@@ -1,5 +1,6 @@
 import { getAnthropicClient, MODELO_GENERACION } from "@/lib/anthropic";
 import { getSubepigrafes } from "@/lib/data/mapeo";
+import { getSeccionReferenciaDeEquipo } from "@/lib/data/plantilla-referencia";
 import { guardarEvaluacion, reemplazarAvisosAutomaticos } from "@/lib/data/evaluacion";
 import { limpiarParaExportar } from "@/lib/export/docx";
 import { detectarContaminacion } from "./contaminacion";
@@ -47,7 +48,8 @@ export const CODIGOS_PLANTILLA_INVARIANTE = new Set(["MO.4", "MO.8", "MO.9", "MO
  */
 export async function evaluarCapitulo(
   capitulo: Pick<CapituloRow, "id" | "codigo" | "motor" | "estado" | "contenido_html">,
-  municipio: Pick<MunicipioRow, "nombre">
+  municipio: Pick<MunicipioRow, "nombre">,
+  equipoId: string
 ): Promise<ResultadoEvaluacion | null> {
   if (!capitulo.contenido_html) return null;
   // Se evalúa el texto tal como quedaría en el documento entregado, no el
@@ -66,10 +68,35 @@ export async function evaluarCapitulo(
     };
   }
 
-  const viaClaude = await evaluarConClaude(capitulo.codigo, contenido, municipio.nombre);
+  const referencia = await recopilarReferenciaDelEquipo(capitulo.codigo, equipoId);
+  const viaClaude = await evaluarConClaude(capitulo.codigo, contenido, municipio.nombre, referencia);
   if (!viaClaude) return null;
 
   return { ...viaClaude, avisos: [...avisosSubepigrafesFaltantes, ...viaClaude.avisos] };
+}
+
+/**
+ * Reúne, si existe, el texto que el propio equipo ya tiene confirmado como
+ * válido para este código en su Avance de referencia (y en los de sus
+ * subepígrafes, si es un capítulo mixto) — para que la puntuación de
+ * "especificidad"/"fundamentación" no la decida Claude por su cuenta desde
+ * cero, sino comparando contra lo que el equipo ya ha dado por bueno en un
+ * documento real: si el capítulo generado es tan genérico como el propio
+ * texto de referencia del equipo, eso es correcto, no un fallo (ver el
+ * mecanismo ya existente `CODIGOS_PLANTILLA_INVARIANTE`, que hace lo mismo
+ * pero fijado a mano en el código para un puñado de capítulos).
+ *
+ * Hoy cada equipo solo puede tener un Avance de referencia subido (ver
+ * `equipo_plantilla_referencia`) — si en el futuro se admite más de uno,
+ * este es el punto por el que habría que agregarlos.
+ */
+async function recopilarReferenciaDelEquipo(capituloCodigo: string, equipoId: string): Promise<string | null> {
+  const codigosARevisar = [capituloCodigo, ...(await getSubepigrafes(capituloCodigo)).map((s) => s.capitulo_codigo)];
+  const secciones = (
+    await Promise.all(codigosARevisar.map((codigo) => getSeccionReferenciaDeEquipo(equipoId, codigo)))
+  ).filter((s): s is NonNullable<typeof s> => s !== null && s.texto_html.trim() !== "");
+  if (secciones.length === 0) return null;
+  return secciones.map((s) => `[${s.titulo ?? "sin título"}]\n${s.texto_html}`).join("\n\n");
 }
 
 export function evaluarPlantillaInvariante(
@@ -162,14 +189,28 @@ verdad como punto de partida para un técnico urbanista real. Un capítulo breve
 fundamentado en el diagnóstico del municipio debe puntuar mejor que uno largo y genérico
 que serviría casi igual para cualquier otro municipio.
 
+Si se te da un "CONTENIDO DE REFERENCIA DEL EQUIPO" (extraído del Avance real que el
+propio estudio ya ha redactado y confirmado como válido), tu criterio de especificidad y
+fundamentación se mide CONTRA ESE TEXTO, no contra tu propia idea general de qué es
+"suficientemente específico". Si el capítulo evaluado es del mismo tipo de contenido
+(genérico/normativo o concreto/con datos) que ya usó el equipo en su documento real, eso
+es correcto — no lo penalices por "genérico" solo porque no cite datos del municipio; el
+equipo ya decidió que ese punto es así de general en la práctica. Solo baja
+ESPECIFICIDAD/FUNDAMENTACION por debajo de lo que refleja la referencia cuando el
+capítulo evaluado se aparte de ella (menos desarrollado, con menos datos concretos de los
+que el propio equipo sí incluyó, o con afirmaciones que la referencia no respalda). Si no
+se te da contenido de referencia, evalúa con tu propio criterio como hasta ahora.
+
 Puntúa estos cinco factores, cada uno de 0 a 20:
 - COBERTURA: ¿se han desarrollado los contenidos esperados de este capítulo, o hay huecos
   evidentes (secciones a medias, frases cortadas, apartados anunciados pero no escritos)?
 - FUNDAMENTACION: ¿el contenido está respaldado por información específica de ESTE
   municipio (datos, cifras, nombres propios citados del diagnóstico), o es solo marco
-  legal/conceptual sin ningún dato concreto?
+  legal/conceptual sin ningún dato concreto? Compáralo contra el contenido de referencia
+  del equipo si te lo han dado (ver arriba).
 - ESPECIFICIDAD: ¿el texto habla realmente de este municipio, o podría usarse casi igual
-  en cualquier otro con solo cambiar el nombre?
+  en cualquier otro con solo cambiar el nombre? Mismo criterio: compáralo contra la
+  referencia del equipo si la tienes.
 - SOLIDEZ: ¿las afirmaciones son prudentes y coherentes con el nivel de definición de un
   Avance (no un documento completo), sin inventar determinaciones que no le corresponden
   a este motor?
@@ -192,9 +233,13 @@ CONTAMINACION: <la frase exacta sospechosa>`;
 async function evaluarConClaude(
   capituloCodigo: string,
   contenidoHtml: string,
-  nombreMunicipio: string
+  nombreMunicipio: string,
+  referenciaDelEquipo: string | null
 ): Promise<Omit<ResultadoEvaluacion, "avisos"> & { avisos: AvisoPendiente[] } | null> {
   const anthropic = getAnthropicClient();
+  const bloqueReferencia = referenciaDelEquipo
+    ? `\n\n--- CONTENIDO DE REFERENCIA DEL EQUIPO (de su propio Avance real, ya confirmado como válido) ---\n${referenciaDelEquipo}`
+    : "";
   const respuesta = await anthropic.messages.create({
     model: MODELO_GENERACION,
     // Comprobado contra un capítulo real de ~44.000 caracteres (MO.3): con
@@ -213,7 +258,7 @@ async function evaluarConClaude(
 Capítulo: ${capituloCodigo}
 
 --- Contenido a evaluar ---
-${contenidoHtml}`,
+${contenidoHtml}${bloqueReferencia}`,
       },
     ],
   });
@@ -278,11 +323,12 @@ ${contenidoHtml}`,
 export async function evaluarYGuardar(
   capitulo: Pick<CapituloRow, "id" | "codigo" | "motor" | "estado" | "contenido_html">,
   municipio: Pick<MunicipioRow, "nombre" | "plan_vigente">,
-  otrosMunicipiosDelEquipo: Pick<MunicipioRow, "nombre" | "plan_vigente">[]
+  otrosMunicipiosDelEquipo: Pick<MunicipioRow, "nombre" | "plan_vigente">[],
+  equipoId: string
 ): Promise<void> {
   if (!capitulo.contenido_html) return;
 
-  const resultado = await evaluarCapitulo(capitulo, municipio);
+  const resultado = await evaluarCapitulo(capitulo, municipio, equipoId);
 
   const avisosContaminacion: AvisoPendiente[] = detectarContaminacion(
     limpiarParaExportar(capitulo.contenido_html),

@@ -374,7 +374,7 @@ export async function generarCapitulosIniciales(municipioId: string, equipo: Equ
     capitulosCreados
       .filter((c) => c.contenido_html)
       .map((c) =>
-        evaluarYGuardar(c, municipio, otrosMunicipios).catch((err: unknown) =>
+        evaluarYGuardar(c, municipio, otrosMunicipios, equipo.id).catch((err: unknown) =>
           console.error(`Evaluación técnica de ${c.codigo} falló:`, err)
         )
       )

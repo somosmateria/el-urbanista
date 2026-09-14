@@ -236,7 +236,8 @@ export async function aplicarRegeneracionAction(
     await evaluarYGuardar(
       { id: capituloId, codigo: capitulo.codigo, motor: capitulo.motor, estado, contenido_html: contenidoNuevo },
       municipio,
-      otrosMunicipios
+      otrosMunicipios,
+      equipo.id
     ).catch((err: unknown) => console.error(`Evaluación técnica de ${capitulo.codigo} falló:`, err));
   }
 
