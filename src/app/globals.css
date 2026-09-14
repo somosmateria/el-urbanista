@@ -216,6 +216,17 @@ mark {
 .btn-ghost:hover:not(:disabled) {
   background: color-mix(in srgb, var(--color-violet) 10%, transparent);
 }
+/* Mismo azul que los avisos de "pendiente de completar" del .docx (ver
+   docx.ts) — para el botón "Ir a lo pendiente", que si no se confunde
+   visualmente con el resto de botones secundarios. */
+.btn-azul {
+  color: var(--color-azul-ink);
+  border-color: var(--color-azul);
+  background: var(--color-azul-wash);
+}
+.btn-azul:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-azul) 18%, transparent);
+}
 
 /*
  * Los motores de generación devuelven HTML con estas clases directamente

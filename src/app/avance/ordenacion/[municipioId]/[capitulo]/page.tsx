@@ -119,7 +119,7 @@ export default async function CapituloPage({
         <span className="flex-1" />
         <span className="flex gap-2.5 flex-wrap">
           {anclaPendiente && (
-            <a href={`#${anclaPendiente}`} className="btn btn-secondary">
+            <a href={`#${anclaPendiente}`} className="btn btn-azul">
               Ir a lo pendiente{totalPendientes > 1 ? ` (${totalPendientes})` : ""}
             </a>
           )}

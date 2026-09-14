@@ -13,6 +13,32 @@ export async function listVersionesDeCapitulo(capituloId: string) {
 }
 
 /**
+ * El `tipo` de la versión MÁS RECIENTE de cada capítulo, de golpe — para
+ * decidir en una regeneración masiva (ver regenerarMemoriaAction) qué
+ * capítulos tienen una edición manual sin sobrescribir sin preguntar, sin
+ * una consulta por capítulo. Un capítulo sin ninguna versión (nunca se
+ * llegó a generar) no aparece en el mapa devuelto.
+ */
+export async function listUltimoTipoVersionPorCapitulo(capituloIds: string[]): Promise<Map<string, string>> {
+  if (capituloIds.length === 0) return new Map();
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("capitulo_versiones")
+    .select("capitulo_id, tipo, created_at")
+    .in("capitulo_id", capituloIds)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+
+  const ultimoPorCapitulo = new Map<string, string>();
+  for (const version of data) {
+    if (!ultimoPorCapitulo.has(version.capitulo_id)) {
+      ultimoPorCapitulo.set(version.capitulo_id, version.tipo);
+    }
+  }
+  return ultimoPorCapitulo;
+}
+
+/**
  * Guarda una edición manual: la versión anterior ya está en el historial
  * (se insertó cuando se generó o se editó por última vez), así que aquí solo
  * hace falta añadir la nueva como versión y como contenido activo del

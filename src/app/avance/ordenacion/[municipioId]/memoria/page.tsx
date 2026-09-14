@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
 import { BackLink } from "@/components/BackLink";
 import { ChapterRow } from "@/components/ChapterRow";
+import { RegenerarMemoriaButton } from "@/components/RegenerarMemoriaButton";
 import { EstadoPill } from "@/components/EstadoPill";
 import { ESTADO_UI } from "@/lib/capitulos/estado-ui";
 import { getMunicipio, listCapitulosDeMunicipio } from "@/lib/data/municipios";
@@ -86,6 +87,10 @@ export default async function MemoriaOrdenacionPage({
             </button>
           )}
         </div>
+      </div>
+
+      <div className="mb-[30px]">
+        <RegenerarMemoriaButton municipioId={municipio.id} />
       </div>
 
       <div className="flex items-center gap-4 py-4 border-t border-b border-line mb-[38px]">
