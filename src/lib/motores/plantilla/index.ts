@@ -94,8 +94,14 @@ export async function resolverPlantilla(
 ): Promise<{ contenido: string | null; necesitaRevision: boolean }> {
   if (!CODIGOS_NO_SUSTITUIBLES.has(codigo)) {
     const seccion = await getSeccionReferenciaDeEquipo(equipoId, codigo);
-    if (seccion) {
-      const cuerpo = seccion.texto_html.replaceAll("{{MUNICIPIO}}", municipio.nombre);
+    // La sección puede existir en el Avance de referencia del equipo con el
+    // cuerpo vacío (el segmentado por título encontró el epígrafe pero sin
+    // texto propio, p.ej. porque en el documento real ese contenido es solo
+    // una tabla) — comprobado en producción con MO.3.2 de Los Palacios: sin
+    // esta comprobación se sustituía por un bloque vacío en vez de caer en
+    // la plantilla fija de abajo, que sí tiene contenido real.
+    const cuerpo = seccion?.texto_html.replaceAll("{{MUNICIPIO}}", municipio.nombre).trim();
+    if (cuerpo) {
       const contenido = `
 <div class="doc-text">${cuerpo}</div>
 <div class="src-note">Basado en el Avance de referencia del equipo — confirma que encaja con el diagnóstico de este municipio antes de cerrar el capítulo.</div>
