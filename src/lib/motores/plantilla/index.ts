@@ -1,5 +1,7 @@
 import type { MunicipioRow } from "@/lib/supabase/types";
+import { createServiceClient } from "@/lib/supabase/server";
 import { getSeccionReferenciaDeEquipo } from "@/lib/data/plantilla-referencia";
+import { detectarContaminacion } from "@/lib/motores/evaluacion/contaminacion";
 import { CODIGOS_NO_SUSTITUIBLES } from "./referencia";
 import { generarMO1 } from "./mo1";
 import { generarMO2 } from "./mo2";
@@ -79,12 +81,40 @@ export const PLANTILLAS: Record<
 export const PLANTILLAS_QUE_NECESITAN_REVISION = new Set(["MO.1", "MO.2"]);
 
 /**
+ * Igual que `listOtrosMunicipiosDelEquipo` de `@/lib/data/municipios`, pero
+ * duplicada aquí (no importada) porque ese archivo ya importa
+ * `resolverPlantilla` — importarla de vuelta crearía un ciclo. Consulta
+ * mínima, no hace falta compartirla.
+ */
+async function otrosMunicipiosDelEquipo(equipoId: string, municipioIdActual: string) {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("municipios")
+    .select("nombre, plan_vigente")
+    .eq("equipo_id", equipoId)
+    .neq("id", municipioIdActual);
+  if (error) throw error;
+  return data;
+}
+
+/**
  * Punto único por el que pasa cualquier capítulo de motor "plantilla" al
  * generarse o regenerarse: si el equipo tiene un Avance de referencia
  * propio y localizó contenido para este código, se usa eso (con
  * {{MUNICIPIO}} sustituido) en vez del banco de texto fijo del código —
  * ver docs de 0009_plantilla_referencia.sql sobre por qué MO.1 y MO.11
  * quedan siempre fuera de esta sustitución.
+ *
+ * Antes de usar ese contenido se comprueba que no mencione a NINGÚN otro
+ * municipio del equipo (nombre o plan vigente) — la misma comprobación que
+ * ya hace `detectarContaminacion` en la evaluación técnica, pero aplicada
+ * ANTES de guardar nada, no después. Motivo: aunque un código se marque
+ * "sustituible" hoy, el documento real del que sale el Avance de referencia
+ * puede traer datos irreducibles de SU municipio de origen (ver el caso
+ * real documentado en CODIGOS_NO_SUSTITUIBLES) — esta comprobación es la
+ * garantía estructural de que eso nunca llega a aparecer en la Memoria de
+ * otro municipio, en vez de depender solo de mantener esa lista al día a
+ * mano. Si salta, se descarta la sustitución y se cae a la plantilla fija.
  */
 export async function resolverPlantilla(
   codigo: string,
@@ -102,11 +132,19 @@ export async function resolverPlantilla(
     // la plantilla fija de abajo, que sí tiene contenido real.
     const cuerpo = seccion?.texto_html.replaceAll("{{MUNICIPIO}}", municipio.nombre).trim();
     if (cuerpo) {
-      const contenido = `
+      const otros = await otrosMunicipiosDelEquipo(equipoId, municipio.id);
+      const hallazgos = detectarContaminacion(cuerpo, municipio, otros);
+      if (hallazgos.length === 0) {
+        const contenido = `
 <div class="doc-text">${cuerpo}</div>
 <div class="src-note">Basado en el Avance de referencia del equipo — confirma que encaja con el diagnóstico de este municipio antes de cerrar el capítulo.</div>
 `.trim();
-      return { contenido, necesitaRevision: true };
+        return { contenido, necesitaRevision: true };
+      }
+      console.error(
+        `[plantilla] ${codigo}: el Avance de referencia del equipo menciona a otro municipio, se descarta la sustitución —`,
+        hallazgos.map((h) => h.fuente).join("; ")
+      );
     }
   }
 

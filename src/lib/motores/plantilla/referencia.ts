@@ -24,20 +24,30 @@ import { parsearRespuestaReferencia } from "@/lib/texto/avance-referencia";
  *   contenido de forma distinta a como lo separa El Urbanista (ver
  *   también la nota de mo9.ts/mo12.ts sobre este mismo desajuste de
  *   empaquetado), así que buscar por título puede cortar a mitad.
- * - MO.2, MO.3.2, MO.5.1, MO.5.2, MO.5.2.2, MO.6.1, MO.7: comprobado al
- *   rellenar el Avance de referencia del equipo (Lora del Río) — su
- *   "marco conceptual común" en el documento real trae intercalado
- *   contenido irreducible de ESE municipio: nombres de parques y
- *   monumentos propios (MO.3.2 "Castillo de Lora del Río", MO.6.1 BIC
- *   catalogados con fecha BOJA/BOE), carreteras y códigos de vía
- *   concretos (MO.5.1/MO.5.2, p.ej. "A-457 de Carmona a Lora del Río"),
- *   y observaciones locales (MO.7: barrios, comunidades migrantes,
- *   actuaciones ya hechas por el ayuntamiento — MO.7 ya lo documentaba
- *   así antes de tener Avance de referencia, ver su propio archivo). No
- *   es sustituible por {{MUNICIPIO}}: aunque se sustituyera el nombre,
- *   el resto del dato (una carretera, un monumento, un barrio) sigue
- *   siendo de Lora del Río y no de otro municipio. Se deja fuera en vez
- *   de arriesgarse a que se cuele en el documento de otro municipio.
+ * - MO.2, MO.3.2, MO.3.1.4, MO.5.1, MO.5.2, MO.5.2.2, MO.5.3, MO.5.4,
+ *   MO.6.1, MO.7: comprobado al rellenar el Avance de referencia del
+ *   equipo (Lora del Río) — su "marco conceptual común" en el documento
+ *   real trae intercalado contenido irreducible de ESE municipio: nombres
+ *   de parques y monumentos propios (MO.3.2 "Castillo de Lora del Río",
+ *   MO.6.1 BIC catalogados con fecha BOJA/BOE), carreteras y códigos de
+ *   vía concretos (MO.3.1.4/MO.5.1/MO.5.2, p.ej. "A-457 de Carmona a Lora
+ *   del Río", "SE-6102"), equipamientos e inversiones municipales
+ *   concretas con nombre propio (MO.5.3 "Polideportivo Municipal de Lora
+ *   del Río Antonio Trigo Merlo", MO.5.4 plan de inversiones del agua del
+ *   ayuntamiento), y observaciones locales (MO.7: barrios, comunidades
+ *   migrantes, actuaciones ya hechas por el ayuntamiento — MO.7 ya lo
+ *   documentaba así antes de tener Avance de referencia, ver su propio
+ *   archivo). No es sustituible por {{MUNICIPIO}}: aunque se sustituyera
+ *   el nombre, el resto del dato (una carretera, un monumento, un
+ *   equipamiento, un barrio) sigue siendo de Lora del Río y no de otro
+ *   municipio. Se deja fuera en vez de arriesgarse a que se cuele en el
+ *   documento de otro municipio.
+ *
+ * Además de esta lista, `resolverPlantilla` (./index.ts) comprueba en
+ * tiempo real que el contenido del Avance de referencia no mencione a
+ * ningún otro municipio del equipo antes de usarlo — esta lista deja de
+ * ser la única barrera, es la que evita gastar esa comprobación en casos
+ * ya sabidos.
  */
 export const CODIGOS_NO_SUSTITUIBLES = new Set([
   "MO.1",
@@ -48,10 +58,13 @@ export const CODIGOS_NO_SUSTITUIBLES = new Set([
   "MO.9",
   "MO.10",
   "MO.12",
+  "MO.3.1.4",
   "MO.3.2",
   "MO.5.1",
   "MO.5.2",
   "MO.5.2.2",
+  "MO.5.3",
+  "MO.5.4",
   "MO.6.1",
   "MO.7",
 ]);
