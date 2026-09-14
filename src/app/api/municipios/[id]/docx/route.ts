@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import JSZip from "jszip";
 import { createServiceClient } from "@/lib/supabase/server";
 import { generarDocxCapitulo, nombreArchivoCapitulo, slugificarNombre } from "@/lib/export/docx";
+import { generarDocxRevisionTecnicaDeMunicipio } from "@/lib/export/revision-tecnica";
 import { getMunicipio } from "@/lib/data/municipios";
 import { requireEquipoActivo } from "@/lib/data/equipos";
 import { getTitulosReferenciaDeEquipo } from "@/lib/data/plantilla-referencia";
@@ -41,6 +42,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     );
     zip.file(nombreArchivoCapitulo(capitulo.codigo), buffer);
   }
+
+  // Documento de trabajo interno con la puntuación/avisos de cada capítulo
+  // y las tablas rellenadas por el equipo — mismo contenido que la
+  // descarga suelta desde /revision, incluido aquí también para no tener
+  // que volver a la app a por él (ver generarDocxRevisionTecnicaDeMunicipio).
+  const bufferRevision = await generarDocxRevisionTecnicaDeMunicipio(municipio, equipo);
+  zip.file("revision-tecnica.docx", bufferRevision);
+
   const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
 
   const nombreArchivo = `memoria-ordenacion-${slugificarNombre(municipio.nombre)}.zip`;

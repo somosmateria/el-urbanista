@@ -62,12 +62,23 @@ export default async function RevisionTecnicaPage({
   return (
     <AppShell>
       <BackLink href={`/avance/ordenacion/${municipio.id}/memoria`} />
-      <div className="text-[10px] tracking-[0.22em] uppercase text-violet mb-3.5">
-        {municipio.nombre} · Revisión técnica
+      <div className="flex flex-wrap items-start justify-between gap-6 mb-8">
+        <div>
+          <div className="text-[10px] tracking-[0.22em] uppercase text-violet mb-3.5">
+            {municipio.nombre} · Revisión técnica
+          </div>
+          <h1 className="font-serif font-normal text-[38px] sm:text-[46px] leading-[1.02] tracking-[-0.025em]">
+            Revisión técnica
+          </h1>
+        </div>
+        <a
+          href={`/api/municipios/${municipio.id}/revision-tecnica`}
+          title="Puntuación, avisos y tablas rellenadas por el equipo — documento de trabajo interno"
+          className="btn btn-secondary whitespace-nowrap"
+        >
+          Descargar (.docx)
+        </a>
       </div>
-      <h1 className="font-serif font-normal text-[38px] sm:text-[46px] leading-[1.02] tracking-[-0.025em] mb-8">
-        Revisión técnica
-      </h1>
 
       <div className="flex flex-wrap items-center gap-8 py-5 border-t border-b border-line mb-10">
         <div>

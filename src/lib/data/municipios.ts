@@ -56,6 +56,96 @@ export async function listMunicipiosConProgreso(equipo: EquipoActivo) {
   });
 }
 
+export type CapituloReciente = {
+  municipioId: string;
+  municipioNombre: string;
+  capituloId: string;
+  capituloCodigo: string;
+  capituloTitulo: string;
+  capituloEstado: CapituloEstado;
+};
+
+/**
+ * Los capítulos con actividad más reciente (generados o regenerados) de
+ * todo el equipo, con su municipio — pensado para "creados recientemente"
+ * en el inicio: antes enlazaba al municipio y aterrizabas en la pantalla
+ * de diagnóstico/avance sin más contexto; esto lleva directo al documento
+ * concreto en el que se trabajó. Respeta el mismo acceso por miembro que
+ * `listMunicipiosConProgreso` (un no-admin no debe ver actividad de un
+ * municipio que no tiene concedido).
+ *
+ * Se piden más versiones de las que hacen falta (`limite * 8`) porque
+ * varias ediciones seguidas del mismo capítulo no deben "gastar" un hueco
+ * cada una — se deduplica por capítulo quedándose con la más reciente.
+ */
+export async function listCapitulosRecientes(equipo: EquipoActivo, limite = 5): Promise<CapituloReciente[]> {
+  const supabase = createServiceClient();
+
+  const { data: todos, error: municipiosError } = await supabase
+    .from("municipios")
+    .select("id, nombre")
+    .eq("equipo_id", equipo.id);
+  if (municipiosError) throw municipiosError;
+  if (todos.length === 0) return [];
+
+  const accesibles =
+    equipo.rol === "admin"
+      ? null
+      : await listMunicipioIdsAccesibles(
+          todos.map((m) => m.id),
+          equipo.userId
+        );
+  const visibles = accesibles ? todos.filter((m) => accesibles.has(m.id)) : todos;
+  if (visibles.length === 0) return [];
+  const municipioPorId = new Map(visibles.map((m) => [m.id, m]));
+
+  const { data: capitulos, error: capitulosError } = await supabase
+    .from("capitulos")
+    .select("id, codigo, titulo, estado, municipio_id")
+    .in(
+      "municipio_id",
+      visibles.map((m) => m.id)
+    );
+  if (capitulosError) throw capitulosError;
+  if (capitulos.length === 0) return [];
+  const capituloPorId = new Map(capitulos.map((c) => [c.id, c]));
+
+  const { data: versiones, error: versionesError } = await supabase
+    .from("capitulo_versiones")
+    .select("capitulo_id, created_at")
+    .in(
+      "capitulo_id",
+      capitulos.map((c) => c.id)
+    )
+    .order("created_at", { ascending: false })
+    .limit(limite * 8);
+  if (versionesError) throw versionesError;
+
+  const titulosReferencia = await getTitulosReferenciaDeEquipo(equipo.id);
+
+  const vistos = new Set<string>();
+  const recientes: CapituloReciente[] = [];
+  for (const version of versiones) {
+    if (vistos.has(version.capitulo_id)) continue;
+    vistos.add(version.capitulo_id);
+
+    const capitulo = capituloPorId.get(version.capitulo_id);
+    const municipio = capitulo ? municipioPorId.get(capitulo.municipio_id) : undefined;
+    if (!capitulo || !municipio) continue;
+
+    recientes.push({
+      municipioId: municipio.id,
+      municipioNombre: municipio.nombre,
+      capituloId: capitulo.id,
+      capituloCodigo: capitulo.codigo,
+      capituloTitulo: titulosReferencia.get(capitulo.codigo) ?? capitulo.titulo,
+      capituloEstado: capitulo.estado,
+    });
+    if (recientes.length >= limite) break;
+  }
+  return recientes;
+}
+
 /**
  * `equipo` no es opcional: es la frontera de autorización, en dos pasos —
  * primero que el municipio pertenezca al equipo activo (evita que

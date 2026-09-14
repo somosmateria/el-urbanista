@@ -31,7 +31,6 @@ export default async function MemoriaOrdenacionPage({
   const contables = capitulos.filter((c) => c.sin_info_motivo !== "no_aplica");
   const cerrados = contables.filter((c) => c.estado === "listo").length;
   const abiertos = contables.length - cerrados;
-  const pctCerrados = contables.length > 0 ? Math.round((cerrados / contables.length) * 100) : 0;
   const hayAlgoDescargable = capitulos.some((c) => c.contenido_html);
 
   const estadosPresentes = Array.from(new Set(capitulos.map((c) => c.estado)));
@@ -58,7 +57,7 @@ export default async function MemoriaOrdenacionPage({
           <RegenerarMemoriaButton municipioId={municipio.id} />
           <Link
             href={`/avance/ordenacion/${municipio.id}/revision`}
-            className="btn btn-secondary whitespace-nowrap"
+            className="btn btn-azul whitespace-nowrap"
           >
             Revisión técnica
           </Link>
@@ -70,13 +69,6 @@ export default async function MemoriaOrdenacionPage({
                 className="btn btn-secondary whitespace-nowrap"
               >
                 Por capítulos (.zip)
-              </a>
-              <a
-                href={`/api/municipios/${municipio.id}/revision-tecnica`}
-                title="Puntuación, avisos y tablas rellenadas por el equipo — documento de trabajo interno"
-                className="btn btn-secondary whitespace-nowrap"
-              >
-                Revisión técnica (.docx)
               </a>
               <a
                 href={`/api/municipios/${municipio.id}/documento-completo`}
@@ -104,18 +96,11 @@ export default async function MemoriaOrdenacionPage({
         </div>
       </div>
 
-      <div className="flex items-center gap-4 py-4 border-t border-b border-line mb-[38px]">
-        <span className="flex items-center gap-1.5 text-[10px] tracking-[0.18em] uppercase text-text-faint shrink-0">
-          Cerrados
-        </span>
-        <span className="flex-1 h-[2px] bg-line relative">
-          <span className="absolute inset-y-0 left-0 bg-violet" style={{ width: `${pctCerrados}%` }} />
-        </span>
+      <div className="flex items-center gap-2 py-4 border-t border-b border-line mb-[38px]">
         <span className="font-serif text-[22px] tabular-nums shrink-0">
-          {cerrados}
-          <span className="text-text-faint">/{contables.length}</span>
+          {cerrados}/{contables.length}
         </span>
-        <span className="text-[11.5px] tabular-nums text-text-soft shrink-0">{pctCerrados}%</span>
+        <span className="text-[13px] text-text-soft">capítulos cerrados</span>
       </div>
 
       <div className="border-t border-line">

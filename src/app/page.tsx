@@ -2,9 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { DocCard } from "@/components/DocCard";
-import { TownRow } from "@/components/TownRow";
+import { DocumentoRecienteRow } from "@/components/DocumentoRecienteRow";
 import { IntroOverlay } from "@/components/IntroOverlay";
-import { listMunicipiosConProgreso } from "@/lib/data/municipios";
+import { listMunicipiosConProgreso, listCapitulosRecientes } from "@/lib/data/municipios";
 import { getEquipoActivo } from "@/lib/data/equipos";
 
 export const dynamic = "force-dynamic";
@@ -14,8 +14,10 @@ export default async function Home() {
   // Cuenta recién creada sin ningún equipo todavía — Ajustes es donde se
   // pide crear el primero, en vez de reventar aquí.
   if (!equipo) redirect("/ajustes");
-  const municipios = await listMunicipiosConProgreso(equipo);
-  const recientes = municipios.slice(0, 5);
+  const [municipios, recientes] = await Promise.all([
+    listMunicipiosConProgreso(equipo),
+    listCapitulosRecientes(equipo),
+  ]);
 
   return (
     <AppShell>
@@ -63,14 +65,14 @@ export default async function Home() {
 
       <div className="flex items-baseline justify-between mb-[14px]">
         <div className="text-[10px] tracking-[0.2em] uppercase text-text-faint">
-          Creados recientemente
+          Trabajado recientemente
         </div>
         {municipios.length > 0 && (
           <Link
             href="/avance/ordenacion"
             className="text-[10px] tracking-[0.16em] uppercase text-violet hover:text-violet-hover"
           >
-            Ver todos ({municipios.length})
+            Ir a municipios ({municipios.length})
           </Link>
         )}
       </div>
@@ -78,18 +80,19 @@ export default async function Home() {
       {recientes.length === 0 ? (
         <div className="pageblock border border-line rounded p-6">
           <p className="text-text-faint text-[13.5px]">
-            Todavía no hay ningún municipio. Empieza desde la tarjeta de Avance.
+            Todavía no hay ningún documento generado. Empieza desde la tarjeta de Avance.
           </p>
         </div>
       ) : (
         <div className="border-t border-line">
-          {recientes.map((m) => (
-            <TownRow
-              key={m.id}
-              href={`/avance/ordenacion/${m.id}`}
-              nombre={m.nombre}
-              pct={m.progreso.total > 0 ? Math.round((m.progreso.listos / m.progreso.total) * 100) : 0}
-              meta={`${m.progreso.listos} de ${m.progreso.total} listos`}
+          {recientes.map((c) => (
+            <DocumentoRecienteRow
+              key={c.capituloId}
+              href={`/avance/ordenacion/${c.municipioId}/${encodeURIComponent(c.capituloCodigo)}`}
+              codigo={c.capituloCodigo}
+              titulo={c.capituloTitulo}
+              municipioNombre={c.municipioNombre}
+              estado={c.capituloEstado}
             />
           ))}
         </div>

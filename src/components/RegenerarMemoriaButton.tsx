@@ -74,7 +74,7 @@ export function RegenerarMemoriaButton({ municipioId }: { municipioId: string })
       type="button"
       onClick={() => setConfirmando(true)}
       disabled={pending}
-      className="btn btn-secondary whitespace-nowrap"
+      className="btn btn-primary whitespace-nowrap"
     >
       {pending ? "Regenerando… (puede tardar)" : "Regenerar toda la memoria"}
     </button>

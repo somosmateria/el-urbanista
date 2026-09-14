@@ -154,6 +154,10 @@ export default async function CapituloPage({
       )}
 
       {capitulo.motor !== "tabla" && capitulo.contenido_html && (
+        <RegenerarPanel municipioId={municipioId} capituloId={capitulo.id} />
+      )}
+
+      {capitulo.motor !== "tabla" && capitulo.contenido_html && (
         <p className="text-text-soft text-[13.5px] mb-[26px] max-w-[560px] leading-relaxed">
           {capitulo.estado === "revisar"
             ? capitulo.contenido_html.includes("<mark")
@@ -207,13 +211,10 @@ export default async function CapituloPage({
       )}
 
       {capitulo.motor !== "tabla" && capitulo.contenido_html && (
-        <>
-          <div
-            className="pageblock border border-line p-[52px] px-8 sm:px-14"
-            dangerouslySetInnerHTML={{ __html: capitulo.contenido_html }}
-          />
-          <RegenerarPanel municipioId={municipioId} capituloId={capitulo.id} />
-        </>
+        <div
+          className="pageblock border border-line p-[52px] px-8 sm:px-14"
+          dangerouslySetInnerHTML={{ __html: capitulo.contenido_html }}
+        />
       )}
 
       {capitulo.motor !== "tabla" && !capitulo.contenido_html && (
