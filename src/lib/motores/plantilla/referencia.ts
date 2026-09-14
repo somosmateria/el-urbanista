@@ -24,8 +24,37 @@ import { parsearRespuestaReferencia } from "@/lib/texto/avance-referencia";
  *   contenido de forma distinta a como lo separa El Urbanista (ver
  *   también la nota de mo9.ts/mo12.ts sobre este mismo desajuste de
  *   empaquetado), así que buscar por título puede cortar a mitad.
+ * - MO.2, MO.3.2, MO.5.1, MO.5.2, MO.5.2.2, MO.6.1, MO.7: comprobado al
+ *   rellenar el Avance de referencia del equipo (Lora del Río) — su
+ *   "marco conceptual común" en el documento real trae intercalado
+ *   contenido irreducible de ESE municipio: nombres de parques y
+ *   monumentos propios (MO.3.2 "Castillo de Lora del Río", MO.6.1 BIC
+ *   catalogados con fecha BOJA/BOE), carreteras y códigos de vía
+ *   concretos (MO.5.1/MO.5.2, p.ej. "A-457 de Carmona a Lora del Río"),
+ *   y observaciones locales (MO.7: barrios, comunidades migrantes,
+ *   actuaciones ya hechas por el ayuntamiento — MO.7 ya lo documentaba
+ *   así antes de tener Avance de referencia, ver su propio archivo). No
+ *   es sustituible por {{MUNICIPIO}}: aunque se sustituyera el nombre,
+ *   el resto del dato (una carretera, un monumento, un barrio) sigue
+ *   siendo de Lora del Río y no de otro municipio. Se deja fuera en vez
+ *   de arriesgarse a que se cuele en el documento de otro municipio.
  */
-export const CODIGOS_NO_SUSTITUIBLES = new Set(["MO.1", "MO.11", "MO.4", "MO.8", "MO.9", "MO.10", "MO.12"]);
+export const CODIGOS_NO_SUSTITUIBLES = new Set([
+  "MO.1",
+  "MO.11",
+  "MO.2",
+  "MO.4",
+  "MO.8",
+  "MO.9",
+  "MO.10",
+  "MO.12",
+  "MO.3.2",
+  "MO.5.1",
+  "MO.5.2",
+  "MO.5.2.2",
+  "MO.6.1",
+  "MO.7",
+]);
 
 type CodigoObjetivo = { codigo: string; titulo: string; motor: string; sustituible: boolean };
 
@@ -183,6 +212,13 @@ async function extraerCapitulo(
       ],
     });
     const respuesta = await stream.finalMessage();
+    // Coste real por llamada — la caché de `textoCompleto` solo ahorra si
+    // esta llamada de verdad llega después de que la primera ya haya
+    // escrito la caché (con varias llamadas en paralelo no está
+    // garantizado, ver el comentario de más arriba); este log deja verlo.
+    console.log(
+      `[plantilla-referencia] "${objetivo.codigo}" — input:${respuesta.usage.input_tokens} cache_write:${respuesta.usage.cache_creation_input_tokens ?? 0} cache_read:${respuesta.usage.cache_read_input_tokens ?? 0} output:${respuesta.usage.output_tokens}`
+    );
 
     const bruto = respuesta.content
       .filter((b) => b.type === "text")
@@ -212,10 +248,29 @@ async function extraerCapitulo(
 export async function segmentarReferencia(
   textoCompleto: string
 ): Promise<{ codigo: string; titulo: string; texto: string }[]> {
-  const objetivo = await getTodosLosCodigos();
+  return segmentarReferenciaParcial(textoCompleto, null);
+}
+
+/**
+ * Igual que `segmentarReferencia`, pero puede acotarse a un subconjunto de
+ * códigos (`soloCodigos`) en vez de volver a pedir los ~30 de golpe —
+ * pensado para rellenar solo los que faltan o cambiaron de "sustituible"
+ * desde el último procesado (ver mapeo_capitulos y CODIGOS_NO_SUSTITUIBLES),
+ * sin gastar de nuevo en los que ya están bien. La lista de títulos que ve
+ * el modelo para no confundir temas cercanos sigue siendo la completa,
+ * aunque solo se pidan unos pocos — mismo contexto, menos llamadas.
+ */
+export async function segmentarReferenciaParcial(
+  textoCompleto: string,
+  soloCodigos: string[] | null
+): Promise<{ codigo: string; titulo: string; texto: string }[]> {
+  const todos = await getTodosLosCodigos();
+  if (todos.length === 0) return [];
+
+  const objetivo = soloCodigos ? todos.filter((o) => soloCodigos.includes(o.codigo)) : todos;
   if (objetivo.length === 0) return [];
 
-  const system = systemPrompt(objetivo.map((o) => o.titulo));
+  const system = systemPrompt(todos.map((o) => o.titulo));
   const truncado = textoCompleto.slice(0, MAX_CARACTERES);
   const resultados = await Promise.all(
     objetivo.map(async (o) => {

@@ -112,6 +112,33 @@ export async function guardarSeccionesReferencia(
   if (insertError) throw insertError;
 }
 
+/**
+ * A diferencia de `guardarSeccionesReferencia`, no borra nada — solo
+ * añade/actualiza los códigos que se le pasan (`unique (referencia_id,
+ * capitulo_codigo)` hace de clave del upsert). Pensada para rellenar a
+ * posteriori los códigos que quedaron sin contenido en el procesado
+ * original porque no existían todavía, o no eran "sustituibles" en ese
+ * momento (ver segmentarReferenciaParcial) — sin gastar de nuevo en volver
+ * a extraer los que ya están bien.
+ */
+export async function actualizarSeccionesReferencia(
+  referenciaId: string,
+  secciones: { codigo: string; titulo: string; texto: string }[]
+) {
+  if (secciones.length === 0) return;
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("equipo_plantilla_secciones").upsert(
+    secciones.map((s) => ({
+      referencia_id: referenciaId,
+      capitulo_codigo: s.codigo,
+      titulo: s.titulo,
+      texto_html: s.texto,
+    })),
+    { onConflict: "referencia_id,capitulo_codigo" }
+  );
+  if (error) throw error;
+}
+
 export async function listSeccionesDeReferencia(referenciaId: string) {
   const supabase = createServiceClient();
   const { data, error } = await supabase
