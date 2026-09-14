@@ -149,6 +149,11 @@ export type EquipoPlantillaReferenciaRow = {
   nombre_archivo: string | null;
   estado: DiagnosticoEstado;
   error_mensaje: string | null;
+  // Municipio real para el que se redactó originalmente este documento
+  // (p.ej. "Lora del Río") — detectado al procesar, usado para bloquear su
+  // aparición en la Memoria de cualquier otro municipio (ver
+  // resolverPlantilla). Null si no se pudo determinar.
+  municipio_origen: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -285,10 +290,14 @@ export type Database = {
       >;
       equipo_plantilla_referencia: TableDef<
         EquipoPlantillaReferenciaRow,
-        Omit<EquipoPlantillaReferenciaRow, "id" | "created_at" | "updated_at" | "estado" | "error_mensaje"> & {
+        Omit<
+          EquipoPlantillaReferenciaRow,
+          "id" | "created_at" | "updated_at" | "estado" | "error_mensaje" | "municipio_origen"
+        > & {
           id?: string;
           estado?: DiagnosticoEstado;
           error_mensaje?: string | null;
+          municipio_origen?: string | null;
         },
         Partial<Omit<EquipoPlantillaReferenciaRow, "id">>
       >;

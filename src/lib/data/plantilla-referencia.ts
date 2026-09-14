@@ -79,6 +79,22 @@ export async function marcarReferenciaLista(referenciaId: string) {
   if (error) throw error;
 }
 
+/**
+ * Nombre del municipio real para el que se redactó originalmente el
+ * documento subido (ver detectarMunicipioOrigen en el motor de
+ * plantillas) — se guarda una vez, al procesar, para poder bloquear su
+ * aparición en la Memoria de cualquier otro municipio aunque ese
+ * municipio de origen no esté dado de alta en la aplicación.
+ */
+export async function actualizarMunicipioOrigenReferencia(referenciaId: string, municipioOrigen: string | null) {
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("equipo_plantilla_referencia")
+    .update({ municipio_origen: municipioOrigen })
+    .eq("id", referenciaId);
+  if (error) throw error;
+}
+
 export async function descargarReferenciaDesdeStorage(storagePath: string) {
   const supabase = createServiceClient();
   const { data, error } = await supabase.storage.from(BUCKET).download(storagePath);

@@ -1,6 +1,6 @@
 import type { MunicipioRow } from "@/lib/supabase/types";
 import { createServiceClient } from "@/lib/supabase/server";
-import { getSeccionReferenciaDeEquipo } from "@/lib/data/plantilla-referencia";
+import { getSeccionReferenciaDeEquipo, getReferenciaDeEquipo } from "@/lib/data/plantilla-referencia";
 import { detectarContaminacion } from "@/lib/motores/evaluacion/contaminacion";
 import { CODIGOS_NO_SUSTITUIBLES } from "./referencia";
 import { generarMO1 } from "./mo1";
@@ -106,15 +106,22 @@ async function otrosMunicipiosDelEquipo(equipoId: string, municipioIdActual: str
  * quedan siempre fuera de esta sustitución.
  *
  * Antes de usar ese contenido se comprueba que no mencione a NINGÚN otro
- * municipio del equipo (nombre o plan vigente) — la misma comprobación que
- * ya hace `detectarContaminacion` en la evaluación técnica, pero aplicada
- * ANTES de guardar nada, no después. Motivo: aunque un código se marque
- * "sustituible" hoy, el documento real del que sale el Avance de referencia
- * puede traer datos irreducibles de SU municipio de origen (ver el caso
- * real documentado en CODIGOS_NO_SUSTITUIBLES) — esta comprobación es la
+ * municipio (nombre o plan vigente) — la misma comprobación que ya hace
+ * `detectarContaminacion` en la evaluación técnica, pero aplicada ANTES de
+ * guardar nada, no después. Motivo: aunque un código se marque "sustituible"
+ * hoy, el documento real del que sale el Avance de referencia puede traer
+ * datos irreducibles de SU municipio de origen (ver el caso real
+ * documentado en CODIGOS_NO_SUSTITUIBLES) — esta comprobación es la
  * garantía estructural de que eso nunca llega a aparecer en la Memoria de
  * otro municipio, en vez de depender solo de mantener esa lista al día a
  * mano. Si salta, se descarta la sustitución y se cae a la plantilla fija.
+ *
+ * La lista de "otros municipios" a comprobar incluye tanto los que el
+ * equipo tiene dados de alta como, si se conoce, el municipio para el que
+ * se redactó ORIGINALMENTE el Avance de referencia (`municipio_origen`) —
+ * este último es el caso más probable de fuga y no depende de que ese
+ * municipio exista como fila en la aplicación (ver
+ * detectarMunicipioOrigen).
  */
 export async function resolverPlantilla(
   codigo: string,
@@ -132,8 +139,16 @@ export async function resolverPlantilla(
     // la plantilla fija de abajo, que sí tiene contenido real.
     const cuerpo = seccion?.texto_html.replaceAll("{{MUNICIPIO}}", municipio.nombre).trim();
     if (cuerpo) {
-      const otros = await otrosMunicipiosDelEquipo(equipoId, municipio.id);
-      const hallazgos = detectarContaminacion(cuerpo, municipio, otros);
+      const [otros, referencia] = await Promise.all([
+        otrosMunicipiosDelEquipo(equipoId, municipio.id),
+        getReferenciaDeEquipo(equipoId),
+      ]);
+      const origen = referencia?.municipio_origen?.trim();
+      const otrosConOrigen =
+        origen && origen.toLowerCase() !== municipio.nombre.trim().toLowerCase()
+          ? [...otros, { nombre: origen, plan_vigente: null }]
+          : otros;
+      const hallazgos = detectarContaminacion(cuerpo, municipio, otrosConOrigen);
       if (hallazgos.length === 0) {
         const contenido = `
 <div class="doc-text">${cuerpo}</div>

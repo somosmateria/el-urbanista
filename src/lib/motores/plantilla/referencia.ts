@@ -273,6 +273,52 @@ export async function segmentarReferencia(
  * el modelo para no confundir temas cercanos sigue siendo la completa,
  * aunque solo se pidan unos pocos — mismo contexto, menos llamadas.
  */
+/**
+ * Nombre del municipio real para el que se redactó originalmente este
+ * Avance (visible en la portada/encabezado), independiente de si el
+ * equipo lo tiene o no dado de alta como municipio propio en la
+ * aplicación — comprobar solo contra los municipios del equipo
+ * (detectarContaminacion) deja fuera precisamente el caso más probable:
+ * el municipio de origen del documento en sí. Una sola llamada corta con
+ * el principio del documento; no hace falta el texto completo ni caché
+ * para esto.
+ */
+export async function detectarMunicipioOrigen(textoCompleto: string): Promise<string | null> {
+  try {
+    const anthropic = getAnthropicClient();
+    const stream = anthropic.messages.stream({
+      model: MODELO_GENERACION,
+      max_tokens: 100,
+      thinking: { type: "disabled" },
+      system: `Eres el motor de extracción de "Avance de referencia" de El Urbanista, una
+herramienta de redacción de Memorias de Ordenación urbanística para un estudio de
+urbanismo español. Identifica el nombre del municipio (ayuntamiento) para el que
+se redactó ORIGINALMENTE el documento de planeamiento que se te muestra a
+continuación — normalmente visible en la portada, el encabezado o el título.
+
+Responde EXCLUSIVAMENTE con el nombre del municipio tal cual aparece escrito en
+el documento (p.ej. "Lora del Río"), sin nada más antes ni después. Si no puedes
+determinarlo con seguridad, responde exactamente: NO_ENCONTRADO`,
+      messages: [
+        {
+          role: "user",
+          content: `Primeras páginas del documento:\n"""\n${textoCompleto.slice(0, 15_000)}\n"""`,
+        },
+      ],
+    });
+    const respuesta = await stream.finalMessage();
+    const texto = respuesta.content
+      .filter((b) => b.type === "text")
+      .map((b) => b.text)
+      .join("")
+      .trim();
+    return texto && texto !== "NO_ENCONTRADO" ? texto : null;
+  } catch (error) {
+    console.error("[plantilla-referencia] Fallo al detectar el municipio de origen:", error);
+    return null;
+  }
+}
+
 export async function segmentarReferenciaParcial(
   textoCompleto: string,
   soloCodigos: string[] | null

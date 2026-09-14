@@ -1,0 +1,11 @@
+-- El Avance de referencia de un equipo se redactó originalmente para UN
+-- municipio real (p.ej. Lora del Río) — hasta ahora, la única barrera
+-- contra que ese municipio se colara en la Memoria de otro era comprobar
+-- el nombre y el plan vigente de los municipios que el equipo tiene dados
+-- de alta en la aplicación (ver detectarContaminacion). Eso deja fuera el
+-- caso en que el municipio de origen del documento no esté dado de alta
+-- como municipio propio del equipo — este campo cierra ese hueco
+-- guardando explícitamente su nombre, para poder bloquearlo siempre,
+-- exista o no como fila en `municipios` (ver resolverPlantilla en
+-- src/lib/motores/plantilla/index.ts).
+alter table equipo_plantilla_referencia add column municipio_origen text;

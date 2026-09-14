@@ -247,6 +247,12 @@ export default async function AjustesPage() {
                 El último intento falló: {referencia.error_mensaje}
               </p>
             )}
+            {referencia?.estado === "listo" && referencia.municipio_origen && (
+              <p className="text-[12px] text-text-faint mt-2">
+                Detectado como redactado originalmente para {referencia.municipio_origen} — su nombre y datos propios
+                quedan siempre excluidos de la sustitución en cualquier otro municipio.
+              </p>
+            )}
           </>
         )}
       </div>

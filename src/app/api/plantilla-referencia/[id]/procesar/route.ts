@@ -5,8 +5,9 @@ import {
   guardarSeccionesReferencia,
   marcarReferenciaError,
   marcarReferenciaLista,
+  actualizarMunicipioOrigenReferencia,
 } from "@/lib/data/plantilla-referencia";
-import { segmentarReferencia } from "@/lib/motores/plantilla/referencia";
+import { segmentarReferencia, detectarMunicipioOrigen } from "@/lib/motores/plantilla/referencia";
 import { instalarPolyfillDOMMatrix } from "@/lib/diagnostico/dommatrix-polyfill";
 import { requireEquipoActivo } from "@/lib/data/equipos";
 
@@ -40,7 +41,10 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     const { text } = await parser.getText();
     await parser.destroy();
 
-    const secciones = await segmentarReferencia(text);
+    const [secciones, municipioOrigen] = await Promise.all([
+      segmentarReferencia(text),
+      detectarMunicipioOrigen(text),
+    ]);
     // Un documento real de verdad no debería fallar en encontrar NI UNO de
     // los ~26 temas — si pasa, es casi seguro un fallo sistemático (visto
     // en producción: un límite del SDK de Anthropic tiraba las 26 llamadas
@@ -53,6 +57,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     }
 
     await guardarSeccionesReferencia(referenciaId, secciones);
+    await actualizarMunicipioOrigenReferencia(referenciaId, municipioOrigen);
     await marcarReferenciaLista(referenciaId);
 
     return NextResponse.json({ ok: true, capitulos: secciones.length });
