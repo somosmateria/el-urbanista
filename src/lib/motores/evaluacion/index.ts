@@ -115,18 +115,35 @@ export function evaluarPlantillaInvariante(
  * subepígrafe no llegó a generarse — exactamente el hueco que esta sesión
  * encontró a mano en Lora del Río (MO.3.2/3.4/3.6, MO.6.2 ausentes sin que
  * nadie lo supiera). Determinista, sin coste de API.
+ *
+ * Se comprueba el NÚMERO del epígrafe (p.ej. "6.2 ·") además del título:
+ * `titulo_canonico` es la etiqueta corta de `mapeo_capitulos`, pensada para
+ * listas de navegación de la propia app, y en algún generador no coincide
+ * palabra por palabra con el título largo que de verdad lleva el
+ * `doc-eyebrow` del documento (p.ej. MO.3.3/MO.6.2 — falso positivo real
+ * encontrado en producción). El número sí es siempre fiable: todos los
+ * generadores lo escriben igual, tanto los de plantilla como el motor RAG
+ * (`generarBloqueSubepigrafe`).
  */
 async function detectarSubepigrafesFaltantes(capituloCodigo: string, contenidoHtml: string): Promise<AvisoPendiente[]> {
   const subepigrafes = await getSubepigrafes(capituloCodigo);
   if (subepigrafes.length === 0) return [];
 
   const contenidoEnMayusculas = contenidoHtml.toUpperCase();
+  const aparece = (s: (typeof subepigrafes)[number]) => {
+    const numero = s.capitulo_codigo.replace(/^MO\./, "");
+    return (
+      contenidoEnMayusculas.includes(`${numero.toUpperCase()} ·`) ||
+      contenidoEnMayusculas.includes(s.titulo_canonico.toUpperCase())
+    );
+  };
+
   return subepigrafes
     // Motor "tabla": propuesta técnica que rellena el equipo a mano, nunca
     // se genera sola — que no aparezca en contenido_html es lo esperado,
     // no un hueco de generación.
     .filter((s) => s.motor !== "tabla")
-    .filter((s) => !contenidoEnMayusculas.includes(s.titulo_canonico.toUpperCase()))
+    .filter((s) => !aparece(s))
     .map((s) => ({
       subepigrafeCodigo: s.capitulo_codigo,
       tipo: "informacion_no_localizada" as const,
